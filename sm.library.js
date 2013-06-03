@@ -5,55 +5,74 @@ var sm = function(module) {
       return v.toString(16)
     })
   };
-  var Channel = function() {
-    this.subscribers = []
-  };
-  Channel.prototype.publish = function(message) {
-    var cancel = false;
-    for(var i = 0;i < this.subscribers.length;i++) {
-      if(cancel === true) {
-        this.subscribers[i].subscriber.cancel(message)
-      }else {
-        if(this.subscribers[i].subscriber.update(message) === false) {
-          cancel = true
-        }
-      }
-    }
+  var Membership = function() {
+    this._joiners = [];
+    this._extend = function() {
+      return new Membership
+    };
     return this
   };
-  Channel.prototype.subscribe = function(subscriber) {
+  Membership.prototype.extend = function(name) {
+    if(this[name]) {
+      throw new Error("There is a name conflict adding the specified memberhsip: " + name);
+    }
+    this[name] = this._extend();
+    return this[name]
+  };
+  Membership.prototype.join = function(member) {
+    this._joiners.push(member);
+    return this
+  };
+  var Channel = function() {
+    this._subscribers = [];
+    this._extend = function() {
+      return new Channel
+    };
+    return this
+  };
+  Channel.prototype = {join:Membership.prototype.join, extend:Membership.prototype.extend, subscribe:function(subscriber) {
     if(typeof subscriber.update != "function") {
       throw new Error('A supplied subscriber object must implement an "update" method');
     }
     if(typeof subscriber.cancel != "function") {
       throw new Error('A supplied subscriber object must implement an "cancel" method');
     }
-    this.subscribers.push(subscriber)
-  };
-  Channel.prototype.add = function(name) {
-    if(this[name]) {
-      throw new Error("There is a name conflict on the specified channel: " + name);
+    this._subscribers.push(subscriber);
+    return this
+  }, publish:function(message, isCancelled) {
+    var cancel = typeof isCancelled == "undefined" ? false : isCancelled;
+    for(var i = 0;i < this._subscribers.length;i++) {
+      if(cancel === true) {
+        this._subscribers[i].subscriber.cancel(message)
+      }else {
+        if(this._subscribers[i].subscriber.update(message) === false) {
+          cancel = true
+        }
+      }
     }
-    this[name] = new Channel;
-    return this[name]
-  };
-  Channel.prototype.join = function(channel) {
-    if(typeof channel == "undefined") {
-      throw new Error("A valid channel must be passed to method Channel.join");
+    for(var i = 0;i < this._joiners.length;i++) {
+      if(typeof this._joiners[i].publish == "function") {
+        this._joiners[i].publish(message, cancel)
+      }
     }
-    this.subscribe({update:function(message) {
-      channel.publish(message)
-    }, cancel:function(message) {
-    }})
-  };
+    return this
+  }};
   module.channels = new Channel;
+  var Subcomponent = function() {
+    this._extend = function() {
+      return new Subcomponent
+    };
+    return this
+  };
+  Subcomponent.prototype = {join:Membership.prototype.join, extend:Membership.prototype.extend};
+  module.subcomponents = new Subcomponent;
   return module
 }(sm || {});
 var sm = function(module) {
-  var user = module.channels.add("user");
-  user.add("click");
-  var system = module.channels.add("system");
-  system.add("click");
+  var user = module.channels.extend("user");
+  user.extend("click");
+  var system = module.channels.extend("system");
+  system.extend("click");
   module.channels.user.click.join(module.channels.system.click);
   return module
 }(sm || {});

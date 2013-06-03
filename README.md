@@ -1,5 +1,4 @@
 # smallmachine.js #
-----------
 
 ## Components ##
 1. Client Assets

@@ -8,13 +8,34 @@
 		});
 	};
 
-	var Channel = function() {
+	var Membership = function() {
 		this._joiners = [];
+		this._extend = function(){ return new Membership(); }
+		return this;
+	};
+
+	Membership.prototype.extend = function(name) {
+		if (this[name]) {
+			throw new Error('There is a name conflict adding the specified memberhsip: ' + name);
+		}
+		this[name] = this._extend();
+		return this[name];
+	};
+
+	Membership.prototype.join = function(member) {
+		this._joiners.push(member);
+		return this;
+	};
+
+	var Channel = function() {
 		this._subscribers = [];
+		this._extend = function() { return new Channel(); }
 		return this;
 	};
 
 	Channel.prototype = {
+		join : Membership.prototype.join,
+		extend : Membership.prototype.extend,
 		subscribe : function(subscriber) {
 			if (typeof subscriber.update != 'function') {
 				throw new Error('A supplied subscriber object must implement an "update" method');
@@ -27,15 +48,8 @@
 			this._subscribers.push(subscriber);
 			return this;
 		},
-		extend : function(name) {
-			if (this[name]) {
-				throw new Error('There is a name conflict adding the specified memberhsip: ' + name);
-			}
-			this[name] = new Channel();
-			return this[name];
-		},
 		publish : function(message, isCancelled) {
-			var cancel = (typeof isCancelled = 'undefined') ? false : isCancelled;
+			var cancel = (typeof isCancelled == 'undefined') ? false : isCancelled;
 
 			for (var i = 0; i < this._subscribers.length; i++) {
 				if (cancel === true) {
@@ -53,32 +67,19 @@
 			}
 
 			return this;
-		},
-		join : function(member) {
-			this._joiners.push(member);
-			return this;
 		}
 	};
 
 	module.channels = new Channel();
 
 	var Subcomponent = function() {
-		this._joiners = [];
+		this._extend = function() { return new Subcomponent(); }
 		return this;
 	};
 
 	Subcomponent.prototype =  {
-		extend : function(name) {
-			if (this[name]) {
-				throw new Error('There is a name conflict adding the specified memberhsip: ' + name);
-			}
-			this[name] = new Subcomponent();
-			return this[name];
-		},
-		join : function(member) {
-			this._joiners.push(member);
-			return this;
-		}
+		join : Membership.prototype.join,
+		extend : Membership.prototype.extend
 	};
 
 	module.subcomponents = new Subcomponent();

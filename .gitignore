@@ -216,5 +216,3 @@ pip-log.txt
 
 #Specifics
 web.config
-*.jar
-jquery*.js
