@@ -9,7 +9,6 @@
 	};
 
 	var Membership = function() {
-		this._joiners = [];
 		this._extend = function(){ return new Membership(); }
 		return this;
 	};
@@ -23,6 +22,9 @@
 	};
 
 	Membership.prototype.join = function(member) {
+		if (typeof this._joiners == 'undefined') {
+			this._joiners = [];
+		}
 		this._joiners.push(member);
 		return this;
 	};
@@ -58,6 +60,10 @@
 				else if (this._subscribers[i].subscriber.update(message) === false) {
 					cancel = true;
 				}
+			}
+
+			if (typeof this._joiners == 'undefined') {
+				return this;
 			}
 
 			for (var i = 0; i < this._joiners.length; i++) {
