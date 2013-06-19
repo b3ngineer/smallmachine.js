@@ -21,14 +21,5 @@ describe('sm.core', function() {
 		expect(sm.channels.test2.subscribe).toBeDefined();
 		expect(sm.channels.test2.publish).toBeDefined();
 	});
-
-	it('should add Subcomponent types to memberships defined by Subcomponent types', function() {
-		sm.subcomponents.extend('test3');
-		expect(sm.subcomponents.test3._subscribers).not.toBeDefined();
-		expect(sm.subcomponents.test3.join).toBeDefined();
-		expect(sm.subcomponents.test3.extend).toBeDefined();
-		expect(sm.subcomponents.test3.publish).not.toBeDefined();
-		expect(sm.subcomponents.test3.subscribe).not.toBeDefined();
-	});
 });
 

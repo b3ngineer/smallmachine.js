@@ -55,9 +55,9 @@
 
 			for (var i = 0; i < this._subscribers.length; i++) {
 				if (cancel === true) {
-					this._subscribers[i].subscriber.cancel(message);
+					this._subscribers[i].cancel(message);
 				}
-				else if (this._subscribers[i].subscriber.update(message) === false) {
+				else if (this._subscribers[i].update(message) === false) {
 					cancel = true;
 				}
 			}
@@ -78,16 +78,5 @@
 
 	module.channels = new Channel();
 
-	var Subcomponent = function() {
-		this._extend = function() { return new Subcomponent(); }
-		return this;
-	};
-
-	Subcomponent.prototype =  {
-		join : Membership.prototype.join,
-		extend : Membership.prototype.extend
-	};
-
-	module.subcomponents = new Subcomponent();
 	return module;
 }(sm || {}));
