@@ -1,82 +1,88 @@
-;var sm = (function(module) {
+;var sm = (function(ontology) {
 	'use strict';
 
-	module.guid = function() {
+	ontology.Guid = function() {
 		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 			var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
 			return v.toString(16);
 		});
 	};
 
-	var Membership = function() {
-		this._extend = function(){ return new Membership(); }
-		return this;
-	};
-
-	Membership.prototype.extend = function(name) {
-		if (this[name]) {
-			throw new Error('There is a name conflict adding the specified memberhsip: ' + name);
-		}
-		this[name] = this._extend();
-		return this[name];
-	};
-
-	Membership.prototype.join = function(member) {
-		if (typeof this._joiners == 'undefined') {
-			this._joiners = [];
-		}
-		this._joiners.push(member);
+	var Message = function() {
 		return this;
 	};
 
 	var Channel = function() {
-		this._subscribers = [];
-		this._extend = function() { return new Channel(); }
+		this.id = new ontology.Guid();
 		return this;
 	};
 
-	Channel.prototype = {
-		join : Membership.prototype.join,
-		extend : Membership.prototype.extend,
-		subscribe : function(subscriber) {
-			if (typeof subscriber.update != 'function') {
-				throw new Error('A supplied subscriber object must implement an "update" method');
-			}
-
-			if (typeof subscriber.cancel != 'function') {
-				throw new Error('A supplied subscriber object must implement an "cancel" method');
-			}
-
-			this._subscribers.push(subscriber);
-			return this;
-		},
-		publish : function(message, isCancelled) {
-			var cancel = (typeof isCancelled == 'undefined') ? false : isCancelled;
-
-			for (var i = 0; i < this._subscribers.length; i++) {
-				if (cancel === true) {
-					this._subscribers[i].cancel(message);
-				}
-				else if (this._subscribers[i].update(message) === false) {
-					cancel = true;
-				}
-			}
-
-			if (typeof this._joiners == 'undefined') {
-				return this;
-			}
-
-			for (var i = 0; i < this._joiners.length; i++) {
-				if (typeof this._joiners[i].publish == 'function') {
-					this._joiners[i].publish(message, cancel);
-				}
-			}
-
-			return this;
-		}
+	Channel.prototype.subscribe = function(subscriber) {
+		return this;
 	};
 
-	module.channels = new Channel();
+	Channel.prototype.publish = function(Message) {
+		return this;
+	};
 
-	return module;
+	var Rules = function() {
+		return this;
+	};
+
+	Rules.prototype = Channel.prototype;
+
+	var Term = function(value) {
+		this._value = value;
+		return this;
+	};
+
+	Term.prototype = Rules.prototype;
+
+	ontology._add = function(Term) {
+		ontology[Term._value] = Term;
+		return ontology;
+	};
+
+	// isA (relationship) codifies subsumption
+	Rules.prototype._isA = function(Term) {
+		ontology[Term._value][this._value] = this;		
+		return this;
+	};
+
+	// concepts
+	ontology._add(new Term("thing"));
+	ontology._add(new Term("user"));
+	ontology._add(new Term("system"));
+	ontology._add(new Term("action"));
+	ontology._add(new Term("click"));
+	ontology._add(new Term("doubleClick"));
+	ontology._add(new Term("keyPress"));
+	ontology._add(new Term("task"));
+	ontology._add(new Term("get"));
+	ontology._add(new Term("set"));
+	ontology._add(new Term("messenger"));
+	ontology._add(new Term("success"));
+	ontology._add(new Term("error"));
+	ontology._add(new Term("messenger"));
+
+	// relationships
+	ontology._add(new Term("performs"));
+	ontology._add(new Term("reactsTo"));
+	ontology._add(new Term("waitsFor"));
+
+	// properties
+	ontology.user._isA(ontology.thing);
+	ontology.system._isA(ontology.thing);
+	ontology.action._isA(ontology.thing);
+	ontology.task._isA(ontology.thing);
+	ontology.messenger._isA(ontology.thing);
+	ontology.click._isA(ontology.action);
+	ontology.doubleClick._isA(ontology.action);
+	ontology.keyPress._isA(ontology.action);
+	ontology.get._isA(ontology.task);
+	ontology.set._isA(ontology.task);
+	ontology.success._isA(ontology.messenger);
+	ontology.error._isA(ontology.messenger);
+
+	return ontology;
 }(sm || {}));
