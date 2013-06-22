@@ -129,7 +129,6 @@
 	ontology.set._isA(ontology.task);
 	ontology.success._isA(ontology.messenger);
 	ontology.error._isA(ontology.messenger);
-
 	// hasProperty and hasRange copy references, so they need to be established after subclassing)
 	ontology.performs._hasRange(ontology.action);
 	ontology.performs._hasRange(ontology.task);
