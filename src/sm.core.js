@@ -17,11 +17,11 @@
 		return this;
 	};
 
-	Channel.prototype.subscribe = function(subscriber) {
+	Channel.prototype._subscribe = function(subscriber) {
 		return this;
 	};
 
-	Channel.prototype.publish = function(Message) {
+	Channel.prototype._publish = function(Message) {
 		return this;
 	};
 
@@ -40,12 +40,58 @@
 
 	ontology._add = function(Term) {
 		ontology[Term._value] = Term;
-		return ontology;
+		return Term;
 	};
 
-	// isA (relationship) codifies subsumption
+	Rules.prototype._hasProperty = function(TermA, TermB) {
+		ontology[this._value][TermA._value] = {};
+		ontology[this._value][TermA._value][TermB._value] = TermB;
+
+		for (var field in TermB) {
+			if (!TermB.hasOwnProperty(field)) {
+				continue;
+			}
+			if (typeof TermB[field] == 'function' || field.indexOf('_') == 0) {
+				continue;
+			}
+			if (typeof TermB[field]._value == 'undefined') {
+				continue;
+			}
+			ontology[this._value][TermA._value][field] = TermB[field];
+		};
+
+		return this;
+	};
+
+	// subsumption
 	Rules.prototype._isA = function(Term) {
-		ontology[Term._value][this._value] = this;		
+		ontology[Term._value][this._value] = this;
+		return this;
+	};
+
+	// object property range
+	Rules.prototype._hasRange = function(Term) {
+		ontology[this._value][Term._value] = Term;
+
+		for (var field in Term) {
+			if (!Term.hasOwnProperty(field)) {
+				continue;
+			}
+			if (typeof Term[field] == 'function' || field.indexOf('_') == 0) {
+				continue;
+			}
+			if (typeof Term[field]._value == 'undefined') {
+				continue;
+			}
+			ontology[this._value][Term[field]._value] = Term[field];
+		};
+
+		return this;
+	};
+
+	// object property domain
+	Rules.prototype._hasDomain = function(Term) {
+		ontology[Term._value][this._value] = this;
 		return this;
 	};
 
@@ -70,7 +116,7 @@
 	ontology._add(new Term("reactsTo"));
 	ontology._add(new Term("waitsFor"));
 
-	// properties
+	// rules
 	ontology.user._isA(ontology.thing);
 	ontology.system._isA(ontology.thing);
 	ontology.action._isA(ontology.thing);
@@ -84,5 +130,15 @@
 	ontology.success._isA(ontology.messenger);
 	ontology.error._isA(ontology.messenger);
 
+	// hasProperty and hasRange copy references, so they need to be established after subclassing)
+	ontology.performs._hasRange(ontology.action);
+	ontology.performs._hasRange(ontology.task);
+	ontology.waitsFor._hasRange(ontology.task)._hasDomain(ontology.messenger);
+	ontology.reactsTo._hasRange(ontology.action)._hasDomain(ontology.system);
+	ontology.user._hasProperty(ontology.performs, ontology.action);
+	ontology.system._hasProperty(ontology.performs, ontology.task);
+	ontology.messenger._hasProperty(ontology.waitsFor, ontology.task);
+
 	return ontology;
 }(sm || {}));
+
