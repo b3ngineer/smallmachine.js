@@ -368,6 +368,37 @@ describe('sm.core', function() {
 	});
 
 	describe('pub/sub', function() {
+		it('should implement the subscribe method on a channel object', function() {
+			expect(sm.thing.subscribe).toBeDefined();
+		});
+
+		it('should implement the publish method on a channel object', function() {
+			expect(sm.thing.publish).toBeDefined();
+		});
+		
+		it('should use lazy instantiation of the suscriber collection on an inheriting prototype', function() {
+			expect(sm.thing._subscribers).not.toBeDefined();
+			sm.thing.subscribe({
+				update :function(Message) {
+				},
+				cancel : function(Message) {
+				}
+			});
+			expect(sm.thing._subscribers).toBeDefined();
+		});
+
+		it('should add a subscriber to the user channel\'s internal collection', function() {
+			sm.thing.user.subscribe({
+				update :function(Message) { 
+				},
+				cancel : function(Message) {
+				}
+			});
+
+			expect(sm.thing.user._subscribers.length).toBe(1);
+			expect(sm.user._subscribers.length).toBe(1);
+		});
+
 	});
 });
 

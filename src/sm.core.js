@@ -9,23 +9,48 @@
 	};
 
 	var Message = function() {
-		return this;
-	};
-
-	var Channel = function() {
 		this.id = new ontology.Guid();
 		return this;
 	};
 
+	var Channel = function() {
+		return this;
+	};
+
 	Channel.prototype._subscribe = function(subscriber) {
+		if (typeof this._subscribers === 'undefined') {
+			this._subscribers = [];
+		}
+		if (typeof subscriber.update !== 'function') {
+			throw new Error("A subscriber must implement update(Message)");
+		}
+		if (typeof subscriber.cancel !== 'function') {
+			throw new Error("A subscriber must implement cancel(Message)");
+		}
+		this._subscribers.push(subscriber);
 		return this;
 	};
 
 	Channel.prototype._publish = function(Message) {
+		if (typeof this._subscribers === 'undefined') {
+			return;
+		}
+		var isCancelled = false;
+		for (var i = 0; i < this._subscribers.length; i++) {
+			if (!cancelled) {
+				if (this._subscribers[i].update(Message) === false) {
+					isCancelled = true;
+				}
+			}
+			else {
+				this._subscribers[i].cancel(Message);
+			}
+		}
 		return this;
 	};
 
 	var Rules = function() {
+		this._value = null;
 		return this;
 	};
 
@@ -51,10 +76,10 @@
 			if (!TermB.hasOwnProperty(field)) {
 				continue;
 			}
-			if (typeof TermB[field] == 'function' || field.indexOf('_') == 0) {
+			if (typeof TermB[field] === 'function' || field.indexOf('_') === 0) {
 				continue;
 			}
-			if (typeof TermB[field]._value == 'undefined') {
+			if (typeof TermB[field]._value === 'undefined') {
 				continue;
 			}
 			ontology[this._value][TermA._value][field] = TermB[field];
@@ -77,10 +102,10 @@
 			if (!Term.hasOwnProperty(field)) {
 				continue;
 			}
-			if (typeof Term[field] == 'function' || field.indexOf('_') == 0) {
+			if (typeof Term[field] === 'function' || field.indexOf('_') === 0) {
 				continue;
 			}
-			if (typeof Term[field]._value == 'undefined') {
+			if (typeof Term[field]._value === 'undefined') {
 				continue;
 			}
 			ontology[this._value][Term[field]._value] = Term[field];
@@ -92,6 +117,40 @@
 	// object property domain
 	Rules.prototype._hasDomain = function(Term) {
 		ontology[Term._value][this._value] = this;
+		return this;
+	};
+
+	//rule based implementation of subscribe
+	Rules.prototype.subscribe = function(Message) {
+		this._subscribe(Message);
+		return this;
+	};
+
+	//rule based implementation of publish 
+	Rules.prototype.publish = function(Message, recipients) {
+		var recipients = recipients || { };
+		this._publish(Message);
+
+		if (this._value != null) {
+			recipients[this._value] = true;
+		}
+
+		for (var property in this) {
+			if (!this.hasOwnProperty(property)) {
+				continue;
+			}
+			if (typeof this[property] === 'function' || property.indexOf("_") === 0) {
+				continue;
+			}
+			if (recipients[property] === true) {
+				continue;
+			}
+			if (typeof this[property].publish === 'function') {
+				recipients[property] = true;
+				this[property].publish(Message, recipients);
+			}
+		};
+
 		return this;
 	};
 
