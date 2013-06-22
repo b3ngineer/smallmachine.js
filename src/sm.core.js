@@ -8,7 +8,7 @@
 		});
 	};
 
-	var Message = function() {
+	ontology.Message = function() {
 		this.id = new ontology.Guid();
 		return this;
 	};
@@ -37,7 +37,7 @@
 		}
 		var isCancelled = false;
 		for (var i = 0; i < this._subscribers.length; i++) {
-			if (!cancelled) {
+			if (!isCancelled) {
 				if (this._subscribers[i].update(Message) === false) {
 					isCancelled = true;
 				}
@@ -69,7 +69,7 @@
 	};
 
 	Rules.prototype._hasProperty = function(TermA, TermB) {
-		ontology[this._value][TermA._value] = {};
+		ontology[this._value][TermA._value] = new Term(TermA._value);
 		ontology[this._value][TermA._value][TermB._value] = TermB;
 
 		for (var field in TermB) {

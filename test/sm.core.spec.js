@@ -397,8 +397,51 @@ describe('sm.core', function() {
 
 			expect(sm.thing.user._subscribers.length).toBe(1);
 			expect(sm.user._subscribers.length).toBe(1);
+			delete sm.thing.user._subscribers;
 		});
 
+		it('should notify subscribers on action and action subclasses during a publish on user', function() {
+			var notified = 0;
+
+			sm.action.subscribe({
+				update : function(Message) {
+					notified++;
+				},
+				cancel : function(Message) {
+				}
+			});
+
+			sm.click.subscribe({
+				update : function(Message) {
+					notified++;
+				},
+				cancel : function(Message) {
+				}
+			});
+
+			sm.doubleClick.subscribe({
+				update : function(Message) {
+					notified++;
+				},
+				cancel : function(Message) {
+				}
+			});
+
+			sm.keyPress.subscribe({
+				update : function(Message) {
+					notified++;
+				},
+				cancel : function(Message) {
+				}
+			});
+
+			sm.user.publish(new sm.Message()); // publish to all vertices under user
+			expect(notified).toBe(4);
+			delete sm.performs.action._subscribers;
+			delete sm.performs.action.click._subscribers;
+			delete sm.performs.action.doubleClick._subscribers;
+			delete sm.performs.action.keyPress._subscribers;
+		});
 	});
 });
 
