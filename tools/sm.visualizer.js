@@ -1,136 +1,76 @@
 ;(function(sm, $) {
-	/*
-	var links = [
-	  {source: "Microsoft", target: "Amazon", type: "licensing"},
-	  {source: "Microsoft", target: "HTC", type: "licensing"},
-	  {source: "Samsung", target: "Apple", type: "suit"},
-	  {source: "Motorola", target: "Apple", type: "suit"},
-	  {source: "Nokia", target: "Apple", type: "resolved"},
-	  {source: "HTC", target: "Apple", type: "suit"},
-	  {source: "Kodak", target: "Apple", type: "suit"},
-	  {source: "Microsoft", target: "Barnes & Noble", type: "suit"},
-	  {source: "Microsoft", target: "Foxconn", type: "suit"},
-	  {source: "Oracle", target: "Google", type: "suit"},
-	  {source: "Apple", target: "HTC", type: "suit"},
-	  {source: "Microsoft", target: "Inventec", type: "suit"},
-	  {source: "Samsung", target: "Kodak", type: "resolved"},
-	  {source: "LG", target: "Kodak", type: "resolved"},
-	  {source: "RIM", target: "Kodak", type: "suit"},
-	  {source: "Sony", target: "LG", type: "suit"},
-	  {source: "Kodak", target: "LG", type: "resolved"},
-	  {source: "Apple", target: "Nokia", type: "resolved"},
-	  {source: "Qualcomm", target: "Nokia", type: "resolved"},
-	  {source: "Apple", target: "Motorola", type: "suit"},
-	  {source: "Microsoft", target: "Motorola", type: "suit"},
-	  {source: "Motorola", target: "Microsoft", type: "suit"},
-	  {source: "Huawei", target: "ZTE", type: "suit"},
-	  {source: "Ericsson", target: "ZTE", type: "suit"},
-	  {source: "Kodak", target: "Samsung", type: "resolved"},
-	  {source: "Apple", target: "Samsung", type: "suit"},
-	  {source: "Kodak", target: "RIM", type: "suit"},
-	  {source: "Nokia", target: "Qualcomm", type: "suit"}
-	];
-	*/
 
-	function getLinks(current, links) {
-		for (var p in current) {
-			if (!sm.hasOwnProperty(p))	{
-				continue;
-			}
-			if (typeof sm[p] === 'function' || p.indexOf("_") === 0) {
-				continue;
-			}
-			links.push({ source : current._value, target: current[p]._value, type: "suit" });
-			getLinks(current[p], links);
-		};
-
-		return links;
+	var Element = function(obj) {
+		if (!obj._value) return null;
+		this.name = obj._value;
+		this.children = [];
+		return this;
 	};
 
-	var links = getLinks(sm.thing, []);
+	function denormalize(obj, currentElement) {
+		for (var p in obj) {
+			if (!obj.hasOwnProperty(p))	{
+				continue;
+			}
+			if (typeof obj[p] === 'function' || p.indexOf("_") === 0) {
+				continue;
+			}
 
-	var nodes = {};
+			var child = new Element(obj[p]);
+			if (child) {
+				currentElement.children.push(child);
+				denormalize(obj[p], child);
+			}
+		};
 
-	// Compute the distinct nodes from the links.
-	links.forEach(function(link) {
-	  link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});
-	  link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});
-	});
+		return currentElement;
+	};
 
-	var w = 960,
-		h = 500;
 
-	var force = d3.layout.force()
-		.nodes(d3.values(nodes))
-		.links(links)
-		.size([w, h])
-		.linkDistance(60)
-		.charge(-300)
-		.on("tick", tick)
-		.start();
+	var denormalizedOntology = denormalize(sm.thing, new Element(sm.thing));
 
-	var svg = d3.select("body").append("svg:svg")
-		.attr("width", w)
-		.attr("height", h);
+	var width = window.innerWidth || document.documentElement.clientWidth || document.documentElement.getElementsByTagName('body')[0].clientWidth,
+		height = window.innerHeight || document.documentElement.clientHeight || document.documentElement.getElementsByTagName('body')[0].clientHeight;
 
-	// Per-type markers, as they don't inherit styles.
-	svg.append("svg:defs").selectAll("marker")
-		.data(["suit", "licensing", "resolved"])
-	  .enter().append("svg:marker")
-		.attr("id", String)
-		.attr("viewBox", "0 -5 10 10")
-		.attr("refX", 15)
-		.attr("refY", -1.5)
-		.attr("markerWidth", 6)
-		.attr("markerHeight", 6)
-		.attr("orient", "auto")
-	  .append("svg:path")
-		.attr("d", "M0,-5L10,0L0,5");
 
-	var path = svg.append("svg:g").selectAll("path")
-		.data(force.links())
-	  .enter().append("svg:path")
-		.attr("class", function(d) { return "link " + d.type; })
-		.attr("marker-end", function(d) { return "url(#" + d.type + ")"; });
+	var cluster = d3.layout.cluster()
+		.size([height, width - 160]);
 
-	var circle = svg.append("svg:g").selectAll("circle")
-		.data(force.nodes())
-	  .enter().append("svg:circle")
-		.attr("r", 6)
-		.call(force.drag);
+	var diagonal = d3.svg.diagonal()
+		.projection(function(d) { return [d.y, d.x]; });
 
-	var text = svg.append("svg:g").selectAll("g")
-		.data(force.nodes())
-	  .enter().append("svg:g");
+	var svg = d3.select("body").append("svg")
+		.attr("width", width)
+		.attr("height", height)
+	  .append("g")
+		.attr("transform", "translate(40,0)");
 
-	// A copy of the text with a thick white stroke for legibility.
-	text.append("svg:text")
-		.attr("x", 8)
-		.attr("y", ".31em")
-		.attr("class", "shadow")
-		.text(function(d) { return d.name; });
+	var nodes = cluster.nodes(denormalizedOntology),
+		  links = cluster.links(nodes);
 
-	text.append("svg:text")
-		.attr("x", 8)
-		.attr("y", ".31em")
-		.text(function(d) { return d.name; });
+	var link = svg.selectAll(".link")
+		  .data(links)
+		.enter().append("path")
+		  .attr("class", "link")
+		  .attr("d", diagonal);
 
-	// Use elliptical arc path segments to doubly-encode directionality.
-	function tick() {
-	  path.attr("d", function(d) {
-		var dx = d.target.x - d.source.x,
-			dy = d.target.y - d.source.y,
-			dr = Math.sqrt(dx * dx + dy * dy);
-		return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
-	  });
+	var node = svg.selectAll(".node")
+		  .data(nodes)
+		.enter().append("g")
+		  .attr("class", "node")
+		  .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; })
 
-	  circle.attr("transform", function(d) {
-		return "translate(" + d.x + "," + d.y + ")";
-	  });
+	node.append("circle")
+		  .attr("r", 4.5);
 
-	  text.attr("transform", function(d) {
-		return "translate(" + d.x + "," + d.y + ")";
-	  });
-	}
+	node.append("text")
+		  .attr("dx", function(d) { return d.children ? -8 : 8; })
+		  .attr("dy", 3)
+		  .attr("class", "text")
+		  .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
+		  .text(function(d) { return d.name; });
+
+	d3.select(self.frameElement).style("height", height + "px");
+	
 
 }(sm, jQuery));

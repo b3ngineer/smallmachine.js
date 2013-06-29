@@ -2,39 +2,25 @@
 	<head>
 		<title>Dashboard</title>
 		<style type="text/css">
-			path.link {
-			  fill: none;
-			  stroke: #666;
+			.node circle {
+			  fill: #fff;
+			  stroke: steelblue;
 			  stroke-width: 1.5px;
 			}
 
-			marker#licensing {
-			  fill: green;
+			.text {
+				font-family: sans-serif;
+				font-size:15px;
 			}
 
-			path.link.licensing {
-			  stroke: green;
-			}
-
-			path.link.resolved {
-			  stroke-dasharray: 0,2 1;
-			}
-
-			circle {
-			  fill: #ccc;
-			  stroke: #333;
-			  stroke-width: 1.5px;
-			}
-
-			text {
+			.node {
 			  font: 10px sans-serif;
-			  pointer-events: none;
 			}
 
-			text.shadow {
-			  stroke: #fff;
-			  stroke-width: 3px;
-			  stroke-opacity: .8;
+			.link {
+			  fill: none;
+			  stroke: #ccc;
+			  stroke-width: 1.5px;
 			}
 		</style>
 		
@@ -43,6 +29,7 @@
 		<script type="text/javascript" src="../lib/jquery-1.10.0.min.js"></script>
 		<script type="text/javascript" src="../lib/d3.v3.min.js"></script>
 		<script type="text/javascript" src="../src/sm.core.js"></script>
+		<script type="text/javascript" src="../src/sm.ontology.js"></script>
 		<script type="text/javascript" src="sm.visualizer.js"></script>
 	</body>
 </html>
