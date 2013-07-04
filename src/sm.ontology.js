@@ -2,46 +2,46 @@
 	'use strict';
 
 	// concepts
-	ontology._add(new ontology.Term("thing"));
-	ontology._add(new ontology.Term("user"));
-	ontology._add(new ontology.Term("system"));
-	ontology._add(new ontology.Term("action"));
-	ontology._add(new ontology.Term("click"));
-	ontology._add(new ontology.Term("doubleClick"));
-	ontology._add(new ontology.Term("keyPress"));
-	ontology._add(new ontology.Term("task"));
-	ontology._add(new ontology.Term("get"));
-	ontology._add(new ontology.Term("set"));
-	ontology._add(new ontology.Term("messenger"));
-	ontology._add(new ontology.Term("success"));
-	ontology._add(new ontology.Term("error"));
+	ontology.add(new ontology.Term("thing"));
+	ontology.add(new ontology.Term("user"));
+	ontology.add(new ontology.Term("system"));
+	ontology.add(new ontology.Term("action"));
+	ontology.add(new ontology.Term("click"));
+	ontology.add(new ontology.Term("doubleClick"));
+	ontology.add(new ontology.Term("keyPress"));
+	ontology.add(new ontology.Term("task"));
+	ontology.add(new ontology.Term("get"));
+	ontology.add(new ontology.Term("set"));
+	ontology.add(new ontology.Term("messenger"));
+	ontology.add(new ontology.Term("success"));
+	ontology.add(new ontology.Term("error"));
 
 	// relationships
-	ontology._add(new ontology.Term("performs"));
-	ontology._add(new ontology.Term("reactsTo"));
-	ontology._add(new ontology.Term("waitsFor"));
+	ontology.add(new ontology.Term("performs"));
+	ontology.add(new ontology.Term("reactsTo"));
+	ontology.add(new ontology.Term("waitsFor"));
 
 	// rules
-	ontology.user._isA(ontology.thing);
-	ontology.system._isA(ontology.thing);
-	ontology.action._isA(ontology.thing);
-	ontology.task._isA(ontology.thing);
-	ontology.messenger._isA(ontology.thing);
-	ontology.click._isA(ontology.action);
-	ontology.doubleClick._isA(ontology.action);
-	ontology.keyPress._isA(ontology.action);
-	ontology.get._isA(ontology.task);
-	ontology.set._isA(ontology.task);
-	ontology.success._isA(ontology.messenger);
-	ontology.error._isA(ontology.messenger);
+	ontology.user.isA(ontology.thing);
+	ontology.system.isA(ontology.thing);
+	ontology.action.isA(ontology.thing);
+	ontology.task.isA(ontology.thing);
+	ontology.messenger.isA(ontology.thing);
+	ontology.click.isA(ontology.action);
+	ontology.doubleClick.isA(ontology.action);
+	ontology.keyPress.isA(ontology.action);
+	ontology.get.isA(ontology.task);
+	ontology.set.isA(ontology.task);
+	ontology.success.isA(ontology.messenger);
+	ontology.error.isA(ontology.messenger);
 
 	// WEAKNESS
-	// hasProperty and hasRange copy references, so they need to be established after subclassing)
-	ontology.performs._hasRange(ontology.action);
-	ontology.performs._hasRange(ontology.task);
-	ontology.waitsFor._hasRange(ontology.task)._hasDomain(ontology.messenger);
-	ontology.reactsTo._hasRange(ontology.action)._hasDomain(ontology.system);
-	ontology.user._hasProperty(ontology.performs, ontology.action);
-	ontology.system._hasProperty(ontology.performs, ontology.task);
-	ontology.messenger._hasProperty(ontology.waitsFor, ontology.task);
+	// describedAs and hasRange copy references, so they need to be established after subclassing)
+	ontology.performs.hasRange(ontology.action);
+	ontology.performs.hasRange(ontology.task);
+	ontology.waitsFor.hasRange(ontology.task).hasDomain(ontology.messenger);
+	ontology.reactsTo.hasRange(ontology.action).hasDomain(ontology.system);
+	ontology.user.describedAs(ontology.performs, ontology.action);
+	ontology.system.describedAs(ontology.performs, ontology.task);
+	ontology.messenger.describedAs(ontology.waitsFor, ontology.task);
 }(sm));

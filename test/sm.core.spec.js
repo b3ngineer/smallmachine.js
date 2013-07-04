@@ -1,7 +1,7 @@
 describe('sm.core', function() {
 
-	it('should create the "private" add method on the core', function() {
-		expect(sm._add).toBeDefined();
+	it('should create the add method on the core', function() {
+		expect(sm.add).toBeDefined();
 	});
 
 	describe('explicit queries', function() {
@@ -435,7 +435,7 @@ describe('sm.core', function() {
 				}
 			});
 
-			sm.user.publish(new sm.Message()); // publish to all vertices under user
+			sm.user.publish({}); // publish to all vertices under user
 			expect(notified).toBe(4);
 			delete sm.performs.action._subscribers;
 			delete sm.performs.action.click._subscribers;

@@ -1,37 +1,46 @@
 ;var sm = (function(core) {
 	'use strict';
 
-	Function.prototype._sm_curry = function() {
+	Function.prototype.partiallyApply = function() {
 		if (arguments.length < 1) {
 			return this;
 		}
-		var __method = this;
+		var method = this;
 		var args = toArray(arguments);
 		return function() {
-			return __method.apply(this, args.concat(toArray(arguments)));
+			return method.apply(this, args.concat(toArray(arguments)));
+		}
+	}
+
+	Function.prototype.alsoBehavesLike = function(something) {
+		for (var p in something.prototype) {
+			if (p.indexOf("_") == 0) {
+				continue;
+			}
+			this.prototype[p] = something.prototype[p];
+		}
+		for (var p in something) {
+			if (!something.hasOwnProperty(p)) {
+				continue;
+			}
+			if (p.indexOf("_") == 0) {
+				continue;
+			}
+			this.prototype[p] = something[p];
 		}
 	}
 
 	var CONCEPT = "concept";
 	var RELATIONSHIP = "relationship";
 
-	core.Guid = function() {
-		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-			var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-			return v.toString(16);
-		});
-	};
-
-	core.Message = function() {
-		this.id = new core.Guid();
-		return this;
-	};
-
 	var Channel = function() {
+	 	this.forward = function(Message, recipients) {
+			throw new Error("Missing implementation of forward"); 
+		};
 		return this;
 	};
 
-	Channel.prototype._subscribe = function(subscriber) {
+	Channel.prototype.subscribe = function(subscriber) {
 		if (typeof this._subscribers === 'undefined') {
 			this._subscribers = [];
 		}
@@ -45,9 +54,11 @@
 		return this;
 	};
 
-	Channel.prototype._publish = function(Message) {
+	Channel.prototype.publish = function(Message, recipients) {
+		var recipients = recipients || { };
 		if (typeof this._subscribers === 'undefined') {
-			return;
+			this.forward(Message, recipients);
+			return this;
 		}
 		var isCancelled = false;
 		for (var i = 0; i < this._subscribers.length; i++) {
@@ -60,30 +71,57 @@
 				this._subscribers[i].cancel(Message);
 			}
 		}
+		this.forward(Message, recipients);
 		return this;
 	};
 
 	var Rules = function() {
-		this._value = null;
+		this.isA = function(o) { 
+			throw new Error("Missing implementation for isA");	
+		};
+		this.hasRange = function(o) { 
+			throw new Error("Missing implementation for hasRange");	
+		};
+		this.hasDomain = function(o) { 
+			throw new Error("Missing implementation for hasDomain");	
+		};
+		this.describedAs = function(p, o) { 
+			throw new Error("Missing implementation for describedAs");	
+		};
 		return this;
 	};
-
-	Rules.prototype = Channel.prototype;
 
 	core.Term = function(value) {
 		this._value = value;
 		this._type = null;
-		return this;
+		this.forward = function(Message, recipients) {
+			if (this._value != null) {
+				recipients[this._value] = true;
+			}
+			for (var property in this) {
+				if (!this.hasOwnProperty(property)) {
+					continue;
+				}
+				if (typeof this[property] === 'function' || property.indexOf("_") === 0) {
+					continue;
+				}
+				if (recipients[property] === true) {
+					continue;
+				}
+				if (typeof this[property].publish === 'function') {
+					recipients[property] = true;
+					this[property].publish(Message, recipients);
+				}
+			};
+		};
 	};
 
-	core.Term.prototype = Rules.prototype;
-
-	core._add = function(Term) {
+	core.add = function(Term) {
 		core[Term._value] = Term;
 		return Term;
 	};
 
-	Rules.prototype._hasProperty = function(TermA, TermB) {
+	core.Term.prototype.describedAs = function(TermA, TermB) {
 		if (TermA._type === CONCEPT) {
 			throw new Error("Cannot define a relationship with a concept type: " + TermA._value);
 		}
@@ -104,7 +142,6 @@
 		else if (this._type === null) {
 			this._type = CONCEPT;
 		}
-
 		core[this._value][TermA._value] = new core.Term(TermA._value);
 		core[this._value][TermA._value][TermB._value] = TermB;
 
@@ -125,7 +162,7 @@
 	};
 
 	// subsumption
-	Rules.prototype._isA = function(Term) {
+	core.Term.prototype.isA = function(Term) {
 		if (Term._type === RELATIONSHIP) {
 			throw new Error("Cannot apply isA to a relationship type: " + Term._value);
 		}
@@ -139,13 +176,12 @@
 		else if (this._type === null) {
 			this._type = CONCEPT;
 		}
-
 		core[Term._value][this._value] = this;
 		return this;
 	};
 
 	// object property range
-	Rules.prototype._hasRange = function(Term) {
+	core.Term.prototype.hasRange = function(Term) {
 		if (Term._type === RELATIONSHIP) {
 			throw new Error("Cannot apply hasRange to a relationship type: " + Term._value);
 		}
@@ -159,7 +195,6 @@
 		else if (Term._type === null) {
 			Term._type = RELATIONSHIP;
 		}
-
 		core[this._value][Term._value] = Term;
 
 		for (var field in Term) {
@@ -179,59 +214,26 @@
 	};
 
 	// object property domain
-	Rules.prototype._hasDomain = function(Term) {
+	core.Term.prototype.hasDomain = function(Term) {
 		if (Term._type === RELATIONSHIP) {
-			throw new Error("Cannot apply hasDomain to a relationship type: " + Term._value);
+			throw new Error("Cannot apply hasRange to a relationship type: " + Term._value);
 		}
 		else if (Term._type === null) {
 			Term._type = CONCEPT;
 		}
 
 		if (this._type === CONCEPT) {
-			throw new Error("Cannot assign hasDomain from a concept type: " + this._value);
+			throw new Error("Cannot assign hasRange from a concept type: " + this._value);
 		}
 		else if (Term._type === null) {
 			Term._type = RELATIONSHIP;
 		}
-
 		core[Term._value][this._value] = this;
 		return this;
 	};
 
-	//rule based implementation of subscribe
-	Rules.prototype.subscribe = function(subscriber) {
-		this._subscribe(subscriber);
-		return this;
-	};
-
-	//rule based implementation of publish 
-	Rules.prototype.publish = function(Message, recipients) {
-		var recipients = recipients || { };
-		this._publish(Message);
-
-		if (this._value != null) {
-			recipients[this._value] = true;
-		}
-
-		for (var property in this) {
-			if (!this.hasOwnProperty(property)) {
-				continue;
-			}
-			if (typeof this[property] === 'function' || property.indexOf("_") === 0) {
-				continue;
-			}
-			if (recipients[property] === true) {
-				continue;
-			}
-			if (typeof this[property].publish === 'function') {
-				recipients[property] = true;
-				this[property].publish(Message, recipients);
-			}
-		};
-
-		return this;
-	};
-
+	core.Term.alsoBehavesLike(Channel);
+	core.Term.alsoBehavesLike(Rules);
 	return core;
 }(sm || {}));
 
