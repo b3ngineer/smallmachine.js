@@ -6,9 +6,9 @@
 			return this;
 		}
 		var method = this;
-		var args = toArray(arguments);
+		var args = Array.prototype.slice.call(arguments);
 		return function() {
-			return method.apply(this, args.concat(toArray(arguments)));
+			return method.apply(this, args.concat(Array.prototype.slice.call(arguments)));
 		}
 	}
 
@@ -74,6 +74,11 @@
 		this.forward(Message, recipients);
 		return this;
 	};
+
+    core.addHelper = function(name, func) {
+        Channel.prototype.publish[name] = Channel.prototype.publish.partiallyApply(func);
+        return this;
+    };
 
 	var Rules = function() {
 		this.isA = function(o) { 
@@ -234,6 +239,7 @@
 
 	core.Term.alsoBehavesLike(Channel);
 	core.Term.alsoBehavesLike(Rules);
+
 	return core;
 }(sm || {}));
 
