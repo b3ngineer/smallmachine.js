@@ -4,24 +4,20 @@
             try {
                 jQuery.ajax({
                     dataType: 'json',
-                    contentType: 'application/x-www-form-urlencoded',
                     url: url,
-                    data: {
-                        blob: {wob:"1",job:"2", ar:[1,2,{a:'b'}]}
-                    },
-                    type : 'POST',
-                    success: function(data, text, jqXHR) {
+                    type : 'GET',
+                    success: function(data, text, jqxhr) {
                         console.log('success');
                     },
-                    error: function(jqXHR, text, thrown) {
-                        console.log(jqXHR);
+                    error: function(jqxhr, text, thrown) {
+                        console.log(jqxhr);
                         console.log(text);
                         console.log(thrown);
                     }
                 }); 
             }
             catch (error) {
-                throw new Error(error);
+                throw new error(error);
             }
         }
     });

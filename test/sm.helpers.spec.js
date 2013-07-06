@@ -15,6 +15,6 @@ describe('sm.helpers', function() {
             cancel : function(e) {
             }
         });
-        sm.system.publish.json('http://localhost:12345/test/');
+        sm.system.publish.json('test.service.php');
     });
 });
