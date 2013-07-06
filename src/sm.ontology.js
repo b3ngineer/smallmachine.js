@@ -44,4 +44,8 @@
 	ontology.user.describedAs(ontology.performs, ontology.action);
 	ontology.system.describedAs(ontology.performs, ontology.task);
 	ontology.messenger.describedAs(ontology.waitsFor, ontology.task);
+
+    // alias prototype functions
+    sm.addHelper = function(name, func) { sm.thing.addHelper(name, func); };
+
 }(sm));

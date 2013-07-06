@@ -1,17 +1,6 @@
 ;var sm = (function(core) {
 	'use strict';
 
-	Function.prototype.partiallyApply = function() {
-		if (arguments.length < 1) {
-			return this;
-		}
-		var method = this;
-		var args = Array.prototype.slice.call(arguments);
-		return function() {
-			return method.apply(this, args.concat(Array.prototype.slice.call(arguments)));
-		}
-	}
-
 	Function.prototype.alsoBehavesLike = function(something) {
 		for (var p in something.prototype) {
 			if (p.indexOf("_") == 0) {
@@ -34,7 +23,7 @@
 	var RELATIONSHIP = "relationship";
 
 	var Channel = function() {
-	 	this.forward = function(Message, recipients) {
+	 	this.forward = function(result, recipients) {
 			throw new Error("Missing implementation of forward"); 
 		};
 		return this;
@@ -45,38 +34,52 @@
 			this._subscribers = [];
 		}
 		if (typeof subscriber.update !== 'function') {
-			throw new Error("A subscriber must implement update(Message)");
+			throw new Error("A subscriber must implement update(result)");
 		}
 		if (typeof subscriber.cancel !== 'function') {
-			throw new Error("A subscriber must implement cancel(Message)");
+			throw new Error("A subscriber must implement cancel(result)");
 		}
 		this._subscribers.push(subscriber);
 		return this;
 	};
 
-	Channel.prototype.publish = function(Message, recipients) {
+	Channel.prototype.publish = function(result, recipients) {
 		var recipients = recipients || { };
+        if (typeof result === 'function') {
+            var newResult = result();
+            result = newResult;
+        }
 		if (typeof this._subscribers === 'undefined') {
-			this.forward(Message, recipients);
+			this.forward(result, recipients);
 			return this;
 		}
 		var isCancelled = false;
 		for (var i = 0; i < this._subscribers.length; i++) {
 			if (!isCancelled) {
-				if (this._subscribers[i].update(Message) === false) {
+				if (this._subscribers[i].update(result) === false) {
 					isCancelled = true;
 				}
 			}
 			else {
-				this._subscribers[i].cancel(Message);
+				this._subscribers[i].cancel(result);
 			}
 		}
-		this.forward(Message, recipients);
+		this.forward(result, recipients);
 		return this;
 	};
 
-    core.addHelper = function(name, func) {
-        Channel.prototype.publish[name] = Channel.prototype.publish.partiallyApply(func);
+    Channel.prototype.addHelper = function(name, helper) {
+		var method = Channel.prototype.publish;
+        var context = this;
+        Channel.prototype.publish[name] = function() {
+            var args = [];
+            for (var i = 0; i < arguments.length; i++) {
+                args.push(arguments[i]);
+            }
+			return method.apply(context, [function() {
+                return helper.apply(context, args);
+            }]);
+        };
         return this;
     };
 
@@ -99,7 +102,7 @@
 	core.Term = function(value) {
 		this._value = value;
 		this._type = null;
-		this.forward = function(Message, recipients) {
+		this.forward = function(result, recipients) {
 			if (this._value != null) {
 				recipients[this._value] = true;
 			}
@@ -115,7 +118,7 @@
 				}
 				if (typeof this[property].publish === 'function') {
 					recipients[property] = true;
-					this[property].publish(Message, recipients);
+					this[property].publish(result, recipients);
 				}
 			};
 		};
