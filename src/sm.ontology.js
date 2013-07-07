@@ -10,6 +10,7 @@
 	ontology.add(new ontology.Term("doubleClick"));
 	ontology.add(new ontology.Term("keyPress"));
 	ontology.add(new ontology.Term("task"));
+	ontology.add(new ontology.Term("initialize"));
 	ontology.add(new ontology.Term("get"));
 	ontology.add(new ontology.Term("set"));
 	ontology.add(new ontology.Term("messenger"));
@@ -34,6 +35,7 @@
 	ontology.set.isA(ontology.task);
 	ontology.success.isA(ontology.messenger);
 	ontology.error.isA(ontology.messenger);
+    ontology.initialize.isA(ontology.task);
 
 	// WEAKNESS
 	// describedAs and hasRange copy references, so they need to be established after subclassing)

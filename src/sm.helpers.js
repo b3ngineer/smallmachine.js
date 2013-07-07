@@ -1,18 +1,17 @@
 ;(function(sm) {
-    sm.addHelper('json', function(url){
+    sm.addHelper('json', function(url, asyncResult){
         if (typeof jQuery !== 'undefined') {
             try {
                 jQuery.ajax({
                     dataType: 'json',
                     url: url,
                     type : 'GET',
-                    success: function(data, text, jqxhr) {
-                        console.log('success');
+                    success: function(data, textStatus, jqxhr) {
+                        sm.messenger.success.publish(textStatus);
+                        asyncResult.publish(data);
                     },
-                    error: function(jqxhr, text, thrown) {
-                        console.log(jqxhr);
-                        console.log(text);
-                        console.log(thrown);
+                    error: function(jqxhr, textStatus, thrown) {
+                        sm.messenger.error.publish(thrown);
                     }
                 }); 
             }
@@ -20,5 +19,7 @@
                 throw new error(error);
             }
         }
+
+        return asyncResult;
     });
 }(sm));
