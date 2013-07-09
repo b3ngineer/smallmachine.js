@@ -11,7 +11,6 @@ describe('sm.helpers', function() {
         sm.system.subscribe({
             update : function(e) {
                 // TODO: make this test work async
-                console.log(e);
             },
             cancel : function(e) {
                 expect(true).toBe(false);

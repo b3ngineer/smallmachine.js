@@ -19,8 +19,8 @@
 		}
 	}
 
-	var CONCEPT = 'concept',
-	    RELATIONSHIP = 'relationship';
+	core.CONCEPT = 'concept';
+	core.RELATIONSHIP = 'relationship';
 
     core.AsyncResult = function(channel) {
         this._type = 'AsyncResult';
@@ -116,8 +116,15 @@
 	};
 
 	core.Term = function(value) {
-		this._value = value;
-		this._type = null;
+        if (typeof value._value !== 'undefined' && typeof value._type !== 'undefined') {
+            this._value = value._value;
+            this._type = value._type;
+        }
+        else {
+            this._value = value;
+            this._type = null;
+        }
+
 		this.forward = function(result, recipients) {
 			if (this._value != null) {
 				recipients[this._value] = true;
@@ -146,27 +153,28 @@
 	};
 
 	core.Term.prototype.describedAs = function(TermA, TermB) {
-		if (TermA._type === CONCEPT) {
+		if (TermA._type === core.CONCEPT) {
 			throw new Error('Cannot define a relationship with a concept type: ' + TermA._value);
 		}
 		else if (TermA._type === null) {
-			TermA._type = RELATIONSHIP;
+			TermA._type = core.RELATIONSHIP;
 		}
 
-		if (TermB._type === RELATIONSHIP) {
+		if (TermB._type === core.RELATIONSHIP) {
 			throw new Error('Cannot create a relationship with a relationship type: ' + TermB._value);
 		}
 		else if (TermB._type === null) {
-			TermB._type = CONCEPT;
+			TermB._type = core.CONCEPT;
 		}
 
-		if (this._type === RELATIONSHIP) {
+		if (this._type === core.RELATIONSHIP) {
 			throw new Error('Cannot create a relationship from a relationship type: ' + this._value);
 		}
 		else if (this._type === null) {
-			this._type = CONCEPT;
+			this._type = core.CONCEPT;
 		}
-		core[this._value][TermA._value] = new core.Term(TermA._value);
+
+		core[this._value][TermA._value] = new core.Term(TermA);
 		core[this._value][TermA._value][TermB._value] = TermB;
 		for (var field in TermB) {
 			if (!TermB.hasOwnProperty(field)) {
@@ -185,17 +193,17 @@
 
 	// subsumption
 	core.Term.prototype.isA = function(Term) {
-		if (Term._type === RELATIONSHIP) {
+		if (Term._type === core.RELATIONSHIP) {
 			throw new Error('Cannot apply isA to a relationship type: ' + Term._value);
 		}
 		else if (Term._type === null) {
-			Term._type = CONCEPT;
+			Term._type = core.CONCEPT;
 		}
-		if (this._type === RELATIONSHIP) {
+		if (this._type === core.RELATIONSHIP) {
 			throw new Error('Cannot apply isA to a relationship type: ' + this._value);
 		}
 		else if (this._type === null) {
-			this._type = CONCEPT;
+			this._type = core.CONCEPT;
 		}
 		core[Term._value][this._value] = this;
 		return this;
@@ -203,17 +211,17 @@
 
 	// object property range
 	core.Term.prototype.hasRange = function(Term) {
-		if (Term._type === RELATIONSHIP) {
+		if (Term._type === core.RELATIONSHIP) {
 			throw new Error('Cannot apply hasRange to a relationship type: ' + Term._value);
 		}
 		else if (Term._type === null) {
-			Term._type = CONCEPT;
+			Term._type = core.CONCEPT;
 		}
-		if (this._type === CONCEPT) {
+		if (this._type === core.CONCEPT) {
 			throw new Error('Cannot assign hasRange from a concept type: ' + this._value);
 		}
-		else if (Term._type === null) {
-			Term._type = RELATIONSHIP;
+		else if (this._type === null) {
+			this._type = core.RELATIONSHIP;
 		}
 		core[this._value][Term._value] = Term;
 		for (var field in Term) {
@@ -233,17 +241,17 @@
 
 	// object property domain
 	core.Term.prototype.hasDomain = function(Term) {
-		if (Term._type === RELATIONSHIP) {
+		if (Term._type === core.RELATIONSHIP) {
 			throw new Error('Cannot apply hasRange to a relationship type: ' + Term._value);
 		}
 		else if (Term._type === null) {
-			Term._type = CONCEPT;
+			Term._type = core.CONCEPT;
 		}
-		if (this._type === CONCEPT) {
+		if (this._type === core.CONCEPT) {
 			throw new Error('Cannot assign hasRange from a concept type: ' + this._value);
 		}
-		else if (Term._type === null) {
-			Term._type = RELATIONSHIP;
+		else if (this._type === null) {
+			this._type = core.RELATIONSHIP;
 		}
 		core[Term._value][this._value] = this;
 		return this;
