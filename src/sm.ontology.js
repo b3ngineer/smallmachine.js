@@ -37,11 +37,11 @@
     ontology.initialize.isA(ontology.task);
 
 	// WEAKNESS
-	// describedAs and hasRange copy references, so they need to be established after subclassing)
+	// relatesTo and hasRange copy references, so they need to be established after subclassing)
 	ontology.performs.hasRange(ontology.action).hasRange(ontology.task);
 	ontology.reactsTo.hasRange(ontology.action).hasDomain(ontology.system);
-	ontology.user.describedAs(ontology.performs, ontology.action);
-	ontology.system.describedAs(ontology.performs, ontology.task);
+	ontology.user.relatesTo(ontology.performs, ontology.action);
+	ontology.system.relatesTo(ontology.performs, ontology.task);
 
     // alias prototype functions
     sm.addHelper = function(name, func) { sm.thing.addHelper(name, func); };

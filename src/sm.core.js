@@ -109,8 +109,8 @@
 		this.hasDomain = function(o) { 
 			throw new Error('Missing implementation for hasDomain');	
 		};
-		this.describedAs = function(p, o) { 
-			throw new Error('Missing implementation for describedAs');	
+		this.relatesTo = function(p, o) { 
+			throw new Error('Missing implementation for relatesTo');	
 		};
 		return this;
 	};
@@ -152,7 +152,7 @@
 		return Term;
 	};
 
-	core.Term.prototype.describedAs = function(TermA, TermB) {
+	core.Term.prototype.relatesTo = function(TermA, TermB) {
 		if (TermA._type === core.CONCEPT) {
 			throw new Error('Cannot define a relationship with a concept type: ' + TermA._value);
 		}
