@@ -21,7 +21,7 @@
 	ontology.add(new ontology.Term("performs"));
 	ontology.add(new ontology.Term("reactsTo"));
 
-	// rules
+	// rules (order dependent)
 	ontology.user.isA(ontology.thing);
 	ontology.system.isA(ontology.thing);
 	ontology.action.isA(ontology.thing);
@@ -35,9 +35,6 @@
 	ontology.success.isA(ontology.messenger);
 	ontology.error.isA(ontology.messenger);
     ontology.initialize.isA(ontology.task);
-
-	// WEAKNESS
-	// relatesTo and hasRange copy references, so they need to be established after subclassing)
 	ontology.performs.hasRange(ontology.action).hasRange(ontology.task);
 	ontology.reactsTo.hasRange(ontology.action).hasDomain(ontology.system);
 	ontology.user.relatesTo(ontology.performs, ontology.action);
