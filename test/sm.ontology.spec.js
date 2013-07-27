@@ -287,25 +287,24 @@ describe('sm.ontology', function() {
 	});
 
     describe('publishing to relationships', function() {
-        it('should notify subscribers to user.perform when any action is published to', function() {
+        it('should notify subscribers to user.performs when any action is published to', function() {
             var notified = null;
-
-            sm.user.performs.subscribe({
-                update : function(result) {
-                    notified = result;
-                },
-                cancel : function(result) {
-                }
-            });
-            
+            sm.user.performs.subscribe({ update : function(result) { notified = result; }, cancel : function(result) { } }); 
             sm.keyPress.publish(function(){ return 123; });
             expect(notified).toBe(123);
-			delete sm.performs.action.keyPress._subscribers;
+			delete sm.user.performs._subscribers;
+        });
+
+        it('should not notify subscribers to user.performs when any task is published to', function() {
+            var notified = 0;
+            sm.user.performs.subscribe({update:function(r){notified++;},cancel:function(r){}});
+            sm.system.get.publish(function(){return 123;});
+            expect(notified).toBe(0);
+			delete sm.user.performs._subscribers;
         });
 
         it('should notify subscribers to system.reactsTo when any action is published to', function() {
             var notified = null;
-
             sm.system.reactsTo.subscribe({
                 update : function(result) {
                     notified = result;
@@ -313,10 +312,9 @@ describe('sm.ontology', function() {
                 cancel : function(result) {
                 }
             });
-            
             sm.keyPress.publish(function(){ return 123; });
             expect(notified).toBe(123);
-			delete sm.performs.action.keyPress._subscribers;
+			delete sm.system.reactsTo._subscribers;
         });
 
         it('should notify subscribers to sm.performs when any action or task is published to', function() {
@@ -325,7 +323,7 @@ describe('sm.ontology', function() {
             sm.user.keyPress.publish(function(){ return 123; });
             sm.system.get.publish(function(){ return 123; });
             expect(notified).toBe(2);
-			delete sm.performs.action.click._subscribers;
+			delete sm.performs._subscribers;
         });
     });
 
