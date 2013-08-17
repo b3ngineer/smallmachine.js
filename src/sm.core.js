@@ -52,6 +52,13 @@
 		if (typeof this._subscribers === 'undefined') {
 			this._subscribers = [];
 		}
+		if (typeof subscriber === 'function') {
+			this._subscribers.push({
+				update : subscriber,
+				cancel : new function(result) {}
+			});
+			return this;
+		}
 		if (typeof subscriber.update !== 'function') {
 			throw new Error('A subscriber must implement update(result)');
 		}
