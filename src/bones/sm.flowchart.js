@@ -3,6 +3,7 @@
 
 	sm.system.initialize.subscribe({
 		update : function(message) {
+			console.log(message);
 			var svg = d3.select('body')
 				.style('margin', '0px')
 				.style('padding', '0px')
