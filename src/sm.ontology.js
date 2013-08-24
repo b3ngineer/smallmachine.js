@@ -39,8 +39,4 @@
 	ontology.reactsTo.hasRange(ontology.action).hasDomain(ontology.system);
 	ontology.user.relatesTo(ontology.performs, ontology.action);
 	ontology.system.relatesTo(ontology.performs, ontology.task);
-
-    // alias prototype functions
-    sm.addHelper = function(name, func) { sm.thing.addHelper(name, func); };
-
 }(sm));

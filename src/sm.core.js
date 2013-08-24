@@ -63,7 +63,8 @@
 			throw new Error('A subscriber must implement update(result)');
 		}
 		if (typeof subscriber.cancel !== 'function') {
-			throw new Error('A subscriber must implement cancel(result)');
+            subscriber.cancel = function(result) {};
+			//throw new Error('A subscriber must implement cancel(result)');
 		}
 		this._subscribers.push(subscriber);
 		return this;
@@ -101,8 +102,8 @@
 
     Channel.prototype.addHelper = function(name, helper) {
 		var method = Channel.prototype.publish;
-        var context = this;
-        Channel.prototype.publish[name] = function() {
+        var context = this; // context becomes static to the channel adding the helper
+        this[name] = function() {
             var args = [];
             for (var i = 0; i < arguments.length; i++) {
                 args.push(arguments[i]);

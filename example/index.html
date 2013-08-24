@@ -10,8 +10,9 @@
 	<script type="text/javascript" src="../src/sm.helpers.js"></script>
 	<script type="text/javascript" src="../src/bones/sm.flowchart.js"></script>
 	<script type="text/javascript">
-		sm.messenger.error.subscribe(function(result){ alert('An error occurred: ' + result); });
-		sm.system.initialize.publish.json('example.json');
+		sm.messenger.error.subscribe(function(result){ console.log(result); });
+		sm.messenger.success.subscribe(function(result){ console.log(result); });
+		sm.system.initialize.json('example.json');
 	</script>
 </body>
 </html>

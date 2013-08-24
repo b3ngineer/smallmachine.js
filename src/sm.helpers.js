@@ -1,5 +1,5 @@
 ;(function(sm) {
-    sm.addHelper('json', function(url, asyncResult){
+    var jsonHelper = function(url, asyncResult){
         if (typeof jQuery !== 'undefined') {
             try {
                 jQuery.ajax({
@@ -26,10 +26,12 @@
 			xhr.onreadystatechange = function() {
 				if (xhr.readyState < 4) return;
 				if (xhr.status == 200) {
+                    console.log('success');
 					sm.messenger.success.publish(xhr.statusText);
 					asyncResult.publish(JSON.parse(xhr.responseText));
 				}
 				else {
+                    console.log('error');
 					sm.messenger.error.publish(xhr.statusText);
 				}
 			}
@@ -39,5 +41,7 @@
 			xhr.send(null);
 		}
         return asyncResult;
-    });
+    }; 
+
+    sm.system.initialize.addHelper('json', jsonHelper);
 }(sm));
