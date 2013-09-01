@@ -26,12 +26,10 @@
 			xhr.onreadystatechange = function() {
 				if (xhr.readyState < 4) return;
 				if (xhr.status == 200) {
-                    console.log('success');
 					sm.messenger.success.publish(xhr.statusText);
 					asyncResult.publish(JSON.parse(xhr.responseText));
 				}
 				else {
-                    console.log('error');
 					sm.messenger.error.publish(xhr.statusText);
 				}
 			}
@@ -44,4 +42,4 @@
     }; 
 
     sm.system.initialize.addHelper('json', jsonHelper);
-}(sm));
+}(smallmachine));

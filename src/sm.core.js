@@ -1,4 +1,4 @@
-;var sm = (function(core) {
+;var smallmachine = (function(core) {
 	'use strict';
 
 	Function.prototype.alsoBehavesLike = function(something) {
@@ -36,8 +36,8 @@
         return this;
     };
 
-    core.AsyncResult.prototype.publish = function(result, recipients) {
-        this._channel.publish(result, recipients);
+    core.AsyncResult.prototype.publish = function(message, recipients) {
+        this._channel.publish(message, recipients);
     };
 
 	var Channel = function() {
@@ -54,49 +54,75 @@
 		}
 		if (typeof subscriber === 'function') {
 			this._subscribers.push({
-				update : subscriber,
-				cancel : new function(result) {}
+				update : subscriber
 			});
 			return this;
-		}
-		if (typeof subscriber.update !== 'function') {
-			throw new Error('A subscriber must implement update(result)');
-		}
-		if (typeof subscriber.cancel !== 'function') {
-            subscriber.cancel = function(result) {};
-			//throw new Error('A subscriber must implement cancel(result)');
 		}
 		this._subscribers.push(subscriber);
 		return this;
 	};
 
-	Channel.prototype.publish = function(result, recipients) {
+    var notify = function(message, subscribers) {
+		var isCancelled = false,
+            shouldDefault = true,
+            defaults = [],
+            cancellations = [],
+            bubbles = [];
+
+        for (var i = 0; i < subscribers.length; i++) {
+            if (typeof subscribers[i].update === 'function') {
+                var returnResult = subscribers[i].update(message);
+                if (returnResult === false) {
+                    isCancelled = true;
+                }
+                else if (returnResult === true) {
+                    shouldDefault = false;
+                }
+            }
+            if (typeof subscribers[i].cancel === 'function') {
+                cancellations.push(subscribers[i].cancel);
+            }
+            if (typeof subscribers[i].defaultTo === 'function') {
+                defaults.push(subscribers[i].defaultTo);
+            }
+            if (!isCancelled && typeof subscribers[i].bubble === 'function') {
+                bubbles.push(subscribers[i].bubble);
+            }
+        }
+        if (shouldDefault) {
+            for (var i = 0; i < defaults.length; i++) {
+                defaults[i](message);
+            }
+        }
+        if (isCancelled) {
+            for (var i = 0; i < cancellations.length; i++) {
+                cancellations[i](message);
+            }
+        }
+        else {
+            for (var i = 0; i < bubbles.length; i++) {
+                bubbles[i](message);
+            }
+        }
+    };
+
+	Channel.prototype.publish = function(message, recipients) {
 		var recipients = recipients || { };
-        if (typeof result === 'function') {
-            var newResult = result(new core.AsyncResult(this));
-            result = newResult;
-            if (typeof result !== 'undefined' &&
-                typeof result._type !== 'undefined' &&
-                result._type === 'AsyncResult') {
+        if (typeof message === 'function') {
+            var newResult = message(new core.AsyncResult(this));
+            message = newResult;
+            if (typeof message !== 'undefined' &&
+                typeof message._type !== 'undefined' &&
+                message._type === 'AsyncResult') {
                 return this;
             }
         }
 		if (typeof this._subscribers === 'undefined') {
-			this.forward(result, recipients);
+			this.forward(message, recipients);
 			return this;
 		}
-		var isCancelled = false;
-		for (var i = 0; i < this._subscribers.length; i++) {
-			if (!isCancelled) {
-				if (this._subscribers[i].update(result) === false) {
-					isCancelled = true;
-				}
-			}
-			else {
-				this._subscribers[i].cancel(result);
-			}
-		}
-		this.forward(result, recipients);
+        notify(message, this._subscribers);
+		this.forward(message, recipients);
 		return this;
 	};
 
@@ -154,7 +180,7 @@
 		return Term;
 	};
 
-    core.Term.prototype.forward = function(result, recipients) {
+    core.Term.prototype.forward = function(message, recipients) {
         if (this._value != null) {
             recipients[this._value] = true;
         }
@@ -170,7 +196,7 @@
             }
             if (typeof this[property].publish === 'function') {
                 recipients[property] = true;
-                this[property].publish(result, recipients);
+                this[property].publish(message, recipients);
             }
         }
         if (typeof this._relatesTo !== 'undefined') {
@@ -179,17 +205,7 @@
                     continue;
                 }
                 // Relationships do *not* continue to notify their object properties when being forwarded to
-                var isCancelled = false;
-                for (var j = 0; j < this._relatesTo[i]._subscribers.length; j++) {
-                    if (!isCancelled) {
-                        if (this._relatesTo[i]._subscribers[j].update(result) === false) {
-                            isCancelled = true;
-                        }
-                    }
-                    else {
-                        this._relatesTo[i]._subscribers[j].cancel(result);
-                    }
-                }
+                notify(message, this._relatesTo[i]._subscribers);
             }
         }
     };
@@ -325,5 +341,5 @@
 	core.Term.alsoBehavesLike(Rules);
 
 	return core;
-}(sm || {}));
+}(smallmachine || {}));
 

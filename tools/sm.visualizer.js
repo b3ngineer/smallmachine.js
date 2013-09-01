@@ -85,4 +85,4 @@
         .attr("dy", 3)
         .text(function(d) { return d.name; });
 
-}(sm, jQuery));
+}(smallmachine, jQuery));
