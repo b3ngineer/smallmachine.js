@@ -64,7 +64,7 @@ The hierarchy of the *smallmachine.js* model is integrated with an asynchronous 
 }(smallmachine));
 ```
 
-Additionally, helpers are supplied as partially applied methods to ```publish()```, on specific channels&mdash;as a convenience for performing common tasks.
+Additionally, helpers are supplied on specific channels&mdash;as partially applied methods to ```publish()```&mdash;as a convenience for generating common message types.
 
 ```js
 (function(sm) {
@@ -75,5 +75,68 @@ Additionally, helpers are supplied as partially applied methods to ```publish()`
 ```
 
 ### A notification lifecycle ###
-Subscribers remain relatively anonymous to other subscribers, thereby making event prioritization a tricky business.  To avoid the need for subscribers to arrange themselves in sequence, *smallmachine.js* incorporates a notification lifecycle that allows for deferred and conditional application behaviors.  Subscribers determine if they have handled the incoming message authoritatively or not.  They can defer execution until all subscribers have received message updates, and they can even abstain from acting unless no other subscribers declared authority.
+Subscribers remain relatively anonymous to other subscribers, thereby making event prioritization a tricky business.  To avoid the need for subscribers to explicitly arrange themselves in sequence, *smallmachine.js* incorporates a notification lifecycle that allows for deferred and conditional application behaviors.  Subscribers determine if they have handled the incoming message authoritatively or not.  They can defer execution until all subscribers have received message updates, and they can even abstain from acting unless no other subscribers declared authority.
 
+Subscribers must implement the method ```update(message)```&mdash;which can return the following types (or nothing at all):
+
+* **Authoritative responses**
+	* ```true```
+	* ```function``` (deferred execution until after all message updates have been made) 	
+		* The function should have a signature ```function(message)```. 
+* **Non authoritative responses**
+	* ```false```
+	* ```undefined```
+	* ```object``` (delegate updated in conditions where no authoritative response was supplied by any subscribers)
+		* The delegate ```object``` needs to implement an ```update(message)``` method exactly like a subscriber
+
+```js
+(function(sm) {
+	// authoritative message handler
+	var myAuthoritativeHandler = {
+		update : function(message) {
+			// ... do some work
+			return true;
+		}
+	};
+
+	// non authoritative message handler
+	var myNonAuthoritativeHandler = {
+		update : function(message) {
+			// ... do some work
+			return;
+		}
+	};
+
+	var someMethod = function(message) {
+		// ... do some work
+	};
+
+	// deferred message handler
+	var myDeferredHandler = {
+		update : function(message) {
+			if (someConditionIsNotYetTrue) {
+				return someMethod;
+			}
+			else {
+				someMethod(message);
+				return true;
+			}
+		}
+	};
+
+	// delegated message handler
+	var myDelegatingHandler = {
+		update : function(message) {
+			// only respond if nobody else has authority
+			return {
+				update : function(message) {
+					// ... do some work
+				}
+			}
+		};
+	};
+}(smallmachine));
+```
+
+### A strategy for reusing application layers ###
+Application interactions can be intuitively bound to the *smallmachine.js* ontology in a way that creates a larger base of reusable components...and also reusable application layers.  By supplying only-or-predominantly *default* behaviors through the notification lifecycle&mdash;generalized applications can supply the "bones" for multiple application domains.
