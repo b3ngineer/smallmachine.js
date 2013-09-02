@@ -86,7 +86,7 @@
         else {
             for (var i = 0; i < delegates.length; i++) {
                 delegates[i](message);
-            }
+           }
         }
     };
 
