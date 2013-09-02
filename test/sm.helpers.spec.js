@@ -56,4 +56,22 @@ describe('sm.helpers', function() {
             expect(this.updated.result && !this.updatedIncorrectly.result).toBe(true);
         });
     });
+
+    it('should publish a hook object after publishing with the hook helper', function() {
+        var result = false;
+        sm.system.insert.subscribe({
+            update : function(message) {
+                if (typeof message.target !== 'undefined' && typeof message.context !== 'undefined') {
+                    result = true;
+                }
+            }
+        });
+
+        sm.system.insert.hook(true, true);
+        expect(result).toBe(true);
+    });
+
+    it('should not define the Hook class in global namespace', function() {
+        expect(typeof Hook).not.toBe('function');
+    });
 });
