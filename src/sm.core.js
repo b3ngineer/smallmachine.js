@@ -63,45 +63,29 @@
 	};
 
     var notify = function(message, subscribers) {
-		var isCancelled = false,
-            shouldDefault = true,
-            defaults = [],
-            cancellations = [],
-            bubbles = [];
-
+        var authoritative = false,
+            delegates = [],
+            deference = [];
         for (var i = 0; i < subscribers.length; i++) {
-            if (typeof subscribers[i].update === 'function') {
-                var returnResult = subscribers[i].update(message);
-                if (returnResult === false) {
-                    isCancelled = true;
-                }
-                else if (returnResult === true) {
-                    shouldDefault = false;
-                }
+            var response = subscribers[i].update(message);
+            if (response === true) {
+                authoritative = true;
             }
-            if (typeof subscribers[i].cancel === 'function') {
-                cancellations.push(subscribers[i].cancel);
+            else if (typeof response === 'function') {
+                deference.push(response);
             }
-            if (typeof subscribers[i].defaultTo === 'function') {
-                defaults.push(subscribers[i].defaultTo);
-            }
-            if (!isCancelled && typeof subscribers[i].bubble === 'function') {
-                bubbles.push(subscribers[i].bubble);
+            else if (typeof response === 'object' && typeof response.update === 'function') {
+                delegates.push(response.update);
             }
         }
-        if (shouldDefault) {
-            for (var i = 0; i < defaults.length; i++) {
-                defaults[i](message);
-            }
-        }
-        if (isCancelled) {
-            for (var i = 0; i < cancellations.length; i++) {
-                cancellations[i](message);
+        if (authoritative) {
+            for (var i = 0; i < deference.length; i++) {
+                deference[i](message);
             }
         }
         else {
-            for (var i = 0; i < bubbles.length; i++) {
-                bubbles[i](message);
+            for (var i = 0; i < delegates.length; i++) {
+                delegates[i](message);
             }
         }
     };
