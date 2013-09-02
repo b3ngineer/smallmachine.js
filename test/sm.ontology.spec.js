@@ -286,6 +286,16 @@ describe('sm.ontology', function() {
 		});
 	});
 
+	describe('publishing to concepts', function() {
+		it('should notify user.click if action is published to', function() {
+			var value = false;
+			sm.user.click.subscribe({ update : function(message){ value = message; } });
+			sm.action.publish(true);
+			expect(value).toBe(true);
+			delete sm.user.click._subscribers;
+		});
+	});
+
     describe('publishing to relationships', function() {
         it('should notify subscribers to user.performs when any action is published to', function() {
             var notified = null;

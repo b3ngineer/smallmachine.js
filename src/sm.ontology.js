@@ -23,7 +23,7 @@
 	ontology.add(new ontology.Term('performs'));
 	ontology.add(new ontology.Term('reactsTo'));
 
-	// rules (order dependent)
+	// rules (order dependent) TODO: get rid of order dependence
 	ontology.user.isA(ontology.thing);
 	ontology.system.isA(ontology.thing);
 	ontology.action.isA(ontology.thing);
