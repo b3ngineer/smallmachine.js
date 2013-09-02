@@ -140,3 +140,12 @@ Subscribers must implement the method ```update(message)```&mdash;which can retu
 
 ### A strategy for reusing application layers ###
 Application interactions can be intuitively bound to the *smallmachine.js* ontology in a way that creates a larger base of reusable components...and also reusable application layers.  By supplying only-or-predominantly *default* behaviors through the notification lifecycle&mdash;generalized applications can supply the "bones" for multiple application domains.
+
+## Laundry list ##
+- [x] MIT licensed
+- [x] Ontology visualizer: ```/tools/index.html```
+- [ ] Complete bare bones application code: ```/src/bones/*.js```
+- [x] Jasmine tests: ```/test/index.html```
+- [ ] Complete demo: ```/example/index.html```
+- [ ] JSLint validation
+- [ ] Memory testing

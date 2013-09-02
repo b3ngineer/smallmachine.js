@@ -12,7 +12,7 @@
 	ontology.add(new ontology.Term('task'));
 	ontology.add(new ontology.Term('initialize'));
 	ontology.add(new ontology.Term('insert'));
-	ontology.add(new ontology.Term('delete'));
+	ontology.add(new ontology.Term('remove'));
 	ontology.add(new ontology.Term('get'));
 	ontology.add(new ontology.Term('set'));
 	ontology.add(new ontology.Term('messenger'));
@@ -38,7 +38,7 @@
 	ontology.error.isA(ontology.messenger);
     ontology.initialize.isA(ontology.task);
     ontology.insert.isA(ontology.task);
-    ontology.delete.isA(ontology.task);
+    ontology.remove.isA(ontology.task);
 	ontology.performs.hasRange(ontology.action).hasRange(ontology.task);
 	ontology.reactsTo.hasRange(ontology.action).hasDomain(ontology.system);
 	ontology.user.relatesTo(ontology.performs, ontology.action);
