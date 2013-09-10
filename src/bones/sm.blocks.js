@@ -23,20 +23,13 @@
             }
         }
         this.id = params.id;
-        this.links = params.links || [],
         this.x = params.x;
         this.y = params.y;
         this.height = params.height;
         this.width = params.width;
-        this.text = params.text;
+        this.text = params.text || '';
         return this;
     });
-
-    sm.addMessageType('Connector', function(a,b) {
-		this.a = a;
-		this.b = b;
-		return this;
-	});
 
     sm.addMessageType('CanvasEvent', function(e, context, $text) {
 		this.x = e.offsetX || e.pageX;
@@ -51,7 +44,6 @@
 			var width = $(window).width();
 			var height = $(window).height();
 			var paper = raphael('paper', width, height);
-			var connectors = [];
             var $text = $('<textarea id="text" style="position:absolute;"></textarea>').hide();
             $('body').append($text);
             $text.keypress(function(e) {
@@ -63,22 +55,16 @@
                 }
             });
 			$('#paper').click(function(e) { sm.user.click.publish(new sm.types.CanvasEvent(e, paper, $text)); });
-			sm.system.reactsTo.click.subscribe({ update : function(message) { return defaultText; } }); 
+			sm.system.reactsTo.click.subscribe({ update : function(message) { return defaultNewText; } }); 
 			sm.system.insert.subscribe({ update : function(message) { return defaultBlocks; } });
 			for (var i = 0; i < message.length; i++) {
 				var block = new sm.types.Block(message[i]);
 				sm.system.insert.hook(block, paper);
-				for (var j = 0; j < block.links.length; j++) {
-					connectors.push(new sm.types.Connector(block.id, block.links[j]));
-				}
-			}
-			for (var i = 0; i < connectors.length; i++) {
-				//connectors[i].paint(paper);
 			}
 		}
 	});
 
-	var defaultText = {
+	var defaultNewText = {
 		update : function(message) {
             if (!message instanceof sm.types.CanvasEvent) {
                 return false;
@@ -96,6 +82,11 @@
 			var paper = message.context;
 			var rect = paper.rect(block.x, block.y, block.width, block.height, 3);
 			rect.node.id = block.id;
+            // TODO: figure out how to position the text vertically
+            var text = paper.text(block.x + 5, block.y + 10, block.text).attr({
+                'text-anchor': 'start',
+                'font-size': 15
+            });
 		}
 	};
 
