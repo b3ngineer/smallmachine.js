@@ -29,16 +29,29 @@
 
 	core.CONCEPT = 'concept';
 	core.RELATIONSHIP = 'relationship';
+    core.types = {};
 
-    core.AsyncResult = function(channel) {
-        this._type = 'AsyncResult';
+    core.addMessageType = function(name, classDef) {
+        if (typeof classDef !== 'function') {
+            throw 'Cannot create a message type without a constructor (function)';
+        }
+        core.types[name] = classDef;
+        core.types[name].prototype.getType = function() {
+            return '[object ' + name + ']';
+        };
+    };
+
+    var AsyncResult = function(channel) {
         this._channel = channel;
         return this;
     };
 
-    core.AsyncResult.prototype.publish = function(message, recipients) {
+    AsyncResult.prototype.publish = function(message, recipients) {
         this._channel.publish(message, recipients);
+        return this;
     };
+
+    core.addMessageType('AsyncResult', AsyncResult);
 
 	var Channel = function() {
 		return this;
@@ -93,11 +106,11 @@
 	Channel.prototype.publish = function(message, recipients) {
 		var recipients = recipients || { };
         if (typeof message === 'function') {
-            var newResult = message(new core.AsyncResult(this));
+            var newResult = message(new core.types.AsyncResult(this));
             message = newResult;
             if (typeof message !== 'undefined' &&
-                typeof message._type !== 'undefined' &&
-                message._type === 'AsyncResult') {
+                typeof message.getType === 'function' &&
+                message.getType() === '[object AsyncResult]') {
                 return this;
             }
         }
@@ -305,7 +318,7 @@
 
 	/* object property domain universally relates concepts upstream from an edge */
 	core.Term.prototype.hasDomain = function(Term) {
-		if (Term._type === core.RELATIONSHIP) {
+		if (Term._type === core.RELATIONSIP) {
 			throw new Error('Cannot apply hasRange to a relationship type: ' + Term._value);
 		}
 		else if (Term._type === null) {

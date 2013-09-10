@@ -4,6 +4,49 @@ describe('sm.core', function() {
 		expect(sm.add).toBeDefined();
 	});
 
+    describe('methods', function() {
+        it('should add message types to the sm.type namespace', function() {
+            sm.addMessageType('Test1', function() { return this; });
+            expect(sm.types.Test1).toBeDefined();
+            delete sm.types.Test1;
+        });
+
+        it('should copy prototype functions when adding a message type', function() {
+            var Test2 = function() {
+                return this;
+            };
+            Test2.prototype.test = function() {
+                return true;
+            };
+            sm.addMessageType('Test2', Test2);
+            expect(typeof sm.types.Test2.prototype.test).toBe('function');
+            delete sm.types.Test2;
+        });
+
+        it('should create member functions on message type instances', function() {
+            var Test3 = function() {
+                return this;
+            };
+            Test3.prototype.test = function() {
+                return true;
+            };
+            sm.addMessageType('Test3', Test3);
+            var testType = new sm.types.Test3();
+            expect(testType.test()).toBe(true);
+            delete sm.types.Test3;
+        });
+
+        it('should allow the use of instanceof to test an instance\'s type', function() {
+            var Test4 = function() {
+                return this;
+            };
+            sm.addMessageType('Test4', Test4);
+            var testType = new sm.types.Test4();
+            expect(testType instanceof sm.types.Test4).toBe(true);
+            delete sm.types.Test4;
+        });
+    });
+
 	describe('pub/sub', function() {
 		it('should implement the subscribe method on a channel object', function() {
 			expect(sm.thing.subscribe).toBeDefined();

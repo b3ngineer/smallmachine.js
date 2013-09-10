@@ -1,16 +1,12 @@
 ;(function(sm) {
-    function Hook(targetObject, contextObject) {
+    sm.addMessageType('Hook', function(targetObject, contextObject) {
         this.target = targetObject;
         this.context = contextObject;
         return this;
-    };
-
-    Hook.prototype.getType = function() {
-        return '[object Hook]';
-    };
+    });
 
     var hookHelper = function(targetObject, contextObject, asyncResult) {
-        var hookObject = new Hook(targetObject, contextObject);
+        var hookObject = new sm.types.Hook(targetObject, contextObject);
         return hookObject;
     };
 
