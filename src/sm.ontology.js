@@ -36,9 +36,9 @@
 	ontology.set.isA(ontology.task);
 	ontology.success.isA(ontology.messenger);
 	ontology.error.isA(ontology.messenger);
-    ontology.initialize.isA(ontology.task);
-    ontology.insert.isA(ontology.task);
-    ontology.remove.isA(ontology.task);
+	ontology.initialize.isA(ontology.task);
+	ontology.insert.isA(ontology.task);
+	ontology.remove.isA(ontology.task);
 	ontology.performs.hasRange(ontology.action).hasRange(ontology.task);
 	ontology.reactsTo.hasRange(ontology.action).hasDomain(ontology.system);
 	ontology.user.relatesTo(ontology.performs, ontology.action);

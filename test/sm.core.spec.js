@@ -72,7 +72,7 @@ describe('sm.core', function() {
 			delete sm.types.Test;
 		});
 
-        it('should allow truthful comparison of types after merge', function() {
+		it('should allow truthful comparison of types after merge', function() {
 			var TestA = function() {
 				this.propertyA = true;
 				return this;
@@ -84,12 +84,12 @@ describe('sm.core', function() {
 
 			sm.addMessageType('Test', TestA);
 			sm.addMessageType('Test', TestB);
-            var test = new sm.types.Test();
-            expect(test.ofType('Test')).toBe(true);
-            expect(test.getType()).toBe('[object Test]');
-            expect(test instanceof sm.types.Test).toBe(true);
+			var test = new sm.types.Test();
+			expect(test.ofType('Test')).toBe(true);
+			expect(test.getType()).toBe('[object Test]');
+			expect(test instanceof sm.types.Test).toBe(true);
 			delete sm.types.Test;
-        });
+		});
 	});
 
 	describe('pub/sub', function() {

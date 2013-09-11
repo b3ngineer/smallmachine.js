@@ -8,13 +8,20 @@
 				continue;
 			}
 			if (typeof this.prototype[p] !== 'undefined') {
-                if (this.prototype[p].prototype.virtual) {
-                    this.prototype[p] = something.prototype[p];
-                }
-                else if (something.prototype[p].prototype.virtual) {
-                    continue;
-                }
-                throw new Error('Cannot combine same-named behaviors: ' + p);
+				var currentBehaviorIsVirtual = this.prototype[p].prototype.virtual;
+				var newBehaviorIsVirtual = something.prototype[p].prototype.virtual;
+
+				if (currentBehaviorIsVirtual && newBehaviorIsVirtual) {
+					throw new Error('Cannot mixin duplicate named virtual behaviors: ' + p);
+				}
+				else if (currentBehaviorIsVirtual) {
+					this.prototype[p] = something.prototype[p];
+				}
+				else if (newBehaviorIsVirtual) {
+					continue;
+				}
+
+				throw new Error('Cannot mixin same-named behaviors: ' + p);
 			}
 			this.prototype[p] = something.prototype[p];
 		}
@@ -26,7 +33,7 @@
 				continue;
 			}
 			if (typeof this.prototype[p] !== 'undefined') {
-                throw new Error('Cannot combine same-named behaviors: ' + p);
+				throw new Error('Cannot mixin same-named properties: ' + p);
 			}
 			this.prototype[p] = something[p];
 		}
@@ -48,9 +55,9 @@
 			core.types[name].prototype.getType = function() {
 				return '[object ' + name + ']';
 			};
-            core.types[name].prototype.ofType = function(type) {
-                return this.getType() == '[object ' + type + ']';
-            };
+			core.types[name].prototype.ofType = function(type) {
+				return this.getType() == '[object ' + type + ']';
+			};
 		}
 	};
 
@@ -73,7 +80,7 @@
 	Channel.prototype.forward = function() {
 	};
 
-    Channel.prototype.forward.prototype.virtual = true;
+	Channel.prototype.forward.prototype.virtual = true;
 
 	Channel.prototype.subscribe = function(subscriber) {
 		if (typeof this._subscribers === 'undefined') {
@@ -160,7 +167,7 @@
 	Rules.prototype.isA = function(o) {
 	};
 
-    Rules.prototype.isA.prototype.virtual = true;
+	Rules.prototype.isA.prototype.virtual = true;
 
 	Rules.prototype.hasRange = function(o) {
 	};
