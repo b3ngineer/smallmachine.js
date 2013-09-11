@@ -7,9 +7,14 @@
 			if (p.indexOf('_') == 0) {
 				continue;
 			}
-			// don't overwrite existing members
 			if (typeof this.prototype[p] !== 'undefined') {
-				continue;
+                if (this.prototype[p].prototype.virtual) {
+                    this.prototype[p] = something.prototype[p];
+                }
+                else if (something.prototype[p].prototype.virtual) {
+                    continue;
+                }
+                throw new Error('Cannot combine same-named behaviors: ' + p);
 			}
 			this.prototype[p] = something.prototype[p];
 		}
@@ -21,7 +26,7 @@
 				continue;
 			}
 			if (typeof this.prototype[p] !== 'undefined') {
-				continue;
+                throw new Error('Cannot combine same-named behaviors: ' + p);
 			}
 			this.prototype[p] = something[p];
 		}
@@ -43,6 +48,9 @@
 			core.types[name].prototype.getType = function() {
 				return '[object ' + name + ']';
 			};
+            core.types[name].prototype.ofType = function(type) {
+                return this.getType() == '[object ' + type + ']';
+            };
 		}
 	};
 
@@ -63,8 +71,9 @@
 	};
 
 	Channel.prototype.forward = function() {
-		throw new Error('Missing implementation of forward'); 
 	};
+
+    Channel.prototype.forward.prototype.virtual = true;
 
 	Channel.prototype.subscribe = function(subscriber) {
 		if (typeof this._subscribers === 'undefined') {
@@ -149,20 +158,24 @@
 	};
 
 	Rules.prototype.isA = function(o) {
-		throw new Error('Missing implementation for isA');	
 	};
+
+    Rules.prototype.isA.prototype.virtual = true;
 
 	Rules.prototype.hasRange = function(o) {
-		throw new Error('Missing implementation for hasRange');	
 	};
+
+	Rules.prototype.hasRange.prototype.virtual = true;
 
 	Rules.prototype.hasDomain = function(o) { 
-		throw new Error('Missing implementation for hasDomain');	
 	};
 
+	Rules.prototype.hasDomain.prototype.virtual = true;
+
 	Rules.prototype.relatesTo = function(p, o) {
-		throw new Error('Missing implementation for relatesTo');	
 	};
+
+	Rules.prototype.relatesTo.prototype.virtual = true;
 
 	core.Term = function(value) {
 		if (typeof value._value !== 'undefined' && typeof value._type !== 'undefined') {
@@ -318,7 +331,7 @@
 
 	/* object property domain universally relates concepts upstream from an edge */
 	core.Term.prototype.hasDomain = function(Term) {
-	    if (Term._type === core.RELATIONSIP) {
+		if (Term._type === core.RELATIONSIP) {
 			throw new Error('Cannot apply hasRange to a relationship type: ' + Term._value);
 		}
 		else if (Term._type === null) {
@@ -335,7 +348,7 @@
 	};
 
 	core.Term.alsoBehavesLike(Channel);
-    core.Term.alsoBehavesLike(Rules);
+	core.Term.alsoBehavesLike(Rules);
 
 	return core;
 }(smallmachine || {}));
