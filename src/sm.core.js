@@ -16,11 +16,11 @@
 				}
 				else if (currentBehaviorIsVirtual) {
 					this.prototype[p] = something.prototype[p];
+                    continue;
 				}
 				else if (newBehaviorIsVirtual) {
 					continue;
 				}
-
 				throw new Error('Cannot mixin same-named behaviors: ' + p);
 			}
 			this.prototype[p] = something.prototype[p];
@@ -45,7 +45,7 @@
 
 	core.addMessageType = function(name, classDef) {
 		if (typeof classDef !== 'function') {
-			throw 'Cannot create a message type without a constructor (function)';
+			throw new Error('Cannot create a message type without a constructor (function)');
 		}
 		if (typeof core.types[name] !== 'undefined') {
 			core.types[name].alsoBehavesLike(classDef);
@@ -160,30 +160,6 @@
 		return this;
 	};
 
-	var Rules = function() {
-		return this;
-	};
-
-	Rules.prototype.isA = function(o) {
-	};
-
-	Rules.prototype.isA.prototype.virtual = true;
-
-	Rules.prototype.hasRange = function(o) {
-	};
-
-	Rules.prototype.hasRange.prototype.virtual = true;
-
-	Rules.prototype.hasDomain = function(o) { 
-	};
-
-	Rules.prototype.hasDomain.prototype.virtual = true;
-
-	Rules.prototype.relatesTo = function(p, o) {
-	};
-
-	Rules.prototype.relatesTo.prototype.virtual = true;
-
 	core.Term = function(value) {
 		if (typeof value._value !== 'undefined' && typeof value._type !== 'undefined') {
 			this._value = value._value;
@@ -202,7 +178,15 @@
 		return Term;
 	};
 
-	core.Term.prototype.forward = function(message, recipients) {
+	core.Term.alsoBehavesLike(Channel);
+
+	var Rules = function(value, type) {
+        this._value = value;
+        this._type = type;
+		return this;
+	};
+
+	Rules.prototype.forward = function(message, recipients) {
 		if (this._value != null) {
 			recipients[this._value] = true;
 		}
@@ -233,7 +217,7 @@
 	};
 
 	/* relatesTo scopes cross-cutting concerns by implicitly grouping concepts */
-	core.Term.prototype.relatesTo = function(TermA, TermB) {
+	Rules.prototype.relatesTo = function(TermA, TermB) {
 		if (TermA._type === core.CONCEPT) {
 			throw new Error('Cannot define a relationship with a concept type: ' + TermA._value);
 		}
@@ -280,7 +264,7 @@
 	};
 
 	/* subsumption establishes proximal relationship to other concepts */
-	core.Term.prototype.isA = function(Term) {
+	Rules.prototype.isA = function(Term) {
 		if (Term._type === core.RELATIONSHIP) {
 			throw new Error('Cannot apply isA to a relationship type: ' + Term._value);
 		}
@@ -298,7 +282,7 @@
 	};
 
 	/* object property range universally relates concepts downstream from an edge */
-	core.Term.prototype.hasRange = function(Term) {
+	Rules.prototype.hasRange = function(Term) {
 		if (Term._type === core.RELATIONSHIP) {
 			throw new Error('Cannot apply hasRange to a relationship type: ' + Term._value);
 		}
@@ -337,7 +321,7 @@
 	};
 
 	/* object property domain universally relates concepts upstream from an edge */
-	core.Term.prototype.hasDomain = function(Term) {
+	Rules.prototype.hasDomain = function(Term) {
 		if (Term._type === core.RELATIONSIP) {
 			throw new Error('Cannot apply hasRange to a relationship type: ' + Term._value);
 		}
@@ -354,7 +338,6 @@
 		return this;
 	};
 
-	core.Term.alsoBehavesLike(Channel);
 	core.Term.alsoBehavesLike(Rules);
 
 	return core;

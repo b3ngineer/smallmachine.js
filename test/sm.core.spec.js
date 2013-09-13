@@ -90,6 +90,11 @@ describe('sm.core', function() {
 			expect(test instanceof sm.types.Test).toBe(true);
 			delete sm.types.Test;
 		});
+
+        it('should allow comparing instanceof AsyncResult from modules outside of core', function() {
+            var test = new sm.types.AsyncResult();
+            expect(test instanceof sm.types.AsyncResult).toBe(true);
+        });
 	});
 
 	describe('pub/sub', function() {
