@@ -39,19 +39,33 @@
 		}
 	}
 
+    var Ontology = function() {
+        return this;
+    };
+
+    Ontology.prototype.add = function(term) {
+        var t = new core.Term(term);
+        this[t._value] = t;
+        return this;
+    };
+
+    core = function() {
+        return new Ontology();
+    };
+
 	core.CONCEPT = 'concept';
 	core.RELATIONSHIP = 'relationship';
 	core.types = {};
 
-	core.addMessageType = function(name, classDef) {
-		if (typeof classDef !== 'function') {
+	core.addMessageType = function(name, ctor) {
+		if (typeof ctor !== 'function') {
 			throw new Error('Cannot create a message type without a constructor (function)');
 		}
 		if (typeof core.types[name] !== 'undefined') {
-			core.types[name].alsoBehavesLike(classDef);
+			core.types[name].alsoBehavesLike(ctor);
 		}
 		else {
-			core.types[name] = classDef;
+			core.types[name] = ctor;
 			core.types[name].prototype.getType = function() {
 				return '[object ' + name + ']';
 			};
@@ -73,93 +87,6 @@
 
 	core.addMessageType('AsyncResult', AsyncResult);
 
-	var Channel = function() {
-		return this;
-	};
-
-	Channel.prototype.forward = function() {
-	};
-
-	Channel.prototype.forward.prototype.virtual = true;
-
-	Channel.prototype.subscribe = function(subscriber) {
-		if (typeof this._subscribers === 'undefined') {
-			this._subscribers = [];
-		}
-		if (typeof subscriber === 'function') {
-			this._subscribers.push({
-				update : subscriber
-			});
-			return this;
-		}
-		this._subscribers.push(subscriber);
-		return this;
-	};
-
-	var notify = function(message, subscribers) {
-		var authoritative = false,
-			delegates = [],
-			deference = [];
-		for (var i = 0; i < subscribers.length; i++) {
-			var response = subscribers[i].update(message);
-			if (response === true) {
-				authoritative = true;
-			}
-			else if (typeof response === 'function') {
-				deference.push(response);
-			}
-			else if (typeof response === 'object' && typeof response.update === 'function') {
-				delegates.push(response.update);
-			}
-		}
-		if (authoritative) {
-			for (var i = 0; i < deference.length; i++) {
-				deference[i](message);
-			}
-		}
-		else {
-			for (var i = 0; i < delegates.length; i++) {
-				delegates[i](message);
-			}
-		}
-	};
-
-	Channel.prototype.publish = function(message, recipients) {
-		var recipients = recipients || { };
-		if (typeof message === 'function') {
-			var newResult = message(new core.types.AsyncResult(this));
-			message = newResult;
-			if (typeof message !== 'undefined' &&
-				typeof message.getType === 'function' &&
-				message.getType() === '[object AsyncResult]') {
-				return this;
-			}
-		}
-		if (typeof this._subscribers === 'undefined') {
-			this.forward(message, recipients);
-			return this;
-		}
-		notify(message, this._subscribers);
-		this.forward(message, recipients);
-		return this;
-	};
-
-	Channel.prototype.addHelper = function(name, helper) {
-		var method = Channel.prototype.publish;
-		var context = this; // context becomes static to the channel adding the helper
-		this[name] = function() {
-			var args = [];
-			for (var i = 0; i < arguments.length; i++) {
-				args.push(arguments[i]);
-			}
-			return method.apply(context, [function(asyncResult) {
-				args.push(asyncResult);
-				return helper.apply(context, args);
-			}]);
-		};
-		return this;
-	};
-
 	core.Term = function(value) {
 		if (typeof value._value !== 'undefined' && typeof value._type !== 'undefined') {
 			this._value = value._value;
@@ -172,48 +99,10 @@
 		return this;
 	};
 
-	/* EVERY term is an immediate child of the core */
-	core.add = function(Term) {
-		core[Term._value] = Term;
-		return Term;
-	};
-
-	core.Term.alsoBehavesLike(Channel);
-
 	var Rules = function(value, type) {
         this._value = value;
         this._type = type;
 		return this;
-	};
-
-	Rules.prototype.forward = function(message, recipients) {
-		if (this._value != null) {
-			recipients[this._value] = true;
-		}
-		for (var property in this) {
-			if (!this.hasOwnProperty(property)) {
-				continue;
-			}
-			if (typeof this[property] === 'function' || property.indexOf('_') === 0) {
-				continue;
-			}
-			if (recipients[property] === true) {
-				continue;
-			}
-			if (typeof this[property].publish === 'function') {
-				recipients[property] = true;
-				this[property].publish(message, recipients);
-			}
-		}
-		if (typeof this._relatesTo !== 'undefined') {
-			for (var i = 0; i < this._relatesTo.length; i++) {
-				if (typeof this._relatesTo[i]._subscribers === 'undefined') {
-					continue;
-				}
-				// Relationships do *not* continue to notify their object properties when being forwarded to
-				notify(message, this._relatesTo[i]._subscribers);
-			}
-		}
 	};
 
 	/* relatesTo scopes cross-cutting concerns by implicitly grouping concepts */
@@ -241,7 +130,7 @@
 		core[this._value][TermB._value] = TermB; // sugar for including property as child
 		if (typeof TermB._relatesTo === 'undefined') {
 			TermB._relatesTo = [];
-		};
+		}
 		TermB._relatesTo.push(core[this._value][TermA._value]);
 		for (var field in TermB) {
 			if (!TermB.hasOwnProperty(field)) {
@@ -257,9 +146,9 @@
 			core[this._value][field] = TermB[field]; // sugar for linking subclasses as children
 			if (typeof TermB[field]._relatesTo === 'undefined') {
 				TermB[field]._relatesTo = [];
-			};
+			}
 			TermB[field]._relatesTo.push(core[this._value][TermA._value]);
-		};
+		}
 		return this;
 	};
 
