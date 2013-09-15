@@ -1,13 +1,13 @@
 ;(function(sm) {
     'use strict';
 
-	var Channel = function(value, type) {
+	sm.Channel = function(value, type) {
         this._value = value;
         this._type = type;
 		return this;
 	};
     
-	Channel.prototype.forward = function(message, recipients) {
+	sm.Channel.prototype.forward = function(message, recipients) {
 		if (this._value != null) {
 			recipients[this._value] = true;
 		}
@@ -37,7 +37,7 @@
 		}
 	};
 
-	Channel.prototype.subscribe = function(subscriber) {
+	sm.Channel.prototype.subscribe = function(subscriber) {
 		if (typeof this._subscribers === 'undefined') {
 			this._subscribers = [];
 		}
@@ -51,7 +51,7 @@
 		return this;
 	};
 
-	Channel.prototype.notify = function(message, subscribers) {
+	sm.Channel.prototype.notify = function(message, subscribers) {
 		var authoritative = false,
 			delegates = [],
 			deference = [];
@@ -79,7 +79,7 @@
 		}
 	};
 
-	Channel.prototype.publish = function(message, recipients) {
+	sm.Channel.prototype.publish = function(message, recipients) {
 		var recipients = recipients || { };
 		if (typeof message === 'function') {
 			var newResult = message(new sm.types.AsyncResult(this));
@@ -99,8 +99,8 @@
 		return this;
 	};
 
-	Channel.prototype.addHelper = function(name, helper) {
-		var method = Channel.prototype.publish;
+	sm.Channel.prototype.addHelper = function(name, helper) {
+		var method = sm.Channel.prototype.publish;
 		var context = this; // context becomes static to the channel adding the helper
 		this[name] = function() {
 			var args = [];
@@ -114,6 +114,4 @@
 		};
 		return this;
 	};
-
-	sm.Term.alsoBehavesLike(Channel);
 }(smallmachine));

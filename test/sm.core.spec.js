@@ -1,14 +1,14 @@
-describe('sm.core', function() {
+describe('target.core', function() {
 
 	it('should create the add method on the core', function() {
-		expect(sm.add).toBeDefined();
+		expect(target.add).toBeDefined();
 	});
 
 	describe('methods', function() {
-		it('should add message types to the sm.type namespace', function() {
-			sm.addMessageType('Test1', function() { return this; });
-			expect(sm.types.Test1).toBeDefined();
-			delete sm.types.Test1;
+		it('should add message types to the target.type namespace', function() {
+			smallmachine.addMessageType('Test1', function() { return this; });
+			expect(smallmachine.types.Test1).toBeDefined();
+			delete smallmachine.types.Test1;
 		});
 
 		it('should copy prototype functions when adding a message type', function() {
@@ -18,9 +18,9 @@ describe('sm.core', function() {
 			Test2.prototype.test = function() {
 				return true;
 			};
-			sm.addMessageType('Test2', Test2);
-			expect(typeof sm.types.Test2.prototype.test).toBe('function');
-			delete sm.types.Test2;
+			smallmachine.addMessageType('Test2', Test2);
+			expect(typeof smallmachine.types.Test2.prototype.test).toBe('function');
+			delete smallmachine.types.Test2;
 		});
 
 		it('should create member functions on message type instances', function() {
@@ -30,20 +30,20 @@ describe('sm.core', function() {
 			Test3.prototype.test = function() {
 				return true;
 			};
-			sm.addMessageType('Test3', Test3);
-			var testType = new sm.types.Test3();
+			smallmachine.addMessageType('Test3', Test3);
+			var testType = new smallmachine.types.Test3();
 			expect(testType.test()).toBe(true);
-			delete sm.types.Test3;
+			delete smallmachine.types.Test3;
 		});
 
 		it('should allow the use of instanceof to test an instance\'s type', function() {
 			var Test4 = function() {
 				return this;
 			};
-			sm.addMessageType('Test4', Test4);
-			var testType = new sm.types.Test4();
-			expect(testType instanceof sm.types.Test4).toBe(true);
-			delete sm.types.Test4;
+			smallmachine.addMessageType('Test4', Test4);
+			var testType = new smallmachine.types.Test4();
+			expect(testType instanceof smallmachine.types.Test4).toBe(true);
+			delete smallmachine.types.Test4;
 		});
 
 		it('should merge prototype methods of two message types when added with the same name', function() {
@@ -65,11 +65,11 @@ describe('sm.core', function() {
 				return true;
 			};
 
-			sm.addMessageType('Test', TestA);
-			sm.addMessageType('Test', TestB);
-			expect(sm.types.Test.prototype.methodA).toBeDefined();
-			expect(sm.types.Test.prototype.methodB).toBeDefined();
-			delete sm.types.Test;
+			smallmachine.addMessageType('Test', TestA);
+			smallmachine.addMessageType('Test', TestB);
+			expect(smallmachine.types.Test.prototype.methodA).toBeDefined();
+			expect(smallmachine.types.Test.prototype.methodB).toBeDefined();
+			delete smallmachine.types.Test;
 		});
 
 		it('should allow truthful comparison of types after merge', function() {
@@ -82,58 +82,58 @@ describe('sm.core', function() {
 				return this;
 			};
 
-			sm.addMessageType('Test', TestA);
-			sm.addMessageType('Test', TestB);
-			var test = new sm.types.Test();
+			smallmachine.addMessageType('Test', TestA);
+			smallmachine.addMessageType('Test', TestB);
+			var test = new smallmachine.types.Test();
 			expect(test.ofType('Test')).toBe(true);
 			expect(test.getType()).toBe('[object Test]');
-			expect(test instanceof sm.types.Test).toBe(true);
-			delete sm.types.Test;
+			expect(test instanceof smallmachine.types.Test).toBe(true);
+			delete smallmachine.types.Test;
 		});
 
         it('should allow comparing instanceof AsyncResult from modules outside of core', function() {
-            var test = new sm.types.AsyncResult();
-            expect(test instanceof sm.types.AsyncResult).toBe(true);
+            var test = new smallmachine.types.AsyncResult();
+            expect(test instanceof smallmachine.types.AsyncResult).toBe(true);
         });
 	});
 
 	describe('pub/sub', function() {
 		it('should implement the subscribe method on a channel object', function() {
-			expect(sm.thing.subscribe).toBeDefined();
+			expect(target.thing.subscribe).toBeDefined();
 		});
 
 		it('should implement the publish method on a channel object', function() {
-			expect(sm.thing.publish).toBeDefined();
+			expect(target.thing.publish).toBeDefined();
 		});
 		
 		it('should use lazy instantiation of the suscriber collection on an inheriting prototype', function() {
-			expect(sm.thing._subscribers).not.toBeDefined();
-			sm.thing.subscribe({
+			expect(target.thing._subscribers).not.toBeDefined();
+			target.thing.subscribe({
 				update :function(result) {
 				},
 				cancel : function(result) {
 				}
 			});
-			expect(sm.thing._subscribers).toBeDefined();
+			expect(target.thing._subscribers).toBeDefined();
 		});
 
 		it('should add a subscriber to the user channel\'s internal collection', function() {
-			sm.thing.user.subscribe({
+			target.thing.user.subscribe({
 				update :function(result) { 
 				},
 				cancel : function(result) {
 				}
 			});
 
-			expect(sm.thing.user._subscribers.length).toBe(1);
-			expect(sm.user._subscribers.length).toBe(1);
-			delete sm.thing.user._subscribers;
+			expect(target.thing.user._subscribers.length).toBe(1);
+			expect(target.user._subscribers.length).toBe(1);
+			delete target.thing.user._subscribers;
 		});
 
 		it('should notify subscribers on action and action subclasses during a publish on user', function() {
 			var notified = 0;
 
-			sm.action.subscribe({
+			target.action.subscribe({
 				update : function(result) {
 					notified++;
 				},
@@ -141,7 +141,7 @@ describe('sm.core', function() {
 				}
 			});
 
-			sm.click.subscribe({
+			target.click.subscribe({
 				update : function(result) {
 					notified++;
 				},
@@ -149,7 +149,7 @@ describe('sm.core', function() {
 				}
 			});
 
-			sm.doubleClick.subscribe({
+			target.doubleClick.subscribe({
 				update : function(result) {
 					notified++;
 				},
@@ -157,7 +157,7 @@ describe('sm.core', function() {
 				}
 			});
 
-			sm.keyPress.subscribe({
+			target.keyPress.subscribe({
 				update : function(result) {
 					notified++;
 				},
@@ -165,18 +165,18 @@ describe('sm.core', function() {
 				}
 			});
 
-			sm.user.publish({}); // publish to all vertices under user
+			target.user.publish({}); // publish to all vertices under user
 			expect(notified).toBe(4);
-			delete sm.performs.action._subscribers;
-			delete sm.performs.action.click._subscribers;
-			delete sm.performs.action.doubleClick._subscribers;
-			delete sm.performs.action.keyPress._subscribers;
+			delete target.performs.action._subscribers;
+			delete target.performs.action.click._subscribers;
+			delete target.performs.action.doubleClick._subscribers;
+			delete target.performs.action.keyPress._subscribers;
 		});
 
 		it('should notify subscribers with results of scalar types', function() {
 			var notified = null;
 
-			sm.keyPress.subscribe({
+			target.keyPress.subscribe({
 				update : function(result) {
 					notified = result;
 				},
@@ -184,15 +184,15 @@ describe('sm.core', function() {
 				}
 			});
 
-			sm.keyPress.publish('test');
+			target.keyPress.publish('test');
 			expect(notified).toBe('test');
-			delete sm.performs.action.keyPress._subscribers;
+			delete target.performs.action.keyPress._subscribers;
 		});
 
 		it('should notify subscribers with results of object types', function() {
 			var notified = null;
 
-			sm.keyPress.subscribe({
+			target.keyPress.subscribe({
 				update : function(result) {
 					notified = result;
 				},
@@ -200,17 +200,17 @@ describe('sm.core', function() {
 				}
 			});
 
-			sm.keyPress.publish({ test : 123 });
+			target.keyPress.publish({ test : 123 });
 			expect(notified.test).toBe(123);
-			delete sm.performs.action.keyPress._subscribers;
+			delete target.performs.action.keyPress._subscribers;
 		});
 
 		it('should notify subscribers with results generated by passed in functions', function() {
 			var notified = null;
-			sm.keyPress.subscribe({update:function(result){notified=result;},cancel:function(result){}});
-			sm.keyPress.publish(function(){return 123;});
+			target.keyPress.subscribe({update:function(result){notified=result;},cancel:function(result){}});
+			target.keyPress.publish(function(){return 123;});
 			expect(notified).toBe(123);
-			delete sm.keyPress._subscribers;
+			delete target.keyPress._subscribers;
 		});
 	});
 });

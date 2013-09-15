@@ -1,19 +1,19 @@
-describe('sm.helpers', function() {
+describe('target.helpers', function() {
     it('should allow calling publish directly', function() {
-        expect(typeof sm.system.initialize.publish).toBe('function');
+        expect(typeof target.system.initialize.publish).toBe('function');
     });
 
     it('should define the json helper as a child of system.initialize', function() {
-        expect(sm.system.initialize.json).toBeDefined();
+        expect(target.system.initialize.json).toBeDefined();
     });
 
     it('should not define the json helper as a child of system', function() {
-        expect(sm.system.json).not.toBeDefined();
+        expect(target.system.json).not.toBeDefined();
     });
 
     it('should allow calling json helper to get results asynchronously', function() {
         var updated = false;
-        sm.system.initialize.subscribe({
+        target.system.initialize.subscribe({
             update : function(e) {
                 updated = true;
             },
@@ -21,7 +21,7 @@ describe('sm.helpers', function() {
                 expect(true).toBe(false);
             }
         });
-        sm.system.initialize.json('test.service.php');
+        target.system.initialize.json('test.service.php');
         waitsFor(function() {
             return updated;
         }, "Failed to return on system.initialize", 1000);
@@ -33,7 +33,7 @@ describe('sm.helpers', function() {
             this.updatedIncorrectly = { result : false };
             var u1 = this.updated;
             var u2 = this.updatedIncorrectly;
-            sm.system.initialize.subscribe({
+            target.system.initialize.subscribe({
                 update : function(e) {
                     u1.result = true;
                 },
@@ -41,7 +41,7 @@ describe('sm.helpers', function() {
                     expect(true).toBe(false);
                 }
             });
-            sm.messenger.error.subscribe({
+            target.messenger.error.subscribe({
                 update : function(e) {
                     u2.result = true;
                 },
@@ -49,7 +49,7 @@ describe('sm.helpers', function() {
                     expect(true).toBe(false);
                 }
             });
-            sm.system.initialize.json('test.service.php');
+            target.system.initialize.json('test.service.php');
         });
         waits(1000);
         runs(function() {
@@ -59,7 +59,7 @@ describe('sm.helpers', function() {
 
     it('should publish a hook object after publishing with the hook helper', function() {
         var result = false;
-        sm.system.insert.subscribe({
+        target.system.insert.subscribe({
             update : function(message) {
                 if (typeof message.target !== 'undefined' && typeof message.context !== 'undefined') {
                     result = true;
@@ -67,7 +67,7 @@ describe('sm.helpers', function() {
             }
         });
 
-        sm.system.insert.hook(true, true);
+        target.system.insert.hook(true, true);
         expect(result).toBe(true);
     });
 

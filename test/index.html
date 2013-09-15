@@ -11,13 +11,14 @@
 
   <!-- include source files here... -->
   <script type="text/javascript" src="../src/sm.core.js"></script>
-  <script type="text/javascript" src="../src/sm.channels.js"></script>
-  <script type="text/javascript" src="../src/sm.base.ontology.js"></script>
-  <script type="text/javascript" src="../src/helpers/sm.json.js"></script>
-  <script type="text/javascript" src="../src/helpers/sm.hook.js"></script>
+  <script type="text/javascript" src="../src/ontologies/sm.channel.js"></script>
+  <script type="text/javascript" src="../src/ontologies/sm.channels.ontology.js"></script>
 
   <script type="text/javascript">
-    sm = channels;
+  	var channels = smallmachine('channels');
+	channels.Term.alsoBehavesLike(smallmachine.Channel);
+	smallmachine.defaultChannels(channels);
+	var target = channels;
   </script>
 
   <!-- include spec files here... -->
