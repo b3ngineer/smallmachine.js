@@ -1,6 +1,19 @@
 ;var smallmachine = (function(core) {
 	'use strict';
 
+	if ( typeof Object.getPrototypeOf !== 'function' ) {
+		if (typeof 'test'.__proto__ === 'object' ) {
+			Object.getPrototypeOf = function(object){
+				return object.__proto__;
+			};
+		}
+		else {
+			Object.getPrototypeOf = function(object){
+				return object.constructor.prototype;
+			};
+		}
+	}
+
     core = function(ontology, behaviors) {
 		if (typeof ontology === 'undefined') {
 			throw new Error('Missing required parameter for smallmachine constructor: ontology [title or object]');
@@ -95,32 +108,31 @@
     };
 
     core.Ontology.prototype.addTerm = function(value) {
-        var t = new this.Term(value);
+		var Term = function(value) {
+			if (typeof value._value !== 'undefined' && typeof value._type !== 'undefined') {
+				this._value = value._value;
+				this._type = value._type;
+			}
+			else {
+				this._value = value;
+				this._type = null;
+			}
+			return this;
+		};
+
+		Term.prototype.getType = function() {
+			return '[object Term]';
+		}
+
+        var t = new Term(value);
 		this[t._value] = new Proxy(t, this._inferencer);
         return this;
     };
-
-	core.Ontology.prototype.Term = function(value) {
-		if (typeof value._value !== 'undefined' && typeof value._type !== 'undefined') {
-			this._value = value._value;
-			this._type = value._type;
-		}
-		else {
-			this._value = value;
-			this._type = null;
-		}
-		return this;
-	};
-
-	core.Ontology.prototype.Term.prototype.getType = function() {
-		return '[object Term]';
-	}
 
 	core.Ontology.prototype.getModel = function(behaviors) {
 		var Model = function(title) {
 			return this;
 		};
-
 		var model = new Model();
 		for (var p in this) {
 			if (!this.hasOwnProperty(p)) {
@@ -134,8 +146,9 @@
 			}
 			if (typeof this[p]._term !== 'undefined') {
 				model[p] = this[p]._term;
+				
 				if (typeof behaviors !== 'undefined') {
-					core.alsoBehavesLike(model[p], behaviors.prototype);
+					core.alsoBehavesLike(Object.getPrototypeOf(model[p]), behaviors.prototype);
 				}
 			}
 			else {
