@@ -1,62 +1,62 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-  "http://www.w3.org/TR/html4/loose.dtd">
+	"http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-  <title>Jasmine Spec Runner</title>
+	<title>Jasmine Spec Runner</title>
 
-  <link rel="stylesheet" type="text/css" href="../lib/jasmine.css">
-  <script type="text/javascript" src="../lib/jasmine.js"></script>
-  <script type="text/javascript" src="../lib/jasmine-html.js"></script>
-  <script type="text/javascript" src="../lib/jquery-1.10.2.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="../lib/jasmine.css">
+	<script type="text/javascript" src="../lib/jasmine.js"></script>
+	<script type="text/javascript" src="../lib/jasmine-html.js"></script>
+	<script type="text/javascript" src="../lib/jquery-1.10.2.min.js"></script>
 
-  <!-- include source files here... -->
-  <script type="text/javascript" src="../src/sm.core.js"></script>
-  <script type="text/javascript" src="../src/ontologies/sm.channel.js"></script>
-  <script type="text/javascript" src="../src/ontologies/sm.channels.ontology.js"></script>
+	<!-- include source files here... -->
+	<script type="text/javascript" src="../src/sm.core.js"></script>
+	<script type="text/javascript" src="../src/ontologies/sm.channel.js"></script>
+	<script type="text/javascript" src="../src/ontologies/sm.channels.ontology.js"></script>
 
-  <script type="text/javascript">
-  	var channels = smallmachine('channels');
-	channels.Term.alsoBehavesLike(smallmachine.Channel);
-	smallmachine.defaultChannels(channels);
-	var target = channels;
-  </script>
+	<script type="text/javascript">
+		var target = (function(sm) {
+			var channels = sm('smallmachine.channels', sm.Channel);
+			console.log(channels);
+			return channels;
+		}(smallmachine));
+	</script>
 
-  <!-- include spec files here... -->
-  <script type="text/javascript" src="sm.core.spec.js"></script>
-  <script type="text/javascript" src="sm.ontology.spec.js"></script>
-  <script type="text/javascript" src="sm.helpers.spec.js"></script>
+	<!-- include spec files here... -->
+	<script type="text/javascript" src="sm.core.spec.js"></script>
+	<script type="text/javascript" src="sm.ontology.spec.js"></script>
+	<!--
+	<script type="text/javascript" src="sm.helpers.spec.js"></script>
+	-->
+	<script type="text/javascript">
+		(function() {
+			var jasmineEnv = jasmine.getEnv();
+			jasmineEnv.updateInterval = 1000;
 
-  <script type="text/javascript">
-    (function() {
-      var jasmineEnv = jasmine.getEnv();
-      jasmineEnv.updateInterval = 1000;
+			var htmlReporter = new jasmine.HtmlReporter();
 
-      var htmlReporter = new jasmine.HtmlReporter();
+			jasmineEnv.addReporter(htmlReporter);
 
-      jasmineEnv.addReporter(htmlReporter);
+			jasmineEnv.specFilter = function(spec) {
+				return htmlReporter.specFilter(spec);
+			};
 
-      jasmineEnv.specFilter = function(spec) {
-        return htmlReporter.specFilter(spec);
-      };
+			var currentWindowOnload = window.onload;
 
-      var currentWindowOnload = window.onload;
+			window.onload = function() {
+				if (currentWindowOnload) {
+					currentWindowOnload();
+				}
+				execJasmine();
+			};
 
-      window.onload = function() {
-        if (currentWindowOnload) {
-          currentWindowOnload();
-        }
-        execJasmine();
-      };
+			function execJasmine() {
+				jasmineEnv.execute();
+			}
 
-      function execJasmine() {
-        jasmineEnv.execute();
-      }
-
-    })();
-  </script>
-
+		})();
+	</script>
 </head>
-
 <body>
 </body>
 </html>

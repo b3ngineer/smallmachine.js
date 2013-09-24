@@ -1,10 +1,33 @@
-describe('target.core', function() {
+describe('sm.core', function() {
 
-	it('should create the add method on the core', function() {
-		expect(target.add).toBeDefined();
-	});
+	describe('sanity', function() {
+		var A = function() {
+			return this;
+		};
 
-	describe('methods', function() {
+		var B = function() {
+			this._value = false;
+			this.value = true;
+			return this;
+		};
+
+		B.prototype.test = function() {
+			return false;
+		};
+
+		B.prototype.test.prototype.virtual = true;
+
+		var C = function() {
+			return true;
+		};
+
+		C.prototype.test = function() {
+			return true;
+		};
+
+		smallmachine.alsoBehavesLike(A,B);
+		smallmachine.alsoBehavesLike(B,C);
+
 		it('should add message types to the target.type namespace', function() {
 			smallmachine.addMessageType('Test1', function() { return this; });
 			expect(smallmachine.types.Test1).toBeDefined();
@@ -95,123 +118,122 @@ describe('target.core', function() {
             var test = new smallmachine.types.AsyncResult();
             expect(test instanceof smallmachine.types.AsyncResult).toBe(true);
         });
-	});
 
-	describe('pub/sub', function() {
-		it('should implement the subscribe method on a channel object', function() {
-			expect(target.thing.subscribe).toBeDefined();
+		it('should create the smallmachine constructor as a function', function() {
+			expect(typeof smallmachine).toBe('function');
 		});
 
-		it('should implement the publish method on a channel object', function() {
-			expect(target.thing.publish).toBeDefined();
-		});
-		
-		it('should use lazy instantiation of the suscriber collection on an inheriting prototype', function() {
-			expect(target.thing._subscribers).not.toBeDefined();
-			target.thing.subscribe({
-				update :function(result) {
-				},
-				cancel : function(result) {
-				}
-			});
-			expect(target.thing._subscribers).toBeDefined();
+		it('should define the smallmachine constants', function() {
+			expect(smallmachine.CONCEPT).toBe('concept');
+			expect(smallmachine.RELATIONSHIP).toBe('relationship');
 		});
 
-		it('should add a subscriber to the user channel\'s internal collection', function() {
-			target.thing.user.subscribe({
-				update :function(result) { 
-				},
-				cancel : function(result) {
-				}
-			});
-
-			expect(target.thing.user._subscribers.length).toBe(1);
-			expect(target.user._subscribers.length).toBe(1);
-			delete target.thing.user._subscribers;
+		it('should copy non-private properties when one object behaves like another', function() {
+			var a = new A();
+			var b = new B();
+			smallmachine.alsoBehavesLike(a,b);
+			expect(a.value).toBe(true);
 		});
 
-		it('should notify subscribers on action and action subclasses during a publish on user', function() {
-			var notified = 0;
-
-			target.action.subscribe({
-				update : function(result) {
-					notified++;
-				},
-				cancel : function(result) {
-				}
-			});
-
-			target.click.subscribe({
-				update : function(result) {
-					notified++;
-				},
-				cancel : function(result) {
-				}
-			});
-
-			target.doubleClick.subscribe({
-				update : function(result) {
-					notified++;
-				},
-				cancel : function(result) {
-				}
-			});
-
-			target.keyPress.subscribe({
-				update : function(result) {
-					notified++;
-				},
-				cancel : function(result) {
-				}
-			});
-
-			target.user.publish({}); // publish to all vertices under user
-			expect(notified).toBe(4);
-			delete target.performs.action._subscribers;
-			delete target.performs.action.click._subscribers;
-			delete target.performs.action.doubleClick._subscribers;
-			delete target.performs.action.keyPress._subscribers;
+		it('should not copy private properties when one object behaves like another', function() {
+			var a = new A();
+			var b = new B();
+			smallmachine.alsoBehavesLike(a,b);
+			expect(a._value).not.toBeDefined();
 		});
 
-		it('should notify subscribers with results of scalar types', function() {
-			var notified = null;
-
-			target.keyPress.subscribe({
-				update : function(result) {
-					notified = result;
-				},
-				cancel : function(result) {
-				}
-			});
-
-			target.keyPress.publish('test');
-			expect(notified).toBe('test');
-			delete target.performs.action.keyPress._subscribers;
+		it('should copy non-private methods when one class behaves like another', function() {
+			var a = new A();
+			var b = new B();
+			expect(typeof a.test).toBe('function');
 		});
 
-		it('should notify subscribers with results of object types', function() {
-			var notified = null;
-
-			target.keyPress.subscribe({
-				update : function(result) {
-					notified = result;
-				},
-				cancel : function(result) {
-				}
-			});
-
-			target.keyPress.publish({ test : 123 });
-			expect(notified.test).toBe(123);
-			delete target.performs.action.keyPress._subscribers;
+		it('should override virtual methods when one class behaves like another', function() {
+			var a = new A();
+			var b = new B();
+			var c = new C();
+			expect(a.test()).toBe(false); // A behaves like B
+			expect(b.test()).toBe(true); // B behaves like C
 		});
 
-		it('should notify subscribers with results generated by passed in functions', function() {
-			var notified = null;
-			target.keyPress.subscribe({update:function(result){notified=result;},cancel:function(result){}});
-			target.keyPress.publish(function(){return 123;});
-			expect(notified).toBe(123);
-			delete target.keyPress._subscribers;
+		it('should add terms to an ontology at the child level', function() {
+			var target = new smallmachine.Ontology();
+			target.addTerm('test');
+			expect(target.test).toBeDefined();
 		});
+
+		it('should add instances of Proxy to an ontology at the child level', function() {
+			var target = new smallmachine.Ontology();
+			target.addTerm('test');
+			expect(target.test.getType() === '[object Proxy]').toBe(true);
+		});
+
+		it('should return a model with all of the terms from the ontology applied', function() {
+			var target = new smallmachine.Ontology();
+			target.addTerm('test');
+			target.addTerm('again');
+			var actual = target.getModel();
+			expect(actual.test.getType() === '[object Term]').toBe(true);
+			expect(actual.again.getType() === '[object Term]').toBe(true);
+		});
+
+		it('should save rules added to an ontology in the inferencer\'s _rules property', function() {
+			var target = new smallmachine.Ontology();
+			target.addTerm('test');
+			target.addTerm('again');
+			target.addTerm('andAgain');
+			target.again.isA(target.test);
+			target.andAgain.isA(target.test);
+			expect(target._inferencer._rules.length).toBe(2);
+		});
+
+		it('should not include the inferencer in a model', function() {
+			var target = new smallmachine.Ontology();
+			var actual = target.getModel();
+			expect(actual._inferencer).not.toBeDefined();
+		});
+
+		it('should include the title in a model', function() {
+			var target = new smallmachine.Ontology('test');
+			var actual = target.getModel();
+			expect(actual.title).toBe('test');
+		});
+
+		it('should make a subclass of a Term a property of that Term', function() {
+			var target = new smallmachine.Ontology('test');
+			target.addTerm('number');
+			target.addTerm('one');
+			target.one.isA(target.number);
+			var actual = target.getModel();
+			expect(actual.number.one).toBeDefined();
+		});
+
+		it('should include a concept that is in the range of a relationship as a property of that relationship', function() {
+			var target = new smallmachine.Ontology('test');
+			target.addTerm('number');
+			target.addTerm('one');
+			target.addTerm('two');
+			target.addTerm('precedes');
+			target.one.isA(target.number);
+			target.two.isA(target.number);
+			target.precedes.hasRange(target.two);
+			var actual = target.getModel();
+			expect(actual.precedes.two).toBeDefined();
+		});
+
+		it('should include a relationship that is in the domain of a concept as a property of that concept', function() {
+			var target = new smallmachine.Ontology('test');
+			target.addTerm('number');
+			target.addTerm('one');
+			target.addTerm('two');
+			target.addTerm('precedes');
+			target.one.isA(target.number);
+			target.two.isA(target.number);
+			target.precedes.hasDomain(target.one);
+			var actual = target.getModel();
+			expect(actual.one.precedes).toBeDefined();
+		});
+
 	});
 });
 
