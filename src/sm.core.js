@@ -65,6 +65,7 @@
 	core.CONCEPT = 'concept';
 	core.RELATIONSHIP = 'relationship';
 	core.types = {};
+	core._activators = [];
 
 	core.addMessageType = function(name, ctor) {
 		if (typeof ctor !== 'function') {
@@ -84,11 +85,15 @@
 		}
 	};
 
-	core.addOntology = function(ontology) {
+	core.saveOntology = function(ontology) {
 		if (typeof core._ontology === 'undefined') {
 			core._ontology = {};
 		}
 		core._ontology[ontology.title] = ontology;
+	};
+
+	core.registerHelpers = function(activator) {
+		core._activators.push(activator);
 	};
 
 	var Proxy = function(Term, Inferencer) {
@@ -146,7 +151,6 @@
 			}
 			if (typeof this[p]._term !== 'undefined') {
 				model[p] = this[p]._term;
-				
 				if (typeof behaviors !== 'undefined') {
 					core.alsoBehavesLike(Object.getPrototypeOf(model[p]), behaviors.prototype);
 				}
@@ -155,14 +159,15 @@
 				model[p] = this[p];
 			}
 		}
-
 		this._inferencer._rules.sort(function(a,b) {
 			return a._priority - b._priority;
 		});
-
 		for (var i = 0; i < this._inferencer._rules.length; i++) {
 			var rule = this._inferencer._rules[i];
 			rule._fn.apply(model, rule._args);
+		}
+		for (var i = 0; i < core._activators.length; i++) {
+			core._activators[i](model);
 		}
 		return model;
 	};

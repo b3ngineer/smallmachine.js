@@ -11,12 +11,13 @@
 
 	<!-- include source files here... -->
 	<script type="text/javascript" src="../src/sm.core.js"></script>
-	<script type="text/javascript" src="../src/ontologies/sm.channel.js"></script>
-	<script type="text/javascript" src="../src/ontologies/sm.channels.ontology.js"></script>
+	<script type="text/javascript" src="../src/behaviors/sm.Channel.js"></script>
+	<script type="text/javascript" src="../src/ontologies/sm.channels.js"></script>
+	<script type="text/javascript" src="../src/ontologies/sm.channels.helpers.js"></script>
 
 	<script type="text/javascript">
 		var target = (function(sm) {
-			var channels = sm('smallmachine.channels', sm.Channel);
+			var channels = sm('sm.channels', sm.Channel);
 			return channels;
 		}(smallmachine));
 	</script>
@@ -24,9 +25,8 @@
 	<!-- include spec files here... -->
 	<script type="text/javascript" src="sm.core.spec.js"></script>
 	<script type="text/javascript" src="sm.ontology.spec.js"></script>
-	<!--
 	<script type="text/javascript" src="sm.helpers.spec.js"></script>
-	-->
+
 	<script type="text/javascript">
 		(function() {
 			var jasmineEnv = jasmine.getEnv();
