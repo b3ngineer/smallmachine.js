@@ -8,15 +8,14 @@
 	<script type="text/javascript" src="../lib/jquery-1.10.2.min.js"></script>
 	<script type="text/javascript" src="../lib/raphael-min.js"></script>
 	<script type="text/javascript" src="../src/sm.core.js"></script>
-	<script type="text/javascript" src="../src/sm.ontology.js"></script>
-	<script type="text/javascript" src="../src/helpers/sm.json.js"></script>
-	<script type="text/javascript" src="../src/helpers/sm.hook.js"></script>
-	<script type="text/javascript" src="../src/bones/sm.blocks.js"></script>
+	<script type="text/javascript" src="../src/ontologies/sm.channels.js"></script>
+	<script type="text/javascript" src="../src/ontologies/sm.channels.helpers.js"></script>
+	<script type="text/javascript" src="../src/behaviors/sm.Channel.js"></script>
+	<script type="text/javascript" src="../src/bones/sm.Nodes.js"></script>
 	<script type="text/javascript">
         (function(sm) {
-            sm.messenger.error.subscribe(function(result){ console.log(result); });
-            sm.messenger.success.subscribe(function(result){ console.log(result); });
-            sm.system.initialize.json('example.json');
+			var nodes = sm('sm.channels', [ sm.Channels, sm.Nodes ]);
+			nodes.system.initialize.json('example.json');
         })(smallmachine);
 	</script>
 </body>

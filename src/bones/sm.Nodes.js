@@ -91,4 +91,4 @@
 	};
 
 	return true;
-}(smallmachine, jQuery, Raphael));
+})(smallmachine, jQuery, Raphael);

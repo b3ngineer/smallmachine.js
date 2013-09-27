@@ -114,6 +114,11 @@
 
     core.Ontology.prototype.addTerm = function(value) {
 		var Term = function(value) {
+			this._id = (function() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+				var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+				return v.toString(16);
+			})})();
+
 			if (typeof value._value !== 'undefined' && typeof value._type !== 'undefined') {
 				this._value = value._value;
 				this._type = value._type;
@@ -128,6 +133,49 @@
 		Term.prototype.getType = function() {
 			return '[object Term]';
 		}
+
+		Term.prototype.copy = function(Term, relatesTo) {
+			if (typeof relatesTo === 'undefined') {
+				relatesTo = false;
+			}
+			for (var field in Term) {
+				if (!Term.hasOwnProperty(field)) {
+					continue;
+				}
+				if (typeof Term[field] === 'function' || field.indexOf('_') === 0) {
+					continue;
+				}
+				if (typeof Term[field]._value === 'undefined') {
+					continue;
+				}
+				var term = Term[field]._value;
+				if (typeof this[term] === 'undefined') {
+					this[term] = Term[field];
+				}
+				if (relatesTo === true) {
+					if (typeof Term[field]._relatesTo === 'undefined') {
+						Term[field]._relatesTo = [];
+					}
+					Term[field]._relatesTo.push(this);
+				}
+			};
+		};
+
+		Term.prototype.relate = function(Term) {
+			if (typeof this._relatesTo === 'undefined') {
+				this._relatesTo = [];
+			}
+			var alreadyRelatesTo = false;
+			for (var i = 0; i < this._relatesTo.length; i++) {
+				if (this._relatesTo[i]._id == Term._id) {
+					alreadyRelatesTo = true;
+					break;
+				}
+			}
+			if (!alreadyRelatesTo) {
+				this._relatesTo.push(Term);
+			}
+		};
 
         var t = new Term(value);
 		this[t._value] = new Proxy(t, this._inferencer);
@@ -212,7 +260,6 @@
 		var Term = this[target];
 		var TermA = this[termA];
 		var TermB = this[termB];
-
 		if (TermA._type === core.CONCEPT) {
 			throw new Error('Cannot define a relationship with a concept type: ' + TermA._value);
 		}
@@ -231,14 +278,17 @@
 		else if (Term._type === null) {
 			Term._type = core.CONCEPT;
 		}
-		var ctor = Term.constructor;
-		this[Term._value][TermA._value] = new ctor(TermA); // isolate relationship scope
-		this[Term._value][TermA._value][TermB._value] = TermB; // put object property in scope
-		this[Term._value][TermB._value] = TermB; // sugar for including property as child
-		if (typeof TermB._relatesTo === 'undefined') {
-			TermB._relatesTo = [];
+		if (typeof Term[termA] === 'undefined') {
+			var ctor = Term.constructor;
+			Term[termA] = new ctor(TermA); // isolate relationship scope
 		}
-		TermB._relatesTo.push(this[Term._value][TermA._value]);
+		if (typeof Term[termA][termB] === 'undefined') {
+			Term[termA][termB] = TermB; // put object property in scope
+		}
+		if (typeof Term[termB] === 'undefined') {
+			Term[termB] = TermB; // sugar for including property as child
+		}
+		TermB.relate(Term[termA]);
 		for (var field in TermB) {
 			if (!TermB.hasOwnProperty(field)) {
 				continue;
@@ -249,12 +299,9 @@
 			if (typeof TermB[field]._value === 'undefined') {
 				continue;
 			}
-			this[Term._value][TermA._value][field] = TermB[field]; // link subclasses in scope
-			this[Term._value][field] = TermB[field]; // sugar for linking subclasses as children
-			if (typeof TermB[field]._relatesTo === 'undefined') {
-				TermB[field]._relatesTo = [];
-			}
-			TermB[field]._relatesTo.push(this[Term._value][TermA._value]);
+			Term[termA][field] = TermB[field]; // link subclasses in scope
+			Term[field] = TermB[field]; // sugar for linking subclasses as children
+			TermB[field].relate(Term[termA]);
 		}
 	};
 
@@ -275,14 +322,15 @@
 		else if (Term._type === null) {
 			Term._type = core.CONCEPT;
 		}
-		TermA[Term._value] = Term;
+		if (typeof TermA[target] === 'undefined') {
+			TermA[target] = Term;
+		}
 	};
 
 	/* object property range universally relates concepts downstream from an edge */
 	var hasRange = function(target, termA) {
 		var Term = this[target];
 		var TermA = this[termA];
-
 		if (TermA._type === core.RELATIONSHIP) {
 			throw new Error('Cannot apply hasRange to a relationship type: ' + TermA._value);
 		}
@@ -295,35 +343,17 @@
 		else if (Term._type === null) {
 			Term._type = core.RELATIONSHIP;
 		}
-		this[Term._value][TermA._value] = TermA;
-		
-		if (typeof TermA._relatesTo === 'undefined') {
-			TermA._relatesTo = [];
+		if (typeof Term[termA] === 'undefined') {
+			Term[termA] = TermA;
 		}
-		TermA._relatesTo.push(Term);
-		for (var field in TermA) {
-			if (!TermA.hasOwnProperty(field)) {
-				continue;
-			}
-			if (typeof TermA[field] === 'function' || field.indexOf('_') === 0) {
-				continue;
-			}
-			if (typeof TermA[field]._value === 'undefined') {
-				continue;
-			}
-			this[Term._value][TermA[field]._value] = TermA[field];
-			if (typeof TermA[field]._relatesTo === 'undefined') {
-				TermA[field]._relatesTo = [];
-			}
-			TermA[field]._relatesTo.push(Term);
-		};
+		TermA.relate(Term);
+		Term.copy(TermA, true);
 	};
 
 	/* object property domain universally relates concepts upstream from an edge */
 	var hasDomain = function(target, termA) {
 		var Term = this[target];
 		var TermA = this[termA];
-
 		if (TermA._type === core.RELATIONSIP) {
 			throw new Error('Cannot apply hasRange to a relationship type: ' + TermA._value);
 		}
@@ -336,7 +366,9 @@
 		else if (Term._type === null) {
 			Term._type = core.RELATIONSHIP;
 		}
-		this[TermA._value][Term._value] = Term;
+		if (typeof TermA[target] === 'undefined') {
+			TermA[target] = Term;
+		}
 	};
 
 	var AsyncResult = function(channel) {

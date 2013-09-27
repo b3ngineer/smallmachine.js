@@ -233,7 +233,6 @@ describe('sm.core', function() {
 			var actual = target.getModel();
 			expect(actual.one.precedes).toBeDefined();
 		});
-
 	});
 });
 
