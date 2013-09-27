@@ -39,9 +39,8 @@
 			if (typeof a[p] !== 'undefined') {
 				var currentBehaviorIsVirtual = (typeof a[p].prototype !== 'undefined') ? a[p].prototype.virtual : false;
 				var newBehaviorIsVirtual = (typeof b[p].prototype !== 'undefined') ? b[p].prototype.virtual : false;
-
 				if (currentBehaviorIsVirtual && newBehaviorIsVirtual) {
-					throw new Error('Cannot mixin duplicate named virtual behaviors: ' + p);
+					continue;
 				}
 				else if (currentBehaviorIsVirtual) {
 					a[p] = b[p];
@@ -50,9 +49,10 @@
 				else if (newBehaviorIsVirtual) {
 					continue;
 				}
-				throw new Error('Cannot mixin same-named behaviors: ' + p);
 			}
-			a[p] = b[p];
+			else {
+				a[p] = b[p];
+			}
 		}
 		if (typeof b.prototype !== 'undefined') {
 			if (typeof a.prototype === 'undefined') {
@@ -106,19 +106,38 @@
 		return '[object Proxy]';
 	};
 
+	var ProtoTerm = function() {
+		return this;
+	};
+
+	ProtoTerm.prototype.relate = function(Term) {
+		if (typeof this._relatesTo === 'undefined') {
+			this._relatesTo = [];
+		}
+		var alreadyRelatesTo = false;
+		for (var i = 0; i < this._relatesTo.length; i++) {
+			if (this._relatesTo[i]._id == Term._id) {
+				alreadyRelatesTo = true;
+				break;
+			}
+		}
+		if (!alreadyRelatesTo) {
+			this._relatesTo.push(Term);
+		}
+	};
+
+	ProtoTerm.prototype.getType = function() {
+		return '[object Term]';
+	};
+
     core.Ontology = function(title) {
 		this.title = title;
 		this._inferencer = new Inferencer();
-        return this;
-    };
-
-    core.Ontology.prototype.addTerm = function(value) {
-		var Term = function(value) {
+		this._term = function(value) {
 			this._id = (function() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 				var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
 				return v.toString(16);
 			})})();
-
 			if (typeof value._value !== 'undefined' && typeof value._type !== 'undefined') {
 				this._value = value._value;
 				this._type = value._type;
@@ -129,54 +148,13 @@
 			}
 			return this;
 		};
+        return this;
+    };
 
-		Term.prototype.getType = function() {
-			return '[object Term]';
-		}
-
-		Term.prototype.copy = function(Term, relatesTo) {
-			if (typeof relatesTo === 'undefined') {
-				relatesTo = false;
-			}
-			for (var field in Term) {
-				if (!Term.hasOwnProperty(field)) {
-					continue;
-				}
-				if (typeof Term[field] === 'function' || field.indexOf('_') === 0) {
-					continue;
-				}
-				if (typeof Term[field]._value === 'undefined') {
-					continue;
-				}
-				var term = Term[field]._value;
-				if (typeof this[term] === 'undefined') {
-					this[term] = Term[field];
-				}
-				if (relatesTo === true) {
-					if (typeof Term[field]._relatesTo === 'undefined') {
-						Term[field]._relatesTo = [];
-					}
-					Term[field]._relatesTo.push(this);
-				}
-			};
-		};
-
-		Term.prototype.relate = function(Term) {
-			if (typeof this._relatesTo === 'undefined') {
-				this._relatesTo = [];
-			}
-			var alreadyRelatesTo = false;
-			for (var i = 0; i < this._relatesTo.length; i++) {
-				if (this._relatesTo[i]._id == Term._id) {
-					alreadyRelatesTo = true;
-					break;
-				}
-			}
-			if (!alreadyRelatesTo) {
-				this._relatesTo.push(Term);
-			}
-		};
-
+    core.Ontology.prototype.addTerm = function(value) {
+		var Term = this._term;
+		Term.prototype.relate = ProtoTerm.prototype.relate;
+		Term.prototype.getType = ProtoTerm.prototype.getType;
         var t = new Term(value);
 		this[t._value] = new Proxy(t, this._inferencer);
         return this;
@@ -293,15 +271,15 @@
 			if (!TermB.hasOwnProperty(field)) {
 				continue;
 			}
-			if (typeof TermB[field] === 'function' || field.indexOf('_') === 0) {
-				continue;
+			if (TermB[field].getType && TermB[field].getType() === '[object Term]') {
+				if (typeof Term[termA][field] === 'undefined') {
+					Term[termA][field] = TermB[field]; // link subclasses in scope
+				}
+				if (typeof Term[field] === 'undefined') {
+					Term[field] = TermB[field]; // sugar for linking subclasses as children
+				}
+				TermB[field].relate(Term[termA]);
 			}
-			if (typeof TermB[field]._value === 'undefined') {
-				continue;
-			}
-			Term[termA][field] = TermB[field]; // link subclasses in scope
-			Term[field] = TermB[field]; // sugar for linking subclasses as children
-			TermB[field].relate(Term[termA]);
 		}
 	};
 
@@ -347,7 +325,18 @@
 			Term[termA] = TermA;
 		}
 		TermA.relate(Term);
-		Term.copy(TermA, true);
+		for (var field in TermA) {
+			if (!TermA.hasOwnProperty(field)) {
+				continue;
+			}
+			if (TermA[field].getType && TermA[field].getType() === '[object Term]') {
+				var term = TermA[field]._value;
+				if (typeof Term[term] === 'undefined') {
+					Term[term] = TermA[field];
+				}
+				TermA[field].relate(Term);
+			}
+		}
 	};
 
 	/* object property domain universally relates concepts upstream from an edge */
