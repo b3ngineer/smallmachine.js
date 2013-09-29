@@ -130,6 +130,11 @@
 		return '[object Term]';
 	};
 
+	core.Behavior = function(title) {
+		this.title = title;
+		return this;
+	};
+
     core.Ontology = function(title) {
 		this.title = title;
 		this._inferencer = new Inferencer();
