@@ -61,33 +61,6 @@
 
 	core.CONCEPT = 'concept';
 	core.RELATIONSHIP = 'relationship';
-	core.types = {};
-	core._activators = [];
-
-	core.addMessageType = function(name, ctor) {
-		if (typeof ctor !== 'function') {
-			throw new Error('Cannot create a message type without a constructor (function)');
-		}
-		if (typeof core.types[name] !== 'undefined') {
-			core.alsoBehavesLike(core.types[name], ctor);
-		}
-		else {
-			core.types[name] = ctor;
-			core.types[name].prototype.getType = function() {
-				return '[object ' + name + ']';
-			};
-			core.types[name].prototype.ofType = function(type) {
-				if (typeof type.getType === 'function') {
-					return this.getType() === type.getType();
-				}
-				return this.getType() === '[object ' + type + ']';
-			};
-		}
-	};
-
-	core.registerHelpers = function(activator) {
-		core._activators.push(activator);
-	};
 
 	var Proxy = function(Term, Inferencer) {
 		this._term = Term;
@@ -131,6 +104,7 @@
     core.Ontology = function(title) {
 		this.title = title;
 		this._inferencer = new Inferencer();
+		this._activators = [];
 		this._term = function(value) {
 			this._id = (function() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 				var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
@@ -161,6 +135,10 @@
 		this[t._value] = new Proxy(t, this._inferencer);
         return this;
     };
+
+	core.Ontology.prototype.registerActivator = function(activator) {
+		this._activators.push(activator);
+	};
 
 	core.Ontology.prototype.getModel = function(behaviors) {
 		var Model = function(title) {
@@ -194,8 +172,8 @@
 			var rule = this._inferencer._rules[i];
 			rule._fn.apply(model, rule._args);
 		}
-		for (var i = 0; i < core._activators.length; i++) {
-			core._activators[i](model);
+		for (var i = 0; i < this._activators.length; i++) {
+			this._activators[i](model);
 		}
 		return model;
 	};
@@ -361,18 +339,6 @@
 			TermA[target] = Term;
 		}
 	};
-
-	var AsyncResult = function(channel) {
-		this._channel = channel;
-		return this;
-	};
-
-	AsyncResult.prototype.publish = function(message, recipients) {
-		this._channel.publish(message, recipients);
-		return this;
-	};
-
-	core.addMessageType('AsyncResult', AsyncResult);
 
 	return core;
 }(smallmachine || {}));

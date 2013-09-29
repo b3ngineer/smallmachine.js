@@ -3,7 +3,6 @@
 	o.addTerm('property');
 	o.addTerm('type');
 	o.addTerm('ontology');
-	o.addTerm('messageType');
 	o.addTerm('behavior');
 	o.addTerm('hasMemberType');
 	o.addTerm('hasMember');
@@ -12,7 +11,6 @@
 	o.addTerm('Constructor');
 	o.addTerm('Null');
 	o.ontology.isA(o.property);
-	o.messageType.isA(o.property);
 	o.behavior.isA(o.property);
 	o.Ontology.isA(o.type);
 	o.Behavior.isA(o.type);
@@ -20,18 +18,38 @@
 	o.Null.isA(o.type);
 	o.ontology.relatesTo(o.hasMemberType, o.Ontology); 
 	o.behavior.relatesTo(o.hasMemberType, o.Behavior); 
-	o.messageType.relatesTo(o.hasMemberType, o.Constructor);
 	o.ontology.relatesTo(o.hasMember, o.Null);
 	o.behavior.relatesTo(o.hasMember, o.Null);
-	o.messageType.relatesTo(o.hasMember, o.Null);
 
 	var TypeExtender = function() {
 		return this;
 	};
 
-	TypeExtender.prototype.extend = function(model) {
+	TypeExtender.prototype.extendedBy = function(model,typeName) {
+		if (typeof typeName !== 'undefined' && typeof model === 'function') {
+			if (typeof this[typeName] !== 'undefined') {
+				sm.alsoBehavesLike(this[typeName], model);
+			}
+			else {
+				this[typeName] = model;
+			}
+			if (typeof this[typeName].prototype.getType !== 'function') {
+				this[typeName].prototype.getType = function() {
+					return '[object ' + typeName + ']';
+				};
+			}
+			if (typeof this[typeName].prototype.ofType !== 'function') {
+				this[typeName].prototype.ofType = function(type) {
+					if (typeof type.getType === 'function') {
+						return this.getType() === type.getType();
+					}
+					return this.getType() === '[object ' + type + ']';
+				};
+			}
+			return;
+		}
 		if (typeof model.title === 'undefined') {
-			throw new Error('Cannot extend the core ontology with model that is missing the \'title\' property');
+			throw new Error('Cannot extendedBy the core ontology with model that is missing the \'title\' property');
 		}
 		if (typeof this[model.title] !== 'undefined') {
 			sm.alsoBehavesLike(this[model.title], model);
@@ -84,9 +102,21 @@
 		return false;
 	};
 
+	// a "core" ontology is used as a behavior model for smallmachine
 	sm.alsoBehavesLike(sm, o.getModel(TypeExtender));
-	sm.ontology.extend(new Null());
-	sm.behavior.extend(new Null());
-	sm.messageType.extend(new Null());
+	sm.ontology.extendedBy(new Null());
+	sm.behavior.extendedBy(new Null());
+
+	var AsyncResult = function(channel) {
+		this._channel = channel;
+		return this;
+	};
+
+	AsyncResult.prototype.publish = function(message, recipients) {
+		this._channel.publish(message, recipients);
+		return this;
+	};
+
+	sm.type.extendedBy(AsyncResult, 'AsyncResult');
 }(smallmachine));
 

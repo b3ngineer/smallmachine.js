@@ -82,7 +82,7 @@
 	sm.Channel.prototype.publish = function(message, recipients) {
 		var recipients = recipients || { };
 		if (typeof message === 'function') {
-			var newResult = message(new sm.types.AsyncResult(this));
+			var newResult = message(new sm.type.AsyncResult(this));
 			message = newResult;
 			if (typeof message !== 'undefined' &&
 				typeof message.getType === 'function' &&
@@ -113,5 +113,9 @@
 			}]);
 		};
 		return this;
+	};
+
+	sm.Channel.prototype.getType = function() {
+		return '[object Channel]';
 	};
 }(smallmachine));
