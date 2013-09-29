@@ -16,12 +16,9 @@
 
     core = function(ontology, behaviors) {
 		if (typeof ontology === 'undefined') {
-			throw new Error('Missing required parameter for smallmachine constructor: ontology [title or object]');
+			throw new Error('Missing required parameter for smallmachine constructor: ontology (title or object)');
 		}
-		if (typeof core._ontology[ontology] !== 'undefined' && typeof core._ontology[ontology].getModel !== 'undefined') {
-			return core._ontology[ontology].getModel(behaviors);
-		}
-		else if (typeof ontology.getModel !== 'undefined') {
+		if (typeof ontology.getModel !== 'undefined') {
 			return ontology.getModel(behaviors);
 		}
 		throw new Error('Expected parameter to be the title of an ontology that was added (using addOnotology) or else a valid Ontology object');
@@ -80,16 +77,12 @@
 				return '[object ' + name + ']';
 			};
 			core.types[name].prototype.ofType = function(type) {
-				return this.getType() == '[object ' + type + ']';
+				if (typeof type.getType === 'function') {
+					return this.getType() === type.getType();
+				}
+				return this.getType() === '[object ' + type + ']';
 			};
 		}
-	};
-
-	core.saveOntology = function(ontology) {
-		if (typeof core._ontology === 'undefined') {
-			core._ontology = {};
-		}
-		core._ontology[ontology.title] = ontology;
 	};
 
 	core.registerHelpers = function(activator) {
@@ -106,11 +99,11 @@
 		return '[object Proxy]';
 	};
 
-	var ProtoTerm = function() {
+	var _Term = function() {
 		return this;
 	};
 
-	ProtoTerm.prototype.relate = function(Term) {
+	_Term.prototype.relate = function(Term) {
 		if (typeof this._relatesTo === 'undefined') {
 			this._relatesTo = [];
 		}
@@ -126,7 +119,7 @@
 		}
 	};
 
-	ProtoTerm.prototype.getType = function() {
+	_Term.prototype.getType = function() {
 		return '[object Term]';
 	};
 
@@ -156,10 +149,14 @@
         return this;
     };
 
+	core.Ontology.prototype.getType = function() {
+		return '[object Ontology]';
+	};
+
     core.Ontology.prototype.addTerm = function(value) {
 		var Term = this._term;
-		Term.prototype.relate = ProtoTerm.prototype.relate;
-		Term.prototype.getType = ProtoTerm.prototype.getType;
+		Term.prototype.relate = _Term.prototype.relate;
+		Term.prototype.getType = _Term.prototype.getType;
         var t = new Term(value);
 		this[t._value] = new Proxy(t, this._inferencer);
         return this;

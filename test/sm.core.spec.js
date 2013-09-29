@@ -238,11 +238,9 @@ describe('sm.core', function() {
 			expect(smallmachine.ontology).toBeDefined();
 		});
 
-		/*
 		it('should mixin the TypeExtender prototype with the ontology property in the core', function() {
 			expect(smallmachine.ontology.extend).toBeDefined();
 		});
-		*/
 	});
 });
 

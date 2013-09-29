@@ -18,8 +18,17 @@
 
 	<script type="text/javascript">
 		var target = (function(sm) {
-			var channels = sm('sm.channels', sm.Channel);
-			return channels;
+			try {
+				var o = sm.ontology['sm.channels'];
+				var channelsModel = sm(o, sm.Channel);
+				return channelsModel;
+			}
+			catch (error) {
+				if (typeof console.error === 'function') {
+					console.error(error.message + '\n' + error.stack);
+				}
+				return null;
+			}
 		}(smallmachine));
 	</script>
 

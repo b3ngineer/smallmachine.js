@@ -43,5 +43,11 @@
 	ontology.performs.hasRange(ontology.action).hasRange(ontology.task);
 	ontology.reactsTo.hasRange(ontology.action).hasDomain(ontology.system);
 
-	sm.saveOntology(ontology);
+	//sm.saveOntology(ontology);
+	try {
+		sm.ontology.extend(ontology);
+	}
+	catch (error) {
+		throw new Error('Could not extend the core ontology with the channels ontology model: ' + error.message + '\n' + error.stack);
+	}
 }(smallmachine));
