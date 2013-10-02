@@ -1,5 +1,8 @@
 [
 	{ "id" : "1", "edges" : [ { "id" : "2", "label" : "isA" }, { "id" : "3", "label" : "isA" } ], "y" : "100", "x" : "300", "height" : "60", "width" : "60", "label" : "A" },
-	{ "id" : "2", "edges" : [],  "y" : "220", "x" : "400", "height" : "60", "width" : "60", "label" : "B" },
-	{ "id" : "3", "edges" : [],  "y" : "80", "x" : "440", "height" : "60", "width" : "60", "label" : "C" }
+	{ "id" : "2", "edges" : [ { "id" : "4", "label" : "hasProperty" }, { "id" : "5", "label" : "alsoHasProperty" }, { "id" : "6", "label" : "relatesTo" } ],  "y" : "240", "x" : "400", "height" : "60", "width" : "60", "label" : "C" },
+	{ "id" : "3", "edges" : [],  "y" : "40", "x" : "460", "height" : "60", "width" : "60", "label" : "B" },
+	{ "id" : "4", "edges" : [],  "y" : "140", "x" : "540", "height" : "60", "width" : "60", "label" : "D" },
+	{ "id" : "5", "edges" : [],  "y" : "240", "x" : "580", "height" : "60", "width" : "60", "label" : "E" },
+	{ "id" : "6", "edges" : [],  "y" : "200", "x" : "100", "height" : "60", "width" : "60", "label" : "F" }
 ]

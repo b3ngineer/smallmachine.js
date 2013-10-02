@@ -53,7 +53,7 @@
 		var b = y1 - y2;
 		var cX = (x1 + x2) / 2;
 		var cY = (y1 + y2) / 2;
-		var textLabel = hook.context.text(cX, cY, this.label);
+		var textLabel = hook.context.text(cX, cY - 6, this.label);
 		var dX = x2 - x1;
 		var dY = y2 - y1;
 		var angle = Math.atan2(dY, dX) * 180 / Math.PI;

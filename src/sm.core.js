@@ -14,14 +14,36 @@
 		}
 	}
 
-    core = function(ontology, behaviors) {
-		if (typeof ontology === 'undefined') {
-			throw new Error('Missing required parameter for smallmachine constructor: ontology (title or object)');
+    core = function(ontologies, behaviors) {
+		if (typeof ontologies === 'undefined') {
+			throw new Error('Missing required parameter for smallmachine constructor: one or more instances of type [object Ontology]');
 		}
-		if (typeof ontology.getModel !== 'undefined') {
-			return ontology.getModel(behaviors);
+		var allOntologies = [].concat(ontologies);
+		if (allOntologies.length === 1) {
+			return allOntologies[0].getModel(behaviors);
 		}
-		throw new Error('Expected parameter to be the title of an ontology that was added (using addOnotology) or else a valid Ontology object');
+		var ontology = new core.Ontology(allOntologies[0].title);
+		for (var i = 0; i < allOntologies.length; i++) {
+			// call ontology.addTerm for all terms in the additional ontology
+			for (var p in allOntologies[i]) {
+				if (!allOntologies[i].hasOwnProperty(p)) {
+					continue;
+				}
+				if (typeof allOntologies[i][p].ofType === 'function' && allOntologies[i][p].ofType('Proxy')) {
+					var term = allOntologies[i][p]._term;
+					ontology.addTerm(term._value);
+				}
+			}
+			// add all of the rules in the additional ontology inferencer to the first ontology
+			for (var j = 0; j < allOntologies[i]._inferencer._rules.length; j++) {
+				ontology._inferencer._rules.push(allOntologies[i]._inferencer._rules[j]);
+			}
+			// merge activators
+			for (var j = 0; j < allOntologies[i]._activators.length; j++) {
+				ontology.registerActivator(allOntologies[i]._activators[j]);
+			}
+		}
+		return ontology.getModel(behaviors);
     };
 
 	core.alsoBehavesLike = function(a, b) {
@@ -72,6 +94,10 @@
 		return '[object Proxy]';
 	};
 
+	Proxy.prototype.ofType = function(type) {
+		return (type === 'Proxy' || (typeof type.getType === 'function' && type.getType() === this.getType()));
+	};
+
 	var _Term = function() {
 		return this;
 	};
@@ -94,6 +120,10 @@
 
 	_Term.prototype.getType = function() {
 		return '[object Term]';
+	};
+
+	_Term.prototype.ofType  = function(type) {
+		return (type === 'Term' || (typeof type.getType === 'function' && type.getType() === this.getType()));
 	};
 
 	core.Behavior = function(title) {
@@ -128,11 +158,15 @@
 	};
 
     core.Ontology.prototype.addTerm = function(value) {
+		if (typeof this[value] !== 'undefined') {
+			return this;
+		}
 		var Term = this._term;
 		Term.prototype.relate = _Term.prototype.relate;
 		Term.prototype.getType = _Term.prototype.getType;
+		Term.prototype.ofType = _Term.prototype.ofType;
         var t = new Term(value);
-		this[t._value] = new Proxy(t, this._inferencer);
+		this[value] = new Proxy(t, this._inferencer);
         return this;
     };
 

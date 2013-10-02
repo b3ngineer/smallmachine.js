@@ -242,6 +242,29 @@ describe('sm.core', function() {
 		it('should mixin the TypeExtender prototype with the ontology property in the core', function() {
 			expect(smallmachine.ontology.extendedBy).toBeDefined();
 		});
+
+		it('should merge all of the proxies when merging ontologies', function() {
+			var ontologyA = new smallmachine.Ontology('testA');
+			ontologyA.addTerm('one');
+			var ontologyB = new smallmachine.Ontology('testB');
+			ontologyB.addTerm('two');
+			var actual = smallmachine([ontologyA, ontologyB]);
+			expect(actual.one).toBeDefined();
+			expect(actual.two).toBeDefined();
+		});
+		it('should merge all of the rules when merging ontologies', function() {
+			var A = new smallmachine.Ontology('testA');
+			A.addTerm('number');
+			A.addTerm('one');
+			A.one.isA(A.number);
+			var B = new smallmachine.Ontology('testB');
+			B.addTerm('number');
+			B.addTerm('two');
+			B.two.isA(B.number);
+			var actual = smallmachine([A, B]);
+			expect(actual.number.one).toBeDefined();
+			expect(actual.number.two).toBeDefined();
+		});
 	});
 });
 
