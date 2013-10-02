@@ -62,9 +62,10 @@
 			}
 			else if (typeof response === 'function') {
 				deference.push(response);
+				authoritative = true;
 			}
 			else if (typeof response === 'object' && typeof response.update === 'function') {
-				delegates.push(response.update);
+				delegates.push(response);
 			}
 		}
 		if (authoritative) {
@@ -73,9 +74,14 @@
 			}
 		}
 		else {
+			if (delegates.length > 0) {
+				this.notify(message, delegates);
+			}
+			/*
 			for (var i = 0; i < delegates.length; i++) {
 				delegates[i](message);
 			}
+			*/
 		}
 	};
 

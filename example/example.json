@@ -1,4 +1,5 @@
 [
-	{ "id" : "1", "links" : [ "2" ], "y" : "10", "x" : "10", "height" : "100", "width" : "150" },
-	{  "id" : "2", "links" : [],  "y" : "220", "x" : "200", "height" : "100", "width" : "150" }
+	{ "id" : "1", "edges" : [ { "id" : "2", "label" : "isA" }, { "id" : "3", "label" : "isA" } ], "y" : "100", "x" : "300", "height" : "60", "width" : "60", "label" : "A" },
+	{ "id" : "2", "edges" : [],  "y" : "220", "x" : "400", "height" : "60", "width" : "60", "label" : "B" },
+	{ "id" : "3", "edges" : [],  "y" : "80", "x" : "440", "height" : "60", "width" : "60", "label" : "C" }
 ]

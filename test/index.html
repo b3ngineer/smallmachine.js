@@ -18,8 +18,8 @@
 	<script type="text/javascript">
 		var target = (function(sm) {
 			try {
-				var o = sm.ontology['sm.channels'];
-				var channelsModel = sm(o, sm.Channel);
+				var channelsOntology = sm.ontology['sm.channels'];
+				var channelsModel = sm(channelsOntology, sm.Channel);
 				return channelsModel;
 			}
 			catch (error) {

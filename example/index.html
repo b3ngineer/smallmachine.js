@@ -1,6 +1,6 @@
 <html>
 <head>
-	<title>Blocks</title>
+	<title>Nodes</title>
 	<link type="text/css" rel="stylesheet" href="style/example.css" />
 </head>
 <body>
@@ -8,15 +8,29 @@
 	<script type="text/javascript" src="../lib/jquery-1.10.2.min.js"></script>
 	<script type="text/javascript" src="../lib/raphael-min.js"></script>
 	<script type="text/javascript" src="../src/sm.core.js"></script>
+	<script type="text/javascript" src="../src/ontologies/sm.properties.js"></script>
 	<script type="text/javascript" src="../src/ontologies/sm.channels.js"></script>
-	<script type="text/javascript" src="../src/ontologies/sm.channels.helpers.js"></script>
 	<script type="text/javascript" src="../src/behaviors/sm.Channel.js"></script>
 	<script type="text/javascript" src="../src/bones/sm.Nodes.js"></script>
 	<script type="text/javascript">
         (function(sm) {
-			var nodes = sm('sm.channels', [ sm.Channels, sm.Nodes ]);
-			nodes.system.initialize.json('example.json');
-        })(smallmachine);
+			try {
+				var channels = sm(sm.ontology['sm.channels'], sm.Channel);
+				var application = new sm.type.Nodes(channels);
+				channels.system.initialize.json('example.json');
+			}
+			catch (error) {
+				if (typeof console.error === 'function') {
+					console.error(error.message + '\n' + error.stack);
+				}
+				else if (typeof console.log === 'function') {
+					console.log(error.message + '\n' + error.stack);
+				}
+				else {
+					alert(error.message);
+				}
+			}
+		}(smallmachine));
 	</script>
 </body>
 </html>
