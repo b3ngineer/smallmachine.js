@@ -1,13 +1,13 @@
 ;(function(sm) {
     'use strict';
 
-	sm.Channel = function(value, type) {
+	var Channel = function(value, type) {
         this._value = value;
         this._type = type;
 		return this;
 	};
     
-	sm.Channel.prototype.forward = function(message, recipients) {
+	Channel.prototype.forward = function(message, recipients) {
 		if (this._value != null) {
 			recipients[this._value] = true;
 		}
@@ -37,7 +37,7 @@
 		}
 	};
 
-	sm.Channel.prototype.subscribe = function(subscriber) {
+	Channel.prototype.subscribe = function(subscriber) {
 		if (typeof this._subscribers === 'undefined') {
 			this._subscribers = [];
 		}
@@ -51,7 +51,7 @@
 		return this;
 	};
 
-	sm.Channel.prototype.notify = function(message, subscribers) {
+	Channel.prototype.notify = function(message, subscribers) {
 		var authoritative = false,
 			delegates = [],
 			deference = [];
@@ -77,15 +77,10 @@
 			if (delegates.length > 0) {
 				this.notify(message, delegates);
 			}
-			/*
-			for (var i = 0; i < delegates.length; i++) {
-				delegates[i](message);
-			}
-			*/
 		}
 	};
 
-	sm.Channel.prototype.publish = function(message, recipients) {
+	Channel.prototype.publish = function(message, recipients) {
 		var recipients = recipients || { };
 		if (typeof message === 'function') {
 			var newResult = message(new sm.type.AsyncResult(this));
@@ -105,8 +100,8 @@
 		return this;
 	};
 
-	sm.Channel.prototype.addHelper = function(name, helper) {
-		var method = sm.Channel.prototype.publish;
+	Channel.prototype.addHelper = function(name, helper) {
+		var method = Channel.prototype.publish;
 		var context = this; // context becomes static to the channel adding the helper
 		this[name] = function() {
 			var args = [];
@@ -121,7 +116,13 @@
 		return this;
 	};
 
-	sm.Channel.prototype.getType = function() {
+	Channel.prototype.getType = function() {
 		return '[object Channel]';
 	};
+
+	Channel.prototype.ofType = function(type) {
+		return (type === 'Channel' || (typeof type.getType === 'function' && type.getType() === this.getType()));
+	};
+
+	sm.behavior.extendedBy(Channel, 'Channel');
 }(smallmachine));

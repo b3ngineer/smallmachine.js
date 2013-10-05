@@ -372,4 +372,12 @@ describe('target.ontology', function() {
 			expect(target.system.reactsTo._type).toBe(smallmachine.RELATIONSHIP);
 		});
     });
+
+	describe('message types', function() {
+        it('should allow comparing instanceof AsyncResult from modules outside of core', function() {
+			var channel = new smallmachine.behavior.Channel();
+            var test = new smallmachine.type.AsyncResult(channel);
+            expect(test instanceof smallmachine.type.AsyncResult).toBe(true);
+        });
+	});
 });

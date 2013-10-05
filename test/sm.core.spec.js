@@ -114,12 +114,6 @@ describe('sm.core', function() {
 			delete smallmachine.type.Test;
 		});
 
-        it('should allow comparing instanceof AsyncResult from modules outside of core', function() {
-			var channel = new smallmachine.Channel();
-            var test = new smallmachine.type.AsyncResult(channel);
-            expect(test instanceof smallmachine.type.AsyncResult).toBe(true);
-        });
-
 		it('should create the smallmachine constructor as a function', function() {
 			expect(typeof smallmachine).toBe('function');
 		});

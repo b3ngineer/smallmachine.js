@@ -87,7 +87,7 @@
 			return asyncResult;
 		};
 
-		if (typeof model.initialize !== 'undefined' && typeof model.initialize.addHelper !== 'undefined') {
+		if (typeof model.initialize.addHelper === 'function') {
 			model.initialize.addHelper('json', jsonHelper);
 		}
 
@@ -102,7 +102,7 @@
 			return hookObject;
 		};
 
-		if (typeof model.insert !== 'undefined' && typeof model.insert.addHelper !== 'undefined') {
+		if (model.insert.addHelper === 'function') {
 			model.insert.addHelper('hook', hookHelper);
 		}
 	};
@@ -113,6 +113,6 @@
 		sm.ontology.extendedBy(ontology);
 	}
 	catch (error) {
-		throw new Error('Could not extend the core ontology with the channels ontology model: ' + error.message + '\n' + error.stack);
+		throw new Error('Could not extend the smallmachine.ontology property with the \'sm.channels\' ontology: ' + error.message + '\n' + error.stack);
 	}
 }(smallmachine));

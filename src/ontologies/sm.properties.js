@@ -118,5 +118,18 @@
 	};
 
 	sm.type.extendedBy(AsyncResult, 'AsyncResult');
+
+	var Item = function(ontology, key, value) {
+		var namespace = ontology.title;
+		if (namespace.slice(-1) !== '.') {
+			namespace += '.';
+		}
+		this._key = namespace + '.' + key;
+		this._value = value;
+		return this;
+	};
+
+	sm.type.extendedBy(Item, 'Item');
+
 }(smallmachine));
 

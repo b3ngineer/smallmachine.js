@@ -10,14 +10,18 @@
 	<script type="text/javascript" src="../src/sm.core.js"></script>
 	<script type="text/javascript" src="../src/ontologies/sm.properties.js"></script>
 	<script type="text/javascript" src="../src/ontologies/sm.channels.js"></script>
+	<script type="text/javascript" src="../src/ontologies/sm.nodes.js"></script>
+	<script type="text/javascript" src="../src/ontologies/sm.raphaeljs.js"></script>
 	<script type="text/javascript" src="../src/behaviors/sm.Channel.js"></script>
-	<script type="text/javascript" src="../src/bones/sm.Nodes.js"></script>
 	<script type="text/javascript">
         (function(sm) {
 			try {
-				var channels = sm(sm.ontology['sm.channels'], sm.Channel);
-				var application = new sm.type.Nodes(channels);
-				channels.system.initialize.json('example.json');
+				var channels = sm.ontology['sm.channels'];
+				var nodes = sm.ontology['sm.nodes'];
+				var raphaeljs = sm.ontology['sm.raphaeljs'];
+				var wiring = sm([channels, nodes, raphaeljs], sm.behavior.Channel);
+				wiring.system.set.svg('paper', '100%', '100%');
+				wiring.system.initialize.json('example.json');
 			}
 			catch (error) {
 				if (typeof console.error === 'function') {
