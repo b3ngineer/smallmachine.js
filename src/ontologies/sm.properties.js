@@ -48,11 +48,12 @@
 			}
 			return;
 		}
-		if (typeof model.title === 'undefined') {
-			throw new Error('Cannot extendedBy the core ontology with model that is missing the \'title\' property');
+		var propertyName = typeName || model.title;
+		if (typeof propertyName === 'undefined') {
+			throw new Error('Cannot call extendedBy on the core ontology with an object that is missing the \'title\' property without specifying a \'typeName\'');
 		}
-		if (typeof this[model.title] !== 'undefined') {
-			sm.alsoBehavesLike(this[model.title], model);
+		if (typeof this[propertyName] !== 'undefined') {
+			sm.alsoBehavesLike(this[propertyName], model);
 			return;
 		}
 		var typeConcept = this.hasMemberType;
@@ -64,7 +65,7 @@
 			throw new Error('The specified type does not exist in the core object model: ' + typeConcept._value);
 		}
 		if (typeof model.getType !== 'function') {
-			throw new Error('The specified model is missing the getType function: ' + model.title);
+			throw new Error('The specified model is missing the getType function: ' + propertyName);
 		}
 		var modelType = model.getType();
 		var validModelType = false;
@@ -77,8 +78,8 @@
 			}
 			var comparison = '[object ' + t + ']';
 			if (comparison === modelType) {
-				this.hasMember[model.title] = model;
-				this[model.title] = model; // syntax sugar; like all Terms provide
+				this.hasMember[propertyName] = model;
+				this[propertyName] = model; // syntax sugar; like all Terms provide
 				validModelType = true;
 				break;
 			}
@@ -119,17 +120,74 @@
 
 	sm.type.extendedBy(AsyncResult, 'AsyncResult');
 
-	var Item = function(ontology, key, value) {
-		var namespace = ontology.title;
-		if (namespace.slice(-1) !== '.') {
-			namespace += '.';
+	var NamedValue = function(namespace, key, value) {
+		if (typeof value === 'undefined') {
+			throw new Error('Parameter \'value\' is required when instantiating the sm.NamedValue type (specify null if an empty value is desired)');
 		}
-		this._key = namespace + '.' + key;
-		this._value = value;
+		if (typeof key === 'undefined') {
+			throw new Error('Parameter \'key\' is required when instantiating the sm.NamedValue type');
+		}
+		this.namespace = namespace;
+		this.key = key;
+		this.value = value;
 		return this;
 	};
 
-	sm.type.extendedBy(Item, 'Item');
+	sm.type.extendedBy(NamedValue, 'NamedValue');
 
+	var NamedValueCollection = function() {
+		this.title = 'NamedValueCollection';
+		this._collection = {};
+		return this;
+	};
+
+	NamedValueCollection.prototype.exists = function(namespaceOrNamedValue, key) {
+		var namespace = namespaceOrNamedValue;
+		if (typeof namespaceOrNamedValue.ofType === 'function' && namespaceOrNamedValue.ofType('NamedValue')) {
+			namespace = namespaceOrNamedValue.namespace;		
+			key = namespaceOrNamedValue.key;		
+		}
+		return typeof this._collection[namespace] !== 'undefined' && typeof this._collection[namespace][key] !== 'undefined';
+	};
+
+	NamedValueCollection.prototype.add = function(namespaceOrNamedValue, key, value) {
+		var namespace = namespaceOrNamedValue.namespace || namespaceOrNamedValue;
+		if (typeof this._collection[namespace] !== 'undefined' && this._collection[namespace][key] !== 'undefined') {
+			throw new Error('Cannot add a new entry to the collection (already exists): [' + namespace + ']' + key);
+		}
+		this.modify(namespaceOrNamedValue, key, value);
+		return this;
+	};
+
+	NamedValueCollection.prototype.modify = function(namespaceOrNamedValue, key, value) {
+		var namespace = namespaceOrNamedValue.namespace || namespaceOrNamedValue;
+		var k = namespaceOrNamedValue.key || key;
+		var v = namespaceOrNamedValue.value || value;
+		if (typeof k === 'undefined') {
+			throw new Error('Must supply a valid key');
+		}
+		if (typeof v === 'undefined') {
+			throw new Error('Must supply a valid value');
+		}
+		if (typeof this._collection[namespace] === 'undefined') {
+			this._collection[namespace] = {};
+		}
+		this._collection[namespace][k] = v;
+		return this;
+	};
+
+	NamedValueCollection.prototype.remove = function(namespace, key) {
+		if (typeof this._collection[namespace] === 'undefined' || typeof this._collection[namespace][key] === 'undefined') {
+			return;
+		}
+		delete this._collection[namespace][key];
+		return this;
+	};
+
+	NamedValueCollection.prototype.ofType = function(type) {
+		return type === 'NamedValueCollection' || (typeof type.getType === 'function' && type.getType() === this.getType());
+	};
+
+	sm.type.extendedBy(NamedValueCollection, 'NamedValueCollection');
 }(smallmachine));
 

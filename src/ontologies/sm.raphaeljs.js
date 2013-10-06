@@ -1,5 +1,6 @@
 ;(function(sm, raphael) {
-	var ontology = new sm.Ontology('sm.raphaeljs');
+	var TITLE = 'sm.raphaeljs';
+	var ontology = new sm.Ontology(TITLE);
 	ontology.addTerm('set');
 
 	var activator = function(model) {
@@ -10,7 +11,6 @@
 			if (typeof element === 'undefined' || !element) {
 				throw new Error('The specified element ID could not be found: ' + elementId);
 			}
-
 			var w=window,
 				d=document,
 				e=d.documentElement,
@@ -24,7 +24,7 @@
 			else if (typeof width.indexOf === 'function' && width.indexOf('%') > 0) {
 				var match = percentagePattern.exec(width);
 				if (!match) {
-					throw new Error('Invalid width percentage value specified for \'raphaeljs\' helper \'svg\': ' + width);
+					throw new Error('Invalid width percentage value specified for \'sm.raphaeljs\' helper \'svg\': ' + width);
 				}
 				var elementWidth = element.offsetWidth || x;
 				width = elementWidth * 100 / parseFloat(match);
@@ -36,13 +36,13 @@
 			else if (typeof height.indexOf === 'function' && height.indexOf('%') > 0) {
 				var match = percentagePattern.exec(height);
 				if (!match) {
-					throw new Error('Invalid height percentage value specified for \'raphaeljs\' helper \'svg\': ' + height);
+					throw new Error('Invalid height percentage value specified for \'sm.raphaeljs\' helper \'svg\': ' + height);
 				}
 				var elementHeight = element.offsetHeight || y;
 				height = elementHeight * parseFloat(match) / 100;
 			}
 
-			return { 'paper' : raphael(elementId, width, height) };
+			return new sm.type.NamedValue(TITLE, 'paper', raphael(elementId, width, height));
 		};
 
 		if (typeof model.set.addHelper === 'function') {

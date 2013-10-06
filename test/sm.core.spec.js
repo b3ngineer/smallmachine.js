@@ -246,6 +246,7 @@ describe('sm.core', function() {
 			expect(actual.one).toBeDefined();
 			expect(actual.two).toBeDefined();
 		});
+
 		it('should merge all of the rules when merging ontologies', function() {
 			var A = new smallmachine.Ontology('testA');
 			A.addTerm('number');
@@ -258,6 +259,44 @@ describe('sm.core', function() {
 			var actual = smallmachine([A, B]);
 			expect(actual.number.one).toBeDefined();
 			expect(actual.number.two).toBeDefined();
+		});
+		
+		it('should declared NamedValue type', function() {
+			expect(smallmachine.type.NamedValue).toBeDefined();
+		});
+
+		it('NamedValue type should have namespace set', function() {
+			var actual = new smallmachine.type.NamedValue('test', '123', true);
+			expect(actual.namespace).toBe('test');
+		});
+
+		it('NamedValue type should have key set', function() {
+			var actual = new smallmachine.type.NamedValue('test', '123', true);
+			expect(actual.key).toBe('123');
+		});
+
+		it('NamedValueCollection should allow entries to be created from strings', function() {
+			var actual = new smallmachine.type.NamedValueCollection();
+			actual.add('a.b.c', 'd', true);
+			expect(actual._collection['a.b.c']).toBeDefined();
+			expect(actual._collection['a.b.c'].d).toBeDefined();
+			expect(actual._collection['a.b.c'].d).toBe(true);
+		});
+
+		it('NamedValueCollection should allow entries to be created from NamedValue types', function() {
+			var actual = new smallmachine.type.NamedValueCollection();
+			actual.add(new smallmachine.type.NamedValue('a.b.c', 'd', true));
+			expect(actual._collection['a.b.c']).toBeDefined();
+			expect(actual._collection['a.b.c'].d).toBeDefined();
+			expect(actual._collection['a.b.c'].d).toBe(true);
+		});
+
+		it('NamedValueCollection should allow entries to be removed', function() {
+			var actual = new smallmachine.type.NamedValueCollection();
+			actual.add(new smallmachine.type.NamedValue('a.b.c', 'd', true));
+			expect(actual._collection['a.b.c'].d).toBeDefined();
+			actual.remove('a.b.c', 'd');
+			expect(actual._collection['a.b.c'].d).not.toBeDefined();
 		});
 	});
 });

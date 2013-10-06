@@ -97,14 +97,19 @@
 			return this;
 		}, 'Hook');
 
-		var hookHelper = function(targetObject, contextObject, asyncResult) {
-			var hookObject = new sm.type.Hook(targetObject, contextObject);
-			return hookObject;
+		var defaultMemoryDelegate = {
+			update : function(message) {
+				if (typeof message.ofType === 'function' && message.ofType('NamedValue')) {
+					return function(message) {
+						model.memory.modify(message);
+					}
+				}
+				return false;
+			}
 		};
 
-		if (model.insert.addHelper === 'function') {
-			model.insert.addHelper('hook', hookHelper);
-		}
+		sm.alsoBehavesLike(model, { memory : new sm.type.NamedValueCollection() });
+		model.set.subscribe({ update : function(message) { return defaultMemoryDelegate; } });
 	};
 
 	ontology.registerActivator(activator);

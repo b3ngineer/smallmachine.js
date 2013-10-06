@@ -380,4 +380,23 @@ describe('target.ontology', function() {
             expect(test instanceof smallmachine.type.AsyncResult).toBe(true);
         });
 	});
+
+	describe('subscriptions', function() {
+		it('should add a NamedValueCollection to a model', function() {
+			expect(target.memory).toBeDefined();
+		});
+
+		it('should add named values to memory when calling set', function() {
+			var actual = new smallmachine.type.NamedValue('test', '123', true);
+			target.set.publish(actual);
+			expect(target.memory._collection.test).toBeDefined();
+			expect(target.memory._collection.test['123']).toBeDefined();
+		});
+
+		it('should be able to check for the existence of a named value after calling set', function() {
+			var actual = new smallmachine.type.NamedValue('test2', '1234', true);
+			target.set.publish(actual);
+			expect(target.memory.exists('test2', '1234')).toBe(true);
+		});
+	});
 });
