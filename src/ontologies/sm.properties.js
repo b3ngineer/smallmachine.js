@@ -121,9 +121,6 @@
 	sm.type.extendedBy(AsyncResult, 'AsyncResult');
 
 	var NamedValue = function(namespace, key, value) {
-		if (typeof value === 'undefined') {
-			throw new Error('Parameter \'value\' is required when instantiating the sm.NamedValue type (specify null if an empty value is desired)');
-		}
 		if (typeof key === 'undefined') {
 			throw new Error('Parameter \'key\' is required when instantiating the sm.NamedValue type');
 		}
@@ -152,8 +149,9 @@
 
 	NamedValueCollection.prototype.add = function(namespaceOrNamedValue, key, value) {
 		var namespace = namespaceOrNamedValue.namespace || namespaceOrNamedValue;
-		if (typeof this._collection[namespace] !== 'undefined' && this._collection[namespace][key] !== 'undefined') {
-			throw new Error('Cannot add a new entry to the collection (already exists): [' + namespace + ']' + key);
+		var k = namespaceOrNamedValue.key || key;
+		if (typeof this._collection[namespace] !== 'undefined' && this._collection[namespace][k] !== 'undefined') {
+			throw new Error('Cannot add a new entry to the collection (already exists): [' + namespace + ']' + k);
 		}
 		this.modify(namespaceOrNamedValue, key, value);
 		return this;
@@ -182,6 +180,21 @@
 		}
 		delete this._collection[namespace][key];
 		return this;
+	};
+
+	NamedValueCollection.prototype.getValue = function(namespaceOrNamedValue, key) {
+		var namespace = namespaceOrNamedValue.namespace || namespaceOrNamedValue; 
+		var k = namespaceOrNamedValue.key || key;
+		if (typeof this._collection[namespace] === 'undefined' || this._collection[namespace][k] === 'undefined') {
+			return;
+		}
+		var value = this._collection[namespace][k];
+		if (typeof namespaceOrNamedValue.ofType === 'function' && namespaceOrNamedValue.ofType('NamedValue')) {
+			if (typeof value !== 'undefined') {
+				namespaceOrNamedValue.value = value;
+			}
+		}
+		return value;
 	};
 
 	NamedValueCollection.prototype.ofType = function(type) {

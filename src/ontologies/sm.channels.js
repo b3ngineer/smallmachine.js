@@ -97,7 +97,7 @@
 			return this;
 		}, 'Hook');
 
-		var defaultMemoryDelegate = {
+		var defaultStorageDelegate = {
 			update : function(message) {
 				if (typeof message.ofType === 'function' && message.ofType('NamedValue')) {
 					return function(message) {
@@ -109,7 +109,20 @@
 		};
 
 		sm.alsoBehavesLike(model, { memory : new sm.type.NamedValueCollection() });
-		model.set.subscribe({ update : function(message) { return defaultMemoryDelegate; } });
+		model.set.subscribe({ update : function(message) { return defaultStorageDelegate; } });
+
+		var defaultValueDelegate = {
+			update : function(message) {
+				if (typeof message.ofType === 'function' && message.ofType('NamedValue')) {
+					return function(message) {
+						model.memory.getValue(message);
+					}
+				}
+				return false;
+			}
+		};
+
+		model.get.subscribe({ update : function(message) { return defaultValueDelegate; } });
 	};
 
 	ontology.registerActivator(activator);

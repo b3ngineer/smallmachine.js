@@ -398,5 +398,23 @@ describe('target.ontology', function() {
 			target.set.publish(actual);
 			expect(target.memory.exists('test2', '1234')).toBe(true);
 		});
+
+		it('should update a NamedValue when publishing to get', function() {
+			var actual = new smallmachine.type.NamedValue('test3', 'a', true);
+			target.set.publish(actual);
+			expect(target.memory.exists('test3', 'a')).toBe(true);
+			var testData = new smallmachine.type.NamedValue('test3', 'a', false);
+			target.get.publish(testData);
+			expect(testData.value).toBe(true);
+		});
+
+		it('should use default value of a NamedValue when publishing to get', function() {
+			var actual = new smallmachine.type.NamedValue('test4', 'a', true);
+			target.set.publish(actual);
+			expect(target.memory.exists('test4', 'a')).toBe(true);
+			var testData = new smallmachine.type.NamedValue('test4', 'b', false);
+			target.get.publish(testData);
+			expect(testData.value).toBe(false);
+		});
 	});
 });
