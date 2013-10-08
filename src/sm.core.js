@@ -19,6 +19,14 @@
 			throw new Error('Missing required parameter for smallmachine constructor: one or more instances of type [object Ontology]');
 		}
 		var allOntologies = [].concat(ontologies);
+		for (var i = 0; i < allOntologies.length; i++) {
+			if (typeof allOntologies[i].ofType !== 'function' || !allOntologies[i].ofType('Ontology')) {
+				if (typeof core.ontology[allOntologies[i]] !== 'undefined') {
+					allOntologies[i] = core.ontology[allOntologies[i]];
+				}
+			}
+		}
+
 		if (allOntologies.length === 1) {
 			return allOntologies[0].getModel(behaviors);
 		}
@@ -41,6 +49,23 @@
 			// merge activators
 			for (var j = 0; j < allOntologies[i]._activators.length; j++) {
 				ontology.registerActivator(allOntologies[i]._activators[j]);
+				ontology._activators.sort(function(a, b) {
+					if (a.title == b.title) {
+						return 0;
+					}
+					for (var i = 0; i < a.dependencies.length; i++) {
+						if (b.title == a.dependencies[i]) {
+							return 1;
+						}
+					}
+					for (var i = 0; i < b.dependencies.length; i++) {
+						// if a is a dependency of b, it has a lower index
+						if (a.title == b.dependencies[i]) {
+							return -1;
+						}
+					}
+					return 0;
+				});
 			}
 		}
 		return ontology.getModel(behaviors);
@@ -170,8 +195,15 @@
         return this;
     };
 
-	core.Ontology.prototype.registerActivator = function(activator) {
-		this._activators.push(activator);
+	core.Ontology.prototype.registerActivator = function(activator, dependencies) {
+		if (typeof dependencies === 'undefined') {
+			dependencies = [];
+		}
+		if (typeof activator !== 'function' && typeof activator.getType === 'function' && activator.getType() === '[object Activator]') {
+			this._activators.push(activator);
+			return;
+		}
+		this._activators.push({ fn : activator, title : this.title, dependencies : dependencies, getType : function() { return '[object Activator]' } });
 	};
 
 	core.Ontology.prototype.getModel = function(behaviors) {
@@ -207,7 +239,7 @@
 			rule._fn.apply(model, rule._args);
 		}
 		for (var i = 0; i < this._activators.length; i++) {
-			this._activators[i](model);
+			this._activators[i].fn(model);
 		}
 		return model;
 	};

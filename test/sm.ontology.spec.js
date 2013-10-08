@@ -1,4 +1,32 @@
 describe('target.ontology', function() {
+
+	var ontologyA = new smallmachine.Ontology('sm.testA');
+	ontologyA.registerActivator(function(model) {
+		if (typeof model.activatorOrder === 'undefined') {
+			model.activatorOrder = [];
+		}
+		model.activatorOrder.push('sm.testA');
+	});
+	smallmachine.ontology.extendedBy(ontologyA);
+
+	var ontologyB = new smallmachine.Ontology('sm.testB');
+	ontologyB.registerActivator(function(model) {
+		if (typeof model.activatorOrder === 'undefined') {
+			model.activatorOrder = [];
+		}
+		model.activatorOrder.push('sm.testB');
+	}, ['sm.testA']);
+	smallmachine.ontology.extendedBy(ontologyB);
+
+	var ontologyC = new smallmachine.Ontology('sm.testC');
+	ontologyC.registerActivator(function(model) {
+		if (typeof model.activatorOrder === 'undefined') {
+			model.activatorOrder = [];
+		}
+		model.activatorOrder.push('sm.testC');
+	}, ['sm.testA', 'sm.testB']);
+	smallmachine.ontology.extendedBy(ontologyC);
+
 	describe('explicit queries', function() {
 
 		it('should allow accessing of the thing channel', function() {
@@ -415,6 +443,20 @@ describe('target.ontology', function() {
 			var testData = new smallmachine.type.NamedValue('test4', 'b', false);
 			target.get.publish(testData);
 			expect(testData.value).toBe(false);
+		});
+	});
+
+	describe('merging', function() {
+		it('should reorder 2 activators when one has a dependency on the other', function() {
+			var actual = smallmachine(['sm.testB', 'sm.testA']);
+			expect(actual.activatorOrder[0]).toBe('sm.testA');
+		});
+
+		it('should reorder 3 activators when one has a dependency on the other 2', function() {
+			var actual = smallmachine(['sm.testC', 'sm.testB', 'sm.testA']);
+			expect(actual.activatorOrder[0]).toBe('sm.testA');
+			expect(actual.activatorOrder[1]).toBe('sm.testB');
+			expect(actual.activatorOrder[2]).toBe('sm.testC');
 		});
 	});
 });
