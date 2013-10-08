@@ -458,5 +458,11 @@ describe('target.ontology', function() {
 			expect(actual.activatorOrder[1]).toBe('sm.testB');
 			expect(actual.activatorOrder[2]).toBe('sm.testC');
 		});
+
+		it('should throw an error if an activator is dependent on an ontology that has not been included', function() {
+			expect(function(){
+				var actual = smallmachine(['sm.testB']);
+			}).toThrow(new Error("Cannot wire-in ontology with missing activator dependency on 'sm.testA'"));
+		});
 	});
 });

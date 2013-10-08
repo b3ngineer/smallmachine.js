@@ -14,23 +14,40 @@
 		}
 	}
 
+	var getMissingDependency = function(ontologies, activator) {
+		for (var i = 0; i < activator.dependencies.length; i++) {
+			var foundDependency = false;
+			for (var j = 0; j < ontologies.length; j++) {
+				if (activator.dependencies[i] == ontologies[j].title) {
+					foundDependency = true;
+					break;
+				}
+			}
+			if (!foundDependency) {
+				return activator.dependencies[i];
+			}
+		}
+		return null;
+	};
+
     core = function(ontologies, behaviors) {
 		if (typeof ontologies === 'undefined') {
 			throw new Error('Missing required parameter for smallmachine constructor: one or more instances of type [object Ontology]');
 		}
 		var allOntologies = [].concat(ontologies);
+		var titleList = '';
 		for (var i = 0; i < allOntologies.length; i++) {
 			if (typeof allOntologies[i].ofType !== 'function' || !allOntologies[i].ofType('Ontology')) {
 				if (typeof core.ontology[allOntologies[i]] !== 'undefined') {
+					titleList = titleList + allOntologies[i] + ',';
 					allOntologies[i] = core.ontology[allOntologies[i]];
 				}
 			}
+			else {
+				titleList = titleList + allOntologies[i].title;
+			}
 		}
-
-		if (allOntologies.length === 1) {
-			return allOntologies[0].getModel(behaviors);
-		}
-		var ontology = new core.Ontology(allOntologies[0].title);
+		var ontology = new core.Ontology(titleList.substring(0,titleList.length - 1));
 		for (var i = 0; i < allOntologies.length; i++) {
 			// call ontology.addTerm for all terms in the additional ontology
 			for (var p in allOntologies[i]) {
@@ -48,6 +65,10 @@
 			}
 			// merge activators
 			for (var j = 0; j < allOntologies[i]._activators.length; j++) {
+				var missingDependency = getMissingDependency(allOntologies, allOntologies[i]._activators[j]);
+				if (missingDependency !== null) {
+					throw new Error("Cannot wire-in ontology with missing activator dependency on '" + missingDependency + "'");
+				}
 				ontology.registerActivator(allOntologies[i]._activators[j]);
 				ontology._activators.sort(function(a, b) {
 					if (a.title == b.title) {

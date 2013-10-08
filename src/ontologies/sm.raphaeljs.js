@@ -50,7 +50,7 @@
 		}
 	};
 
-	ontology.registerActivator(activator);
+	ontology.registerActivator(activator, ['sm.channels']);
 
 	try {
 		sm.ontology.extendedBy(ontology);
