@@ -427,6 +427,20 @@
 		}
 	};
 
+	core.duck = function(a, b) {
+		for (var property in b) {
+			if (b[property] === true) {
+				if (typeof a[property] === 'undefined') {
+					return false;
+				}
+			}
+			else if (typeof a[property] !== b[property]) {
+				return false;
+			}
+		}
+		return true;
+	};
+
 	return core;
 }(smallmachine || {}));
 

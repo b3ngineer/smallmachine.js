@@ -23,17 +23,20 @@
 		return this;
 	};
 
-	Node.prototype.update = function(hook) {
-		var element = hook.context.circle(this.x,
-										  this.y,
-										  this.width / 2,
-										  this.height / 2);
-		element.id = this.id;
-		element.attr({
-			fill : '#ffffff'
-		});
-		hook.context.text(this.x, this.y, this.label);
-		return true;
+	Node.prototype.update = function(message) {
+		if (sm.duck(message, {circle:'function',text:'function'}) {
+			var element = message.circle(this.x,
+										 this.y,
+										 this.width / 2,
+										 this.height / 2);
+			element.id = this.id;
+			element.attr({
+				fill : '#ffffff'
+			});
+			message.text(this.x, this.y, this.label);
+			return true;
+		}
+		return false;
 	};
 
 	sm.type.extendedBy(Node, 'Node');
@@ -49,21 +52,25 @@
 		return this;
 	};
 
-	Edge.prototype.update = function(hook) {
-		hook.context.path( ["M", this.x1, this.y1, "L", this.x2, this.y2] );
-		var x1 = parseFloat(this.x1);
-		var y1 = parseFloat(this.y1);
-		var x2 = parseFloat(this.x2);
-		var y2 = parseFloat(this.y2);
-		var a = x1 - x2;
-		var b = y1 - y2;
-		var cX = (x1 + x2) / 2;
-		var cY = (y1 + y2) / 2;
-		var textLabel = hook.context.text(cX, cY - 6, this.label);
-		var dX = x2 - x1;
-		var dY = y2 - y1;
-		var angle = Math.atan2(dY, dX) * 180 / Math.PI;
-		textLabel.transform('r' + angle);
+	Edge.prototype.update = function(message) {
+		if (sm.duck(message, {path:'function',text:'function'}) {
+			message.path( ["M", this.x1, this.y1, "L", this.x2, this.y2] );
+			var x1 = parseFloat(this.x1);
+			var y1 = parseFloat(this.y1);
+			var x2 = parseFloat(this.x2);
+			var y2 = parseFloat(this.y2);
+			var a = x1 - x2;
+			var b = y1 - y2;
+			var cX = (x1 + x2) / 2;
+			var cY = (y1 + y2) / 2;
+			var textLabel = message.text(cX, cY - 6, this.label);
+			var dX = x2 - x1;
+			var dY = y2 - y1;
+			var angle = Math.atan2(dY, dX) * 180 / Math.PI;
+			textLabel.transform('r' + angle);
+			return true;
+		}
+		return false;
 	};
 
 	sm.type.extendedBy(Edge, 'Edge');
@@ -80,34 +87,29 @@
 		return null;
 	};
 
+	var nodesInitializerDelegate = {
+		update : function(message) {
+			var edges = [];
+			for(var i = 0; i < message.length; i++) {
+				var node = new sm.type.Node(message[i]);
+				for (var j = 0; j < node.edges.length; j++) {
+					var objectNode = getObjectNode(message, node.edges[j].id);
+					if (objectNode !== null) {
+						var edge = new sm.type.Edge(node, objectNode, j);
+					}
+				}
+			}
+		}
+	};
+
 	var activator = function(model) {
 		model.insert.subscribe({
 			update : function(message) {
-				if (typeof message.ofType !== 'function' || !message.ofType('Hook')) {
-					return false;
-				}
-				if (typeof message.target.update === 'function') {
-					return message.target;
-				}
 			}
 		});
 		model.initialize.subscribe({
 			update : function(message) {
-				return function(message) {
-					//var paper = raphael('paper', width, height);
-					var edges = [];
-					for(var i = 0; i < message.length; i++) {
-						var node = new sm.type.Node(message[i]);
-						for (var j = 0; j < node.edges.length; j++) {
-							var objectNode = getObjectNode(message, node.edges[j].id);
-							if (objectNode !== null) {
-								var edge = new sm.type.Edge(node, objectNode, j);
-								model.insert.publish(new sm.type.Hook(edge, paper));
-							}
-						}
-						model.insert.publish(new sm.type.Hook(node, paper));
-					}
-				};
+				return nodesInitializerDelegate;
 			}
 		});
 	};

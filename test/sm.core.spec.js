@@ -298,6 +298,30 @@ describe('sm.core', function() {
 			actual.remove('a.b.c', 'd');
 			expect(actual._collection['a.b.c'].d).not.toBeDefined();
 		});
+
+		it('should return true when duck testing an object with the expected member and member type of function', function() {
+			var actual = { test : function() { } };
+			var target  = { test : 'function' } ;
+			expect(smallmachine.duck(actual, target)).toBe(true);
+		});
+
+		it('should return true when duck testing an object with the expected member and only being defined as a requirement', function() {
+			var actual = { test : 1 };
+			var target  = { test : true } ;
+			expect(smallmachine.duck(actual, target)).toBe(true);
+		});
+
+		it('should return false when duck testing an object without the expected member', function() {
+			var actual = { testA : function() { } };
+			var target  = { testB : 'function' } ;
+			expect(smallmachine.duck(actual, target)).toBe(false);
+		});
+
+		it('should return false when duck testing an object with the expected member but without the expected member type', function() {
+			var actual = { testA : function() { } };
+			var target  = { testB : 'object' } ;
+			expect(smallmachine.duck(actual, target)).toBe(false);
+		});
 	});
 });
 

@@ -91,12 +91,6 @@
 			model.initialize.addHelper('json', jsonHelper);
 		}
 
-		sm.type.extendedBy(function(targetObject, contextObject) {
-			this.target = targetObject;
-			this.context = contextObject;
-			return this;
-		}, 'Hook');
-
 		var defaultStorageDelegate = {
 			update : function(message) {
 				if (typeof message.ofType === 'function' && message.ofType('NamedValue')) {
