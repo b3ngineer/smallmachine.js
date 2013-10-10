@@ -27,7 +27,7 @@ var smallmachine = function(core) {
   };
   core = function(ontologies, behaviors) {
     if(typeof ontologies === "undefined") {
-      throw new Error("Missing required parameter for smallmachine constructor: one or more instances of type [object Ontology]");
+      core.error(new Error("Missing required parameter for smallmachine constructor: one or more instances of type [object Ontology]"))
     }
     var allOntologies = [].concat(ontologies);
     var titleList = "";
@@ -58,7 +58,7 @@ var smallmachine = function(core) {
       for(var j = 0;j < allOntologies[i]._activators.length;j++) {
         var missingDependency = getMissingDependency(allOntologies, allOntologies[i]._activators[j]);
         if(missingDependency !== null) {
-          throw new Error("Cannot wire-in ontology with missing activator dependency on '" + missingDependency + "'");
+          core.error(new Error("Cannot wire-in ontology with missing activator dependency on '" + missingDependency + "'"))
         }
         ontology.registerActivator(allOntologies[i]._activators[j]);
         ontology._activators.sort(function(a, b) {
@@ -83,7 +83,7 @@ var smallmachine = function(core) {
   };
   core.alsoBehavesLike = function(a, b) {
     if(typeof a === "undefined" || typeof b === "undefined") {
-      throw new Error("Cannot mixin with an undefined object");
+      core.error(new Error("Cannot mixin with an undefined object"))
     }
     for(var p in b) {
       if(!b.hasOwnProperty(p)) {
@@ -116,6 +116,17 @@ var smallmachine = function(core) {
         a.prototype = {}
       }
       core.alsoBehavesLike(a.prototype, b.prototype)
+    }
+  };
+  core.error = function(Error, handler) {
+    if(typeof handler !== "undefined" && typeof handler.handleError === "function") {
+      handler.handleError(Error)
+    }else {
+      if(typeof core.handleError === "function") {
+        core.handleError(Error)
+      }else {
+        throw Error;
+      }
     }
   };
   core.CONCEPT = "concept";
@@ -280,21 +291,21 @@ var smallmachine = function(core) {
     var TermA = this[termA];
     var TermB = this[termB];
     if(TermA._type === core.CONCEPT) {
-      throw new Error("Cannot define a relationship with a concept type: " + TermA._value);
+      core.error(new Error("Cannot define a relationship with a concept type: " + TermA._value))
     }else {
       if(TermA._type === null) {
         TermA._type = core.RELATIONSHIP
       }
     }
     if(TermB._type === core.RELATIONSHIP) {
-      throw new Error("Cannot create a relationship with a relationship type: " + TermB._value);
+      core.error(new Error("Cannot create a relationship with a relationship type: " + TermB._value))
     }else {
       if(TermB._type === null) {
         TermB._type = core.CONCEPT
       }
     }
     if(Term._type === core.RELATIONSHIP) {
-      throw new Error("Cannot create a relationship from a relationship type: " + Term._value);
+      core.error(new Error("Cannot create a relationship from a relationship type: " + Term._value))
     }else {
       if(Term._type === null) {
         Term._type = core.CONCEPT
@@ -330,14 +341,14 @@ var smallmachine = function(core) {
     var Term = this[target];
     var TermA = this[termA];
     if(TermA._type === core.RELATIONSHIP) {
-      throw new Error("Cannot apply isA to a relationship type: " + TermA._value);
+      core.error(new Error("Cannot apply isA to a relationship type: " + TermA._value))
     }else {
       if(TermA._type === null) {
         TermA._type = core.CONCEPT
       }
     }
     if(Term._type === core.RELATIONSHIP) {
-      throw new Error("Cannot apply isA to a relationship type: " + Term._value);
+      core.error(new Error("Cannot apply isA to a relationship type: " + Term._value))
     }else {
       if(Term._type === null) {
         Term._type = core.CONCEPT
@@ -351,14 +362,14 @@ var smallmachine = function(core) {
     var Term = this[target];
     var TermA = this[termA];
     if(TermA._type === core.RELATIONSHIP) {
-      throw new Error("Cannot apply hasRange to a relationship type: " + TermA._value);
+      core.error(new Error("Cannot apply hasRange to a relationship type: " + TermA._value))
     }else {
       if(TermA._type === null) {
         TermA._type = core.CONCEPT
       }
     }
     if(Term._type === core.CONCEPT) {
-      throw new Error("Cannot assign hasRange from a concept type: " + Term._value);
+      core.error(new Error("Cannot assign hasRange from a concept type: " + Term._value))
     }else {
       if(Term._type === null) {
         Term._type = core.RELATIONSHIP
@@ -385,14 +396,14 @@ var smallmachine = function(core) {
     var Term = this[target];
     var TermA = this[termA];
     if(TermA._type === core.RELATIONSIP) {
-      throw new Error("Cannot apply hasRange to a relationship type: " + TermA._value);
+      core.error(new Error("Cannot apply hasRange to a relationship type: " + TermA._value))
     }else {
       if(TermA._type === null) {
         TermA._type = core.CONCEPT
       }
     }
     if(Term._type === core.CONCEPT) {
-      throw new Error("Cannot assign hasRange from a concept type: " + Term._value);
+      core.error(new Error("Cannot assign hasRange from a concept type: " + Term._value))
     }else {
       if(Term._type === null) {
         Term._type = core.RELATIONSHIP
@@ -471,7 +482,7 @@ var smallmachine = function(core) {
     }
     var propertyName = typeName || model.title;
     if(typeof propertyName === "undefined") {
-      throw new Error("Cannot call extendedBy on the core ontology with an object that is missing the 'title' property without specifying a 'typeName'");
+      sm.error(new Error("Cannot call extendedBy on the core ontology with an object that is missing the 'title' property without specifying a 'typeName'"))
     }
     if(typeof this[propertyName] !== "undefined") {
       sm.alsoBehavesLike(this[propertyName], model);
@@ -479,14 +490,14 @@ var smallmachine = function(core) {
     }
     var typeConcept = this.hasMemberType;
     if(typeof typeConcept === "undefined" || typeof typeConcept.getType === "undefined") {
-      throw new Error("The specified concept does not have a valid 'hasMemberType' relationship with another concept");
+      sm.error(new Error("The specified concept does not have a valid 'hasMemberType' relationship with another concept"))
     }
     var hasMemberType = sm[this._value][typeConcept._value];
     if(typeof hasMemberType === "undefined") {
-      throw new Error("The specified type does not exist in the core object model: " + typeConcept._value);
+      sm.error(new Error("The specified type does not exist in the core object model: " + typeConcept._value))
     }
     if(typeof model.getType !== "function") {
-      throw new Error("The specified model is missing the getType function: " + propertyName);
+      sm.error(new Error("The specified model is missing the getType function: " + propertyName))
     }
     var modelType = model.getType();
     var validModelType = false;
@@ -506,7 +517,7 @@ var smallmachine = function(core) {
       }
     }
     if(!validModelType) {
-      throw new Error("Did not find an allowed model type for: " + modelType);
+      sm.error(new Error("Did not find an allowed model type for: " + modelType))
     }
   };
   var Null = function() {
@@ -536,7 +547,7 @@ var smallmachine = function(core) {
   sm.type.extendedBy(AsyncResult, "AsyncResult");
   var NamedValue = function(namespace, key, value) {
     if(typeof key === "undefined") {
-      throw new Error("Parameter 'key' is required when instantiating the sm.NamedValue type");
+      sm.error(new Error("Parameter 'key' is required when instantiating the sm.NamedValue type"))
     }
     this.namespace = namespace;
     this.key = key;
@@ -561,7 +572,7 @@ var smallmachine = function(core) {
     var namespace = namespaceOrNamedValue.namespace || namespaceOrNamedValue;
     var k = namespaceOrNamedValue.key || key;
     if(typeof this._collection[namespace] !== "undefined" && this._collection[namespace][k] !== "undefined") {
-      throw new Error("Cannot add a new entry to the collection (already exists): [" + namespace + "]" + k);
+      sm.error(new Error("Cannot add a new entry to the collection (already exists): [" + namespace + "]" + k))
     }
     this.modify(namespaceOrNamedValue, key, value);
     return this
@@ -571,10 +582,10 @@ var smallmachine = function(core) {
     var k = namespaceOrNamedValue.key || key;
     var v = namespaceOrNamedValue.value || value;
     if(typeof k === "undefined") {
-      throw new Error("Must supply a valid key");
+      sm.error(new Error("Must supply a valid key"))
     }
     if(typeof v === "undefined") {
-      throw new Error("Must supply a valid value");
+      sm.error(new Error("Must supply a valid value"))
     }
     if(typeof this._collection[namespace] === "undefined") {
       this._collection[namespace] = {}

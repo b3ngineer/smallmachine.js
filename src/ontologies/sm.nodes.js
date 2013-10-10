@@ -85,7 +85,7 @@
 	};
 
 	var LeafSort = function(a, b) {
-		return a.edges.length - b.edges.length;
+		return b.edges.length - a.edges.length;
 	};
 
 	InitializerDelegate.prototype.update = function(message) {
