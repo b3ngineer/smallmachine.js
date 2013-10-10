@@ -57,12 +57,12 @@
 							asyncResult.publish(data);
 						},
 						error: function(jqxhr, textStatus, thrown) {
-							model.messenger.error.publish(thrown);
+							sm.error(new Error(thrown));
 						}
 					});
 				}
 				catch (error) {
-					model.messenger.error.publish(error);
+					sm.error(new Error(error));
 				}
 			}
 			else {
@@ -76,7 +76,7 @@
 						asyncResult.publish(JSON.parse(xhr.responseText));
 					}
 					else {
-						model.messenger.error.publish(xhr.statusText);
+						sm.error(new Error(xhr.statusText));
 					}
 				}
 				xhr.open("GET", url, true);
@@ -125,6 +125,6 @@
 		sm.ontology.extendedBy(ontology);
 	}
 	catch (error) {
-		throw new Error('Could not extend the smallmachine.ontology property with the \'sm.channels\' ontology: ' + error.message + '\n' + error.stack);
+		sm.error(new Error('Could not extend the smallmachine.ontology property with the \'sm.channels\' ontology: ' + error.message + '\n' + error.stack));
 	}
 }(smallmachine));

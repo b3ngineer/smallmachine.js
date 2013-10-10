@@ -13,6 +13,7 @@ describe('target.helpers', function() {
 
     it('should allow calling json helper to get results asynchronously', function() {
         var updated = false;
+		target.system.initialize._subscribers = [];
         target.system.initialize.subscribe({
             update : function(e) {
                 updated = true;
@@ -26,13 +27,14 @@ describe('target.helpers', function() {
             return updated;
         }, "Failed to return on system.initialize", 1000);
     });
-    
+
     it('should not notify inappropriate channels while making requests asynchronously', function() {
         runs(function(){
             this.updated = { result : false };
             this.updatedIncorrectly = { result : false };
             var u1 = this.updated;
             var u2 = this.updatedIncorrectly;
+			target.system.initialize._subscribers = [];
             target.system.initialize.subscribe({
                 update : function(e) {
                     u1.result = true;
@@ -41,6 +43,7 @@ describe('target.helpers', function() {
                     expect(true).toBe(false);
                 }
             });
+			target.messenger.error._subscribers = [];
             target.messenger.error.subscribe({
                 update : function(e) {
                     u2.result = true;

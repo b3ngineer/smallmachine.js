@@ -68,23 +68,30 @@
 	};
 
 	var getObjectNode = function(message, id) {
-		if (typeof message.length === 'undefined') {
-			throw new Error('Cannot determine the message type; expecting an array of node objects but received ' + message);
-		}
 		for (var i = 0; i < message.length; i++) {
-		if (message[i].id === id) {
-			return message[i];
-		}
+			if (message[i].id === id) {
+				return message[i];
+			}
 		}
 		return null;
 	};
 
 	var InitializerDelegate = function(model) {
 		this._model = model;
+		this.handleError = function(Error) {
+			model.messenger.error.publish(Error);
+		};
 		return this;
 	};
 
+	var LeafSort = function(a, b) {
+		return a.edges.length - b.edges.length;
+	};
+
 	InitializerDelegate.prototype.update = function(message) {
+		if (sm.typeMask(message, { length : true, sort : 'function' } ) !== null) {
+			sm.error(new Error('Cannot determine the message type; expecting an array (or comparable object) of node objects but received ' + message), this);
+		}
 		var paper = new sm.type.NamedValue('sm.raphaeljs', 'paper', null);
 		this._model.get.publish(paper);
 		var edges = [];
@@ -102,6 +109,17 @@
 	};
 
 	var activator = function(model) {
+		model.initialize.subscribe({
+			update : function(message) {
+				if (sm.typeMask(message, { length : true, sort : 'function' } ) === null) {
+					return function(message) {
+						message.sort(LeafSort);
+						return false;
+					};
+				}
+			}
+			});
+		// default behaviors
 		var delegate = new InitializerDelegate(model);
 		model.initialize.subscribe({ update : function(message) { return delegate; } });
 		model.connect.subscribe({ update : function(message) { return message; } });
@@ -114,7 +132,7 @@
 		sm.ontology.extendedBy(ontology);
 	}
 	catch (error) {
-		throw new Error('Could not extend the smallmachine.ontology property with the \'sm.nodes\' ontology: ' + error.message + '\n' + error.stack);
+		sm.error(new Error('Could not extend the smallmachine.ontology property with the \'sm.nodes\' ontology: ' + error.message + '\n' + error.stack));
 	}
 }(smallmachine));
 

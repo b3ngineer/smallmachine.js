@@ -32,7 +32,7 @@
 
     core = function(ontologies, behaviors) {
 		if (typeof ontologies === 'undefined') {
-			throw new Error('Missing required parameter for smallmachine constructor: one or more instances of type [object Ontology]');
+			core.error(new Error('Missing required parameter for smallmachine constructor: one or more instances of type [object Ontology]'));
 		}
 		var allOntologies = [].concat(ontologies);
 		var titleList = '';
@@ -67,7 +67,7 @@
 			for (var j = 0; j < allOntologies[i]._activators.length; j++) {
 				var missingDependency = getMissingDependency(allOntologies, allOntologies[i]._activators[j]);
 				if (missingDependency !== null) {
-					throw new Error("Cannot wire-in ontology with missing activator dependency on '" + missingDependency + "'");
+					core.error(new Error("Cannot wire-in ontology with missing activator dependency on '" + missingDependency + "'"));
 				}
 				ontology.registerActivator(allOntologies[i]._activators[j]);
 				ontology._activators.sort(function(a, b) {
@@ -94,7 +94,7 @@
 
 	core.alsoBehavesLike = function(a, b) {
 		if (typeof a === 'undefined' || typeof b === 'undefined') {
-			throw new Error('Cannot mixin with an undefined object');
+			core.error(new Error('Cannot mixin with an undefined object'));
 		}
 		for (var p in b) {
 			if (!b.hasOwnProperty(p)) {
@@ -129,6 +129,18 @@
 			core.alsoBehavesLike(a.prototype, b.prototype);
 		}
 	}
+
+	core.error = function(Error, handler) {
+		if (typeof handler !== 'undefined' && typeof handler.handleError === 'function') {
+			handler.handleError(Error);
+		}
+		else if (typeof core.handleError === 'function') {
+			core.handleError(Error);
+		}
+		else {
+			throw Error;
+		}
+	};
 
 	core.CONCEPT = 'concept';
 	core.RELATIONSHIP = 'relationship';
@@ -312,19 +324,19 @@
 		var TermA = this[termA];
 		var TermB = this[termB];
 		if (TermA._type === core.CONCEPT) {
-			throw new Error('Cannot define a relationship with a concept type: ' + TermA._value);
+			core.error(new Error('Cannot define a relationship with a concept type: ' + TermA._value));
 		}
 		else if (TermA._type === null) {
 			TermA._type = core.RELATIONSHIP;
 		}
 		if (TermB._type === core.RELATIONSHIP) {
-			throw new Error('Cannot create a relationship with a relationship type: ' + TermB._value);
+			core.error(new Error('Cannot create a relationship with a relationship type: ' + TermB._value));
 		}
 		else if (TermB._type === null) {
 			TermB._type = core.CONCEPT;
 		}
 		if (Term._type === core.RELATIONSHIP) {
-			throw new Error('Cannot create a relationship from a relationship type: ' + Term._value);
+			core.error(new Error('Cannot create a relationship from a relationship type: ' + Term._value));
 		}
 		else if (Term._type === null) {
 			Term._type = core.CONCEPT;
@@ -362,13 +374,13 @@
 		var TermA = this[termA];
 
 		if (TermA._type === core.RELATIONSHIP) {
-			throw new Error('Cannot apply isA to a relationship type: ' + TermA._value);
+			core.error(new Error('Cannot apply isA to a relationship type: ' + TermA._value));
 		}
 		else if (TermA._type === null) {
 			TermA._type = core.CONCEPT;
 		}
 		if (Term._type === core.RELATIONSHIP) {
-			throw new Error('Cannot apply isA to a relationship type: ' + Term._value);
+			core.error(new Error('Cannot apply isA to a relationship type: ' + Term._value));
 		}
 		else if (Term._type === null) {
 			Term._type = core.CONCEPT;
@@ -383,13 +395,13 @@
 		var Term = this[target];
 		var TermA = this[termA];
 		if (TermA._type === core.RELATIONSHIP) {
-			throw new Error('Cannot apply hasRange to a relationship type: ' + TermA._value);
+			core.error(new Error('Cannot apply hasRange to a relationship type: ' + TermA._value));
 		}
 		else if (TermA._type === null) {
 			TermA._type = core.CONCEPT;
 		}
 		if (Term._type === core.CONCEPT) {
-			throw new Error('Cannot assign hasRange from a concept type: ' + Term._value);
+			core.error(new Error('Cannot assign hasRange from a concept type: ' + Term._value));
 		}
 		else if (Term._type === null) {
 			Term._type = core.RELATIONSHIP;
@@ -417,13 +429,13 @@
 		var Term = this[target];
 		var TermA = this[termA];
 		if (TermA._type === core.RELATIONSIP) {
-			throw new Error('Cannot apply hasRange to a relationship type: ' + TermA._value);
+			core.error(new Error('Cannot apply hasRange to a relationship type: ' + TermA._value));
 		}
 		else if (TermA._type === null) {
 			TermA._type = core.CONCEPT;
 		}
 		if (Term._type === core.CONCEPT) {
-			throw new Error('Cannot assign hasRange from a concept type: ' + Term._value);
+			core.error(new Error('Cannot assign hasRange from a concept type: ' + Term._value));
 		}
 		else if (Term._type === null) {
 			Term._type = core.RELATIONSHIP;

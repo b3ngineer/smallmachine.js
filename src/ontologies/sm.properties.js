@@ -50,7 +50,7 @@
 		}
 		var propertyName = typeName || model.title;
 		if (typeof propertyName === 'undefined') {
-			throw new Error('Cannot call extendedBy on the core ontology with an object that is missing the \'title\' property without specifying a \'typeName\'');
+			sm.error(new Error('Cannot call extendedBy on the core ontology with an object that is missing the \'title\' property without specifying a \'typeName\''));
 		}
 		if (typeof this[propertyName] !== 'undefined') {
 			sm.alsoBehavesLike(this[propertyName], model);
@@ -58,14 +58,14 @@
 		}
 		var typeConcept = this.hasMemberType;
 		if (typeof typeConcept === 'undefined' || typeof typeConcept.getType === 'undefined') {
-			throw new Error('The specified concept does not have a valid \'hasMemberType\' relationship with another concept');
+			sm.error(new Error('The specified concept does not have a valid \'hasMemberType\' relationship with another concept'));
 		}
 		var hasMemberType = sm[this._value][typeConcept._value];
 		if (typeof hasMemberType === 'undefined') {
-			throw new Error('The specified type does not exist in the core object model: ' + typeConcept._value);
+			sm.error(new Error('The specified type does not exist in the core object model: ' + typeConcept._value));
 		}
 		if (typeof model.getType !== 'function') {
-			throw new Error('The specified model is missing the getType function: ' + propertyName);
+			sm.error(new Error('The specified model is missing the getType function: ' + propertyName));
 		}
 		var modelType = model.getType();
 		var validModelType = false;
@@ -85,7 +85,7 @@
 			}
 		}
 		if (!validModelType) {
-			throw new Error('Did not find an allowed model type for: ' + modelType);
+			sm.error(new Error('Did not find an allowed model type for: ' + modelType));
 		}
 	};
 
@@ -122,7 +122,7 @@
 
 	var NamedValue = function(namespace, key, value) {
 		if (typeof key === 'undefined') {
-			throw new Error('Parameter \'key\' is required when instantiating the sm.NamedValue type');
+			sm.error(new Error('Parameter \'key\' is required when instantiating the sm.NamedValue type'));
 		}
 		this.namespace = namespace;
 		this.key = key;
@@ -151,7 +151,7 @@
 		var namespace = namespaceOrNamedValue.namespace || namespaceOrNamedValue;
 		var k = namespaceOrNamedValue.key || key;
 		if (typeof this._collection[namespace] !== 'undefined' && this._collection[namespace][k] !== 'undefined') {
-			throw new Error('Cannot add a new entry to the collection (already exists): [' + namespace + ']' + k);
+			sm.error(new Error('Cannot add a new entry to the collection (already exists): [' + namespace + ']' + k));
 		}
 		this.modify(namespaceOrNamedValue, key, value);
 		return this;
@@ -162,10 +162,10 @@
 		var k = namespaceOrNamedValue.key || key;
 		var v = namespaceOrNamedValue.value || value;
 		if (typeof k === 'undefined') {
-			throw new Error('Must supply a valid key');
+			sm.error(new Error('Must supply a valid key'));
 		}
 		if (typeof v === 'undefined') {
-			throw new Error('Must supply a valid value');
+			sm.error(new Error('Must supply a valid value'));
 		}
 		if (typeof this._collection[namespace] === 'undefined') {
 			this._collection[namespace] = {};

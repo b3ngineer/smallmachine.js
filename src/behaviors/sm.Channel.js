@@ -64,16 +64,23 @@
 				deference.push(response);
 				authoritative = true;
 			}
-			else if (typeof response === 'object' && typeof response.update === 'function') {
+			else if (response && typeof response.update === 'function') {
 				delegates.push(response);
 			}
 		}
 		if (authoritative) {
+			var continuedAuthority = false;
 			for (var i = 0; i < deference.length; i++) {
-				deference[i](message);
+				var deferredResult = deference[i](message);
+				if (!deferredResult === false) {
+					continuedAuthority = true;
+				}
+			}
+			if (continuedAuthority === false) {
+				authoritative = false;
 			}
 		}
-		else {
+		if (authoritative == false) {
 			if (delegates.length > 0) {
 				this.notify(message, delegates);
 			}
@@ -81,6 +88,9 @@
 	};
 
 	Channel.prototype.publish = function(message, recipients) {
+		if (typeof this === 'undefined') {
+			throw new Error('holy fucking shit');
+		}
 		var recipients = recipients || { };
 		if (typeof message === 'function') {
 			var newResult = message(new sm.type.AsyncResult(this));
