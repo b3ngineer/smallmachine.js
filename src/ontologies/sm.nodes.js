@@ -73,20 +73,19 @@
 		}
 		for (var i = 0; i < message.length; i++) {
 		if (message[i].id === id) {
-		p> 
 			return message[i];
 		}
-	}
-	return null;
-};
+		}
+		return null;
+	};
 
-var InitializerDelegate = function(model) {
-	this._model = model;
-	return this;
-};
+	var InitializerDelegate = function(model) {
+		this._model = model;
+		return this;
+	};
 
-InitializerDelegate.prototype.update = function(message) {
-	var paper = new sm.type.NamedValue('sm.raphaeljs', 'paper', null);
+	InitializerDelegate.prototype.update = function(message) {
+		var paper = new sm.type.NamedValue('sm.raphaeljs', 'paper', null);
 		this._model.get.publish(paper);
 		var edges = [];
 		for(var i = 0; i < message.length; i++) {
