@@ -299,28 +299,30 @@ describe('sm.core', function() {
 			expect(actual._collection['a.b.c'].d).not.toBeDefined();
 		});
 
-		it('should return true when duck testing an object with the expected member and member type of function', function() {
+		it('should return true when typeMasking an object with the expected member and member type of function', function() {
 			var actual = { test : function() { } };
 			var target  = { test : 'function' } ;
-			expect(smallmachine.duck(actual, target)).toBe(true);
+			expect(smallmachine.typeMask(actual, target)).toBe(null);
 		});
 
-		it('should return true when duck testing an object with the expected member and only being defined as a requirement', function() {
+		it('should return true when typeMasking an object with the expected member and only being defined as a requirement', function() {
 			var actual = { test : 1 };
 			var target  = { test : true } ;
-			expect(smallmachine.duck(actual, target)).toBe(true);
+			expect(smallmachine.typeMask(actual, target)).toBe(null);
 		});
 
-		it('should return false when duck testing an object without the expected member', function() {
-			var actual = { testA : function() { } };
-			var target  = { testB : 'function' } ;
-			expect(smallmachine.duck(actual, target)).toBe(false);
+		it('should return an array when typeMasking an object without the expected member', function() {
+			var a = { testA : function() { } };
+			var b  = { testB : 'function' } ;
+			var actual = smallmachine.typeMask(a, b);
+			expect(actual.length).toBe(1);
 		});
 
-		it('should return false when duck testing an object with the expected member but without the expected member type', function() {
-			var actual = { testA : function() { } };
-			var target  = { testB : 'object' } ;
-			expect(smallmachine.duck(actual, target)).toBe(false);
+		it('should return an array when typeMasking an object with the expected member but without the expected member type', function() {
+			var a = { testA : function() { } };
+			var b  = { testB : 'object' } ;
+			var actual = smallmachine.typeMask(a, b);
+			expect(actual.length).toBe(1);
 		});
 	});
 });

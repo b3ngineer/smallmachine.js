@@ -8,16 +8,21 @@
 	<script type="text/javascript" src="../lib/jasmine.js"></script>
 	<script type="text/javascript" src="../lib/jasmine-html.js"></script>
 	<script type="text/javascript" src="../lib/jquery-1.10.2.min.js"></script>
+	<script type="text/javascript" src="../lib/raphael-min.js"></script>
+	<script type="text/javascript" src="../lib/sammy.library.min.js"></script>
 
 	<!-- include source files here... -->
-	<script type="text/javascript" src="../sm.library.min.js"></script>
+	<script type="text/javascript" src="../packages/all/sm.library.min.js"></script>
 
 	<script type="text/javascript">
 		var target = (function(sm) {
 			try {
-				var channelsOntology = sm.ontology['sm.channels'];
-				var channelsModel = sm(channelsOntology, sm.behavior.Channel);
-				return channelsModel;
+				var channels = sm.ontology['sm.channels'];
+				var nodes = sm.ontology['sm.nodes'];
+				var sammy = sm.ontology['sm.sammyjs'];
+				var raphael = sm.ontology['sm.raphaeljs'];
+				var wiring = sm([channels, nodes, sammy, raphael], [sm.behavior.Channel]);
+				return wiring;
 			}
 			catch (error) {
 				if (typeof console.error === 'function') {

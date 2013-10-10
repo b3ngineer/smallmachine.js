@@ -10,15 +10,38 @@ var smallmachine = function(core) {
       }
     }
   }
+  var getMissingDependency = function(ontologies, activator) {
+    for(var i = 0;i < activator.dependencies.length;i++) {
+      var foundDependency = false;
+      for(var j = 0;j < ontologies.length;j++) {
+        if(activator.dependencies[i] == ontologies[j].title) {
+          foundDependency = true;
+          break
+        }
+      }
+      if(!foundDependency) {
+        return activator.dependencies[i]
+      }
+    }
+    return null
+  };
   core = function(ontologies, behaviors) {
     if(typeof ontologies === "undefined") {
       throw new Error("Missing required parameter for smallmachine constructor: one or more instances of type [object Ontology]");
     }
     var allOntologies = [].concat(ontologies);
-    if(allOntologies.length === 1) {
-      return allOntologies[0].getModel(behaviors)
+    var titleList = "";
+    for(var i = 0;i < allOntologies.length;i++) {
+      if(typeof allOntologies[i].ofType !== "function" || !allOntologies[i].ofType("Ontology")) {
+        if(typeof core.ontology[allOntologies[i]] !== "undefined") {
+          titleList = titleList + allOntologies[i] + ",";
+          allOntologies[i] = core.ontology[allOntologies[i]]
+        }
+      }else {
+        titleList = titleList + allOntologies[i].title
+      }
     }
-    var ontology = new core.Ontology(allOntologies[0].title);
+    var ontology = new core.Ontology(titleList.substring(0, titleList.length - 1));
     for(var i = 0;i < allOntologies.length;i++) {
       for(var p in allOntologies[i]) {
         if(!allOntologies[i].hasOwnProperty(p)) {
@@ -33,12 +56,35 @@ var smallmachine = function(core) {
         ontology._inferencer._rules.push(allOntologies[i]._inferencer._rules[j])
       }
       for(var j = 0;j < allOntologies[i]._activators.length;j++) {
-        ontology.registerActivator(allOntologies[i]._activators[j])
+        var missingDependency = getMissingDependency(allOntologies, allOntologies[i]._activators[j]);
+        if(missingDependency !== null) {
+          throw new Error("Cannot wire-in ontology with missing activator dependency on '" + missingDependency + "'");
+        }
+        ontology.registerActivator(allOntologies[i]._activators[j]);
+        ontology._activators.sort(function(a, b) {
+          if(a.title == b.title) {
+            return 0
+          }
+          for(var i = 0;i < a.dependencies.length;i++) {
+            if(b.title == a.dependencies[i]) {
+              return 1
+            }
+          }
+          for(var i = 0;i < b.dependencies.length;i++) {
+            if(a.title == b.dependencies[i]) {
+              return-1
+            }
+          }
+          return 0
+        })
       }
     }
     return ontology.getModel(behaviors)
   };
   core.alsoBehavesLike = function(a, b) {
+    if(typeof a === "undefined" || typeof b === "undefined") {
+      throw new Error("Cannot mixin with an undefined object");
+    }
     for(var p in b) {
       if(!b.hasOwnProperty(p)) {
         continue
@@ -150,8 +196,17 @@ var smallmachine = function(core) {
     this[value] = new Proxy(t, this._inferencer);
     return this
   };
-  core.Ontology.prototype.registerActivator = function(activator) {
-    this._activators.push(activator)
+  core.Ontology.prototype.registerActivator = function(activator, dependencies) {
+    if(typeof dependencies === "undefined") {
+      dependencies = []
+    }
+    if(typeof activator !== "function" && typeof activator.getType === "function" && activator.getType() === "[object Activator]") {
+      this._activators.push(activator);
+      return
+    }
+    this._activators.push({fn:activator, title:this.title, dependencies:dependencies, getType:function() {
+      return"[object Activator]"
+    }})
   };
   core.Ontology.prototype.getModel = function(behaviors) {
     var Model = function(title) {
@@ -171,7 +226,10 @@ var smallmachine = function(core) {
       if(typeof this[p]._term !== "undefined") {
         model[p] = this[p]._term;
         if(typeof behaviors !== "undefined") {
-          core.alsoBehavesLike(Object.getPrototypeOf(model[p]), behaviors.prototype)
+          var allBehaviors = [].concat(behaviors);
+          for(var i = 0;i < allBehaviors.length;i++) {
+            core.alsoBehavesLike(Object.getPrototypeOf(model[p]), allBehaviors[i].prototype)
+          }
         }
       }else {
         model[p] = this[p]
@@ -185,7 +243,7 @@ var smallmachine = function(core) {
       rule._fn.apply(model, rule._args)
     }
     for(var i = 0;i < this._activators.length;i++) {
-      this._activators[i](model)
+      this._activators[i].fn(model)
     }
     return model
   };
@@ -344,6 +402,24 @@ var smallmachine = function(core) {
       TermA[target] = Term
     }
   };
+  core.typeMask = function(a, b) {
+    var result = [];
+    for(var p in b) {
+      if(!b.hasOwnProperty(p)) {
+        continue
+      }
+      if(b[p] === true) {
+        if(typeof a[p] === "undefined") {
+          result.push(p)
+        }
+      }else {
+        if(typeof a[p] !== "undefinedf" && typeof a[p] !== b[p]) {
+          result.push(p)
+        }
+      }
+    }
+    return result.length === 0 ? null : result
+  };
   return core
 }(smallmachine || {});
 (function(sm) {
@@ -393,11 +469,12 @@ var smallmachine = function(core) {
       }
       return
     }
-    if(typeof model.title === "undefined") {
-      throw new Error("Cannot extendedBy the core ontology with model that is missing the 'title' property");
+    var propertyName = typeName || model.title;
+    if(typeof propertyName === "undefined") {
+      throw new Error("Cannot call extendedBy on the core ontology with an object that is missing the 'title' property without specifying a 'typeName'");
     }
-    if(typeof this[model.title] !== "undefined") {
-      sm.alsoBehavesLike(this[model.title], model);
+    if(typeof this[propertyName] !== "undefined") {
+      sm.alsoBehavesLike(this[propertyName], model);
       return
     }
     var typeConcept = this.hasMemberType;
@@ -409,7 +486,7 @@ var smallmachine = function(core) {
       throw new Error("The specified type does not exist in the core object model: " + typeConcept._value);
     }
     if(typeof model.getType !== "function") {
-      throw new Error("The specified model is missing the getType function: " + model.title);
+      throw new Error("The specified model is missing the getType function: " + propertyName);
     }
     var modelType = model.getType();
     var validModelType = false;
@@ -422,8 +499,8 @@ var smallmachine = function(core) {
       }
       var comparison = "[object " + t + "]";
       if(comparison === modelType) {
-        this.hasMember[model.title] = model;
-        this[model.title] = model;
+        this.hasMember[propertyName] = model;
+        this[propertyName] = model;
         validModelType = true;
         break
       }
@@ -456,6 +533,79 @@ var smallmachine = function(core) {
     this._channel.publish(message, recipients);
     return this
   };
-  sm.type.extendedBy(AsyncResult, "AsyncResult")
+  sm.type.extendedBy(AsyncResult, "AsyncResult");
+  var NamedValue = function(namespace, key, value) {
+    if(typeof key === "undefined") {
+      throw new Error("Parameter 'key' is required when instantiating the sm.NamedValue type");
+    }
+    this.namespace = namespace;
+    this.key = key;
+    this.value = value;
+    return this
+  };
+  sm.type.extendedBy(NamedValue, "NamedValue");
+  var NamedValueCollection = function() {
+    this.title = "NamedValueCollection";
+    this._collection = {};
+    return this
+  };
+  NamedValueCollection.prototype.exists = function(namespaceOrNamedValue, key) {
+    var namespace = namespaceOrNamedValue;
+    if(typeof namespaceOrNamedValue.ofType === "function" && namespaceOrNamedValue.ofType("NamedValue")) {
+      namespace = namespaceOrNamedValue.namespace;
+      key = namespaceOrNamedValue.key
+    }
+    return typeof this._collection[namespace] !== "undefined" && typeof this._collection[namespace][key] !== "undefined"
+  };
+  NamedValueCollection.prototype.add = function(namespaceOrNamedValue, key, value) {
+    var namespace = namespaceOrNamedValue.namespace || namespaceOrNamedValue;
+    var k = namespaceOrNamedValue.key || key;
+    if(typeof this._collection[namespace] !== "undefined" && this._collection[namespace][k] !== "undefined") {
+      throw new Error("Cannot add a new entry to the collection (already exists): [" + namespace + "]" + k);
+    }
+    this.modify(namespaceOrNamedValue, key, value);
+    return this
+  };
+  NamedValueCollection.prototype.modify = function(namespaceOrNamedValue, key, value) {
+    var namespace = namespaceOrNamedValue.namespace || namespaceOrNamedValue;
+    var k = namespaceOrNamedValue.key || key;
+    var v = namespaceOrNamedValue.value || value;
+    if(typeof k === "undefined") {
+      throw new Error("Must supply a valid key");
+    }
+    if(typeof v === "undefined") {
+      throw new Error("Must supply a valid value");
+    }
+    if(typeof this._collection[namespace] === "undefined") {
+      this._collection[namespace] = {}
+    }
+    this._collection[namespace][k] = v;
+    return this
+  };
+  NamedValueCollection.prototype.remove = function(namespace, key) {
+    if(typeof this._collection[namespace] === "undefined" || typeof this._collection[namespace][key] === "undefined") {
+      return
+    }
+    delete this._collection[namespace][key];
+    return this
+  };
+  NamedValueCollection.prototype.getValue = function(namespaceOrNamedValue, key) {
+    var namespace = namespaceOrNamedValue.namespace || namespaceOrNamedValue;
+    var k = namespaceOrNamedValue.key || key;
+    if(typeof this._collection[namespace] === "undefined" || this._collection[namespace][k] === "undefined") {
+      return
+    }
+    var value = this._collection[namespace][k];
+    if(typeof namespaceOrNamedValue.ofType === "function" && namespaceOrNamedValue.ofType("NamedValue")) {
+      if(typeof value !== "undefined") {
+        namespaceOrNamedValue.value = value
+      }
+    }
+    return value
+  };
+  NamedValueCollection.prototype.ofType = function(type) {
+    return type === "NamedValueCollection" || typeof type.getType === "function" && type.getType() === this.getType()
+  };
+  sm.type.extendedBy(NamedValueCollection, "NamedValueCollection")
 })(smallmachine);
 

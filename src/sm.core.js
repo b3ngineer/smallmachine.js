@@ -93,6 +93,9 @@
     };
 
 	core.alsoBehavesLike = function(a, b) {
+		if (typeof a === 'undefined' || typeof b === 'undefined') {
+			throw new Error('Cannot mixin with an undefined object');
+		}
 		for (var p in b) {
 			if (!b.hasOwnProperty(p)) {
 				continue;
@@ -245,7 +248,10 @@
 			if (typeof this[p]._term !== 'undefined') {
 				model[p] = this[p]._term;
 				if (typeof behaviors !== 'undefined') {
-					core.alsoBehavesLike(Object.getPrototypeOf(model[p]), behaviors.prototype);
+					var allBehaviors = [].concat(behaviors);
+					for (var i = 0; i < allBehaviors.length; i++) {
+						core.alsoBehavesLike(Object.getPrototypeOf(model[p]), allBehaviors[i].prototype);
+					}
 				}
 			}
 			else {
@@ -427,18 +433,22 @@
 		}
 	};
 
-	core.duck = function(a, b) {
-		for (var property in b) {
-			if (b[property] === true) {
-				if (typeof a[property] === 'undefined') {
-					return false;
+	core.typeMask = function(a, b) {
+		var result = [];
+		for (var p in b) {
+			if (!b.hasOwnProperty(p)) {
+				continue;
+			}
+			if (b[p] === true) {
+				if (typeof a[p] === 'undefined') {
+					result.push(p);
 				}
 			}
-			else if (typeof a[property] !== b[property]) {
-				return false;
+			else if (typeof a[p] !== 'undefinedf' && typeof a[p] !== b[p]) {
+				result.push(p);
 			}
 		}
-		return true;
+		return result.length === 0 ? null : result;
 	};
 
 	return core;
