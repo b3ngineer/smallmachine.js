@@ -109,21 +109,19 @@
 	};
 
 	var activator = function(model) {
-		model.initialize.subscribe({
-			update : function(message) {
-				if (sm.typeMask(message, { length : true, sort : 'function' } ) === null) {
-					return function(message) {
-						message.sort(LeafSort);
-						return false;
-					};
-				}
+		model.initialize.subscribe(function(message) {
+			if (sm.typeMask(message, { length : true, sort : 'function' } ) === null) {
+				return function(message) {
+					message.sort(LeafSort);
+					return false; // continue to delegates by default
+				};
 			}
-			});
+		});
 		// default behaviors
 		var delegate = new InitializerDelegate(model);
-		model.initialize.subscribe({ update : function(message) { return delegate; } });
-		model.connect.subscribe({ update : function(message) { return message; } });
-		model.insert.subscribe({ update : function(message) { return message; } });
+		model.initialize.subscribe(function(message) { return delegate; });
+		model.connect.subscribe(function(message) { return message; });
+		model.insert.subscribe(function(message) { return message; });
 	};
 
 	ontology.registerActivator(activator, ['sm.channels', 'sm.raphaeljs'])
