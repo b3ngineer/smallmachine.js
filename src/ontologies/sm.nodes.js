@@ -51,17 +51,13 @@
 
 	Edge.prototype.update = function(message) {
 		this.paper.path( ["M", this.x1, this.y1, "L", this.x2, this.y2] );
-		var x1 = parseFloat(this.x1);
-		var y1 = parseFloat(this.y1);
-		var x2 = parseFloat(this.x2);
-		var y2 = parseFloat(this.y2);
-		var a = x1 - x2;
-		var b = y1 - y2;
-		var cX = (x1 + x2) / 2;
-		var cY = (y1 + y2) / 2;
+		var a = this.x1 - this.x2;
+		var b = this.y1 - this.y2;
+		var cX = (this.x1 + this.x2) / 2;
+		var cY = (this.y1 + this.y2) / 2;
 		var textLabel = this.paper.text(cX, cY - 6, this.label);
-		var dX = x2 - x1;
-		var dY = y2 - y1;
+		var dX = this.x2 - this.x1;
+		var dY = this.y2 - this.y1;
 		var angle = Math.atan2(dY, dX) * 180 / Math.PI;
 		textLabel.transform('r' + angle);
 		return true;
@@ -82,10 +78,6 @@
 			model.messenger.error.publish(Error);
 		};
 		return this;
-	};
-
-	var LeafSort = function(a, b) {
-		return b.edges.length - a.edges.length;
 	};
 
 	InitializerDelegate.prototype.update = function(message) {
@@ -109,14 +101,6 @@
 	};
 
 	var activator = function(model) {
-		model.initialize.subscribe(function(message) {
-			if (sm.typeMask(message, { length : true, sort : 'function' } ) === null) {
-				return function(message) {
-					message.sort(LeafSort);
-					return false; // continue to delegates by default
-				};
-			}
-		});
 		// default behaviors
 		var delegate = new InitializerDelegate(model);
 		model.initialize.subscribe(function(message) { return delegate; });
@@ -124,7 +108,7 @@
 		model.insert.subscribe(function(message) { return message; });
 	};
 
-	ontology.registerActivator(activator, ['sm.channels', 'sm.raphaeljs'])
+	ontology.registerActivator(activator, ['sm.channels', 'sm.raphaeljs']);
 
 	try {
 		sm.ontology.extendedBy(ontology);
