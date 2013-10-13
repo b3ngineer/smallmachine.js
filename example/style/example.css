@@ -2,3 +2,13 @@ body {
     margin:0px;
     padding:0px;
 }
+
+div#background {
+	height:100%;
+	width:100%;
+	position:fixed;
+	background-color:#555870;
+	-moz-box-shadow:    inset 0 0 200px #eeeeff;
+	-webkit-box-shadow: inset 0 0 200px #eeefff;
+	box-shadow:         inset 0 0 200px #eeefff;
+}

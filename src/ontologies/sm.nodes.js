@@ -31,7 +31,9 @@
 									 	this.height / 2);
 		element.id = this.id;
 		element.attr({
-			fill : '#ffffff'
+			'fill': '90-#777793:5-#FFF:95',
+			'stroke': '#FFF',
+			'stroke-width' : 2
 		});
 		this.paper.text(this.x, this.y, this.label);
 		return true;
@@ -50,12 +52,20 @@
 	};
 
 	Edge.prototype.update = function(message) {
-		this.paper.path( ["M", this.x1, this.y1, "L", this.x2, this.y2] );
+		var line = this.paper.path( ["M", this.x1, this.y1, "L", this.x2, this.y2] );
+		line.attr({
+			'stroke':'#aab',
+			'arrow-end' : 'classic-wide-long'
+		});
 		var a = this.x1 - this.x2;
 		var b = this.y1 - this.y2;
 		var cX = (this.x1 + this.x2) / 2;
 		var cY = (this.y1 + this.y2) / 2;
-		var textLabel = this.paper.text(cX, cY - 6, this.label);
+		var textLabel = this.paper.text(cX, cY, this.label);
+		textLabel.attr({
+			'fill' : '#eef',
+			'font-weight' : 'normal'
+		});
 		var dX = this.x2 - this.x1;
 		var dY = this.y2 - this.y1;
 		var angle = Math.atan2(dY, dX) * 180 / Math.PI;

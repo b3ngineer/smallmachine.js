@@ -6,8 +6,9 @@
 
 	var TOP_MARGIN = 50;
 	var SIBLING_MARGIN = 20;
-	var SECTOR_MARGIN = 80;
+	var SECTOR_MARGIN = 40;
 	var GROUP_MARGIN = 40;
+	var FIXED_EDGE_LENGTH = false;
 
 	var Sector = function(previousSector, layoutWidth, layoutHeight, parentId) {
 		if (typeof previousSector === 'undefined') {
@@ -33,6 +34,20 @@
 		var nodeHeight = parseFloat(node.height);
 		this.height = this.height < nodeHeight ? nodeHeight : this.height;
 		this.x = this.x - (SIBLING_MARGIN * 0.5) - (nodeWidth * 0.5);
+		if (!FIXED_EDGE_LENGTH) {
+			var maxEdgeLabelLength = 0;
+			for (var i = 0; i < node.edges.length; i++) {
+				if (node.edges[i].label.length > maxEdgeLabelLength) {
+					maxEdgeLabelLength = node.edges[i].label.length;
+				}
+			}
+			if (maxEdgeLabelLength > 8) {
+				var newHeight = this.height + ((maxEdgeLabelLength - 8) * 10);
+				if (newHeight > this.height) {
+					this.height = newHeight;
+				}
+			}
+		}
 		this.nodes.push({node: node, nodeGroup: nodeGroup});
 	};
 
