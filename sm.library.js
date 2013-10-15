@@ -89,12 +89,17 @@ var smallmachine = function(core) {
       if(!b.hasOwnProperty(p)) {
         continue
       }
-      if(p.indexOf("_") == 0) {
+      if(p.indexOf("_") == 0 || p === "initializer") {
         continue
       }
       if(typeof a[p] !== "undefined") {
+        if(typeof b[p].prototype !== "undefined") {
+          if(typeof b[p].prototype.initializer !== "undefined" && b[p].prototype.initializer == true) {
+            continue
+          }
+          var newBehaviorIsVirtual = typeof b[p].prototype.virtual !== "undefined" ? b[p].prototype.virtual : false
+        }
         var currentBehaviorIsVirtual = typeof a[p].prototype !== "undefined" ? a[p].prototype.virtual : false;
-        var newBehaviorIsVirtual = typeof b[p].prototype !== "undefined" ? b[p].prototype.virtual : false;
         if(currentBehaviorIsVirtual && newBehaviorIsVirtual) {
           continue
         }else {
@@ -224,6 +229,15 @@ var smallmachine = function(core) {
       return this
     };
     var model = new Model;
+    var allBehaviors = [];
+    if(typeof behaviors !== "undefined") {
+      allBehaviors = allBehaviors.concat(behaviors);
+      for(var i = 0;i < allBehaviors.length;i++) {
+        if(typeof allBehaviors[i].prototype !== "undefined" && allBehaviors[i].prototype.initializer === true) {
+          allBehaviors[i](model)
+        }
+      }
+    }
     for(var p in this) {
       if(!this.hasOwnProperty(p)) {
         continue
@@ -236,11 +250,8 @@ var smallmachine = function(core) {
       }
       if(typeof this[p]._term !== "undefined") {
         model[p] = this[p]._term;
-        if(typeof behaviors !== "undefined") {
-          var allBehaviors = [].concat(behaviors);
-          for(var i = 0;i < allBehaviors.length;i++) {
-            core.alsoBehavesLike(Object.getPrototypeOf(model[p]), allBehaviors[i].prototype)
-          }
+        for(var i = 0;i < allBehaviors.length;i++) {
+          core.alsoBehavesLike(Object.getPrototypeOf(model[p]), allBehaviors[i].prototype)
         }
       }else {
         model[p] = this[p]
@@ -562,7 +573,7 @@ var smallmachine = function(core) {
   };
   NamedValueCollection.prototype.exists = function(namespaceOrNamedValue, key) {
     var namespace = namespaceOrNamedValue;
-    if(typeof namespaceOrNamedValue.ofType === "function" && namespaceOrNamedValue.ofType("NamedValue")) {
+    if(sm.typeMask(namespaceOrNamedValue, {namespace:true, key:true}) === null) {
       namespace = namespaceOrNamedValue.namespace;
       key = namespaceOrNamedValue.key
     }
@@ -607,9 +618,15 @@ var smallmachine = function(core) {
       return
     }
     var value = this._collection[namespace][k];
-    if(typeof namespaceOrNamedValue.ofType === "function" && namespaceOrNamedValue.ofType("NamedValue")) {
-      if(typeof value !== "undefined") {
-        namespaceOrNamedValue.value = value
+    if(typeof value === "undefined") {
+      return value
+    }else {
+      if(typeof namespaceOrNamedValue.setValue === "function") {
+        namespaceOrNamedValue.setValue(value)
+      }else {
+        if(typeof namespaceOrNamedValue.value !== "undefined") {
+          namespaceOrNamedValue.value = value
+        }
       }
     }
     return value

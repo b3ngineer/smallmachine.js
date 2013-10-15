@@ -23,7 +23,7 @@
 		update : function(message) {
 			if (typeof message.ofType === 'function' && message.ofType('Sammy')) {
 				return function(message) {
-					sammy('#' + message._id, message._callback).run();
+					sammy('#' + message._id, message._callback).run('#/');
 				};
 			}
 			return false;

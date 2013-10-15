@@ -91,16 +91,17 @@
 	};
 
 	InitializerDelegate.prototype.update = function(message) {
-		if (sm.typeMask(message, { length : true, sort : 'function' } ) !== null) {
-			sm.error(new Error('Cannot determine the message type; expecting an array (or comparable object) of node objects but received ' + message), this);
+		var json = message.value;
+		if (sm.typeMask(json, { length : true, sort : 'function' } ) !== null) {
+			sm.error(new Error('Cannot determine the JSON type; expecting an array (or comparable object) of node objects but received ' + json), this);
 		}
 		var paper = new sm.type.NamedValue('sm.raphaeljs', 'paper', null);
 		this._model.get.publish(paper);
 		var edges = [];
-		for(var i = 0; i < message.length; i++) {
-			var node = new Node(message[i], paper.value);
+		for(var i = 0; i < json.length; i++) {
+			var node = new Node(json[i], paper.value);
 			for (var j = 0; j < node.edges.length; j++) {
-				var objectNode = getObjectNode(message, node.edges[j].id);
+				var objectNode = getObjectNode(json, node.edges[j].id);
 				if (objectNode !== null) {
 					var edge = new Edge(node, objectNode, j, paper.value);
 					this._model.connect.publish(edge);

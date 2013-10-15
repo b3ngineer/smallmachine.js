@@ -116,13 +116,14 @@
 
 	var activator = function(model) {
 		model.initialize.subscribe(function(message) {
-			if (sm.typeMask(message, { length : true, sort : 'function' } ) === null) {
-				return function(message) {
+			if (sm.typeMask(message.value, { length : true, sort : 'function' } ) === null) {
+				return function(mesage) {
+					var json = message.value;
 					var root = new sm.type.NamedValue('sm.flowchart', 'root', null);
 					model.get.publish(root);
 					var paper = new sm.type.NamedValue('sm.raphaeljs', 'paper', null);
 					model.get.publish(paper);
-					format(message, root.value, new Layout(paper));
+					format(json, root.value, new Layout(paper));
 					return false; // proceed to delegated subscribers
 				};
 			}

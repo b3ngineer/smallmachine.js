@@ -140,7 +140,7 @@
 
 	NamedValueCollection.prototype.exists = function(namespaceOrNamedValue, key) {
 		var namespace = namespaceOrNamedValue;
-		if (typeof namespaceOrNamedValue.ofType === 'function' && namespaceOrNamedValue.ofType('NamedValue')) {
+		if (sm.typeMask(namespaceOrNamedValue, { namespace : true, key : true }) === null) {
 			namespace = namespaceOrNamedValue.namespace;		
 			key = namespaceOrNamedValue.key;		
 		}
@@ -189,10 +189,14 @@
 			return;
 		}
 		var value = this._collection[namespace][k];
-		if (typeof namespaceOrNamedValue.ofType === 'function' && namespaceOrNamedValue.ofType('NamedValue')) {
-			if (typeof value !== 'undefined') {
-				namespaceOrNamedValue.value = value;
-			}
+		if (typeof value === 'undefined') {
+			return value;
+		}
+		else if (typeof namespaceOrNamedValue.setValue === 'function') {
+			namespaceOrNamedValue.setValue(value);
+		}
+		else if (typeof namespaceOrNamedValue.value !== 'undefined') {
+			namespaceOrNamedValue.value = value;
 		}
 		return value;
 	};

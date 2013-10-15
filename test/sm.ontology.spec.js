@@ -444,6 +444,13 @@ describe('target.ontology', function() {
 			target.get.publish(testData);
 			expect(testData.value).toBe(false);
 		});
+
+		it('should remove subscribers when calling unsubscribe', function() {
+			var actual = target.system.initialize.subscribe(function(message){});	
+			expect(target.system.initialize._subscribers[actual]).toBeDefined();
+			target.system.initialize.unsubscribe(actual);
+			expect(target.system.initialize._subscribers[actual]).not.toBeDefined();
+		});
 	});
 
 	describe('merging', function() {

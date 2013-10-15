@@ -37,26 +37,48 @@
 		}
 	};
 
+	var _getGuid =  function(c) {
+		var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+		return v.toString(16);
+	};
+
+	var getGuid = function() {
+		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, _getGuid);
+	};
+
+	Channel.prototype.unsubscribe = function(subscriberId) {
+		if (typeof this._subscribers !== 'undefined') {
+			delete this._subscribers[subscriberId];
+		}
+	};
+
 	Channel.prototype.subscribe = function(subscriber) {
 		if (typeof this._subscribers === 'undefined') {
-			this._subscribers = [];
+			this._subscribers = {};
 		}
+		var subscriberId = getGuid();
 		if (typeof subscriber === 'function') {
-			this._subscribers.push({
-				update : subscriber
-			});
-			return this;
+			this._subscribers[subscriberId] = { update : subscriber, lifetime : 1 };
 		}
-		this._subscribers.push(subscriber);
-		return this;
+		else {
+			if (typeof subscriber.lifecycle === 'undefined') {
+				subscriber.lifetime = 1;
+			}
+			this._subscribers[subscriberId] = subscriber;
+		}
+		return subscriberId;
 	};
 
 	Channel.prototype.notify = function(message, subscribers) {
 		var authoritative = false,
-			delegates = [],
+			delegates = {},
+			delegateCount = 0,
 			deference = [];
-		for (var i = 0; i < subscribers.length; i++) {
-			var response = subscribers[i].update(message);
+		for (var id in subscribers) {
+			var response = subscribers[id].update(message);
+			if (subscribers[id].lifetime <= 0) {
+				this.unsusbscribe(id);
+			}
 			if (response === true) {
 				authoritative = true;
 			}
@@ -65,7 +87,8 @@
 				authoritative = true;
 			}
 			else if (response && typeof response.update === 'function') {
-				delegates.push(response);
+				delegates[getGuid()] = response;
+				delegateCount++;
 			}
 		}
 		if (authoritative) {
@@ -80,17 +103,12 @@
 				authoritative = false;
 			}
 		}
-		if (authoritative == false) {
-			if (delegates.length > 0) {
-				this.notify(message, delegates);
-			}
+		if (authoritative == false && delegateCount > 0) {
+			this.notify(message, delegates);
 		}
 	};
 
 	Channel.prototype.publish = function(message, recipients) {
-		if (typeof this === 'undefined') {
-			throw new Error('holy fucking shit');
-		}
 		var recipients = recipients || { };
 		if (typeof message === 'function') {
 			var newResult = message(new sm.type.AsyncResult(this));

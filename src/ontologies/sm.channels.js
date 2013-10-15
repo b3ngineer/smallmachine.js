@@ -54,7 +54,7 @@
 						type : 'GET',
 						success: function(data, textStatus, jqxhr) {
 							model.messenger.success.publish(textStatus);
-							asyncResult.publish(data);
+							asyncResult.publish(new sm.type.NamedValue('sm.channels', url, data));
 						},
 						error: function(jqxhr, textStatus, thrown) {
 							sm.error(new Error(thrown));
@@ -73,7 +73,7 @@
 					if (xhr.readyState < 4) return;
 					if (xhr.status == 200) {
 						model.messenger.success.publish(xhr.statusText);
-						asyncResult.publish(JSON.parse(xhr.responseText));
+						asyncResult.publish(new sm.type.NamedValue('sm.channels', url, JSON.parse(xhr.responseText)));
 					}
 					else {
 						sm.error(new Error(xhr.statusText));
@@ -86,10 +86,6 @@
 			}
 			return asyncResult;
 		};
-
-		if (typeof model.initialize.addHelper === 'function') {
-			model.initialize.addHelper('json', jsonHelper);
-		}
 
 		var defaultStorageDelegate = {
 			update : function(message) {
@@ -107,7 +103,7 @@
 
 		var defaultValueDelegate = {
 			update : function(message) {
-				if (typeof message.ofType === 'function' && message.ofType('NamedValue')) {
+				if (typeof message.ofType === 'function') {
 					return function(message) {
 						model.memory.getValue(message);
 					}
@@ -117,6 +113,34 @@
 		};
 
 		model.get.subscribe({ update : function(message) { return defaultValueDelegate; } });
+
+		if (typeof model.initialize.addHelper === 'function') {
+			model.initialize.addHelper('json', jsonHelper);
+		}
+		if (typeof model.set.addHelper === 'function') {
+			model.set.addHelper('config', function(config) {
+				return new sm.type.NamedValue('sm.channels', 'config', config);
+			});
+		}
+		if (typeof model.get.addHelper === 'function') {
+			model.get.addHelper('json', jsonHelper);
+
+			var Config = function() {
+				this.namespace = 'sm.channels';
+				this.key = 'config';
+				return this;
+			};
+
+			Config.prototype.setValue = function(value) {
+				sm.alsoBehavesLike(this, value);
+			};
+
+			sm.type.extendedBy(Config, 'Config');
+
+			model.get.addHelper('config', function(outVar) {
+				return outVar;
+			});
+		}
 	};
 
 	ontology.registerActivator(activator);

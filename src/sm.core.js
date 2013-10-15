@@ -100,13 +100,19 @@
 			if (!b.hasOwnProperty(p)) {
 				continue;
 			}
-			// don't copy "private" members
-			if (p.indexOf('_') == 0) {
+			// don't copy "private" members or characteristics
+			if (p.indexOf('_') == 0 || p === 'initializer') {
 				continue;
 			}
 			if (typeof a[p] !== 'undefined') {
+				if (typeof b[p].prototype !== 'undefined') {
+					if (typeof b[p].prototype.initializer !== 'undefined' && b[p].prototype.initializer == true) {
+						//b[p](a);
+						continue;
+					}
+					var newBehaviorIsVirtual = typeof b[p].prototype.virtual !== 'undefined' ? b[p].prototype.virtual : false;
+				}
 				var currentBehaviorIsVirtual = (typeof a[p].prototype !== 'undefined') ? a[p].prototype.virtual : false;
-				var newBehaviorIsVirtual = (typeof b[p].prototype !== 'undefined') ? b[p].prototype.virtual : false;
 				if (currentBehaviorIsVirtual && newBehaviorIsVirtual) {
 					continue;
 				}
@@ -247,6 +253,15 @@
 			return this;
 		};
 		var model = new Model();
+		var allBehaviors = [];
+		if (typeof behaviors !== 'undefined') {
+			allBehaviors = allBehaviors.concat(behaviors);
+			for (var i = 0; i < allBehaviors.length; i++) {
+				if (typeof allBehaviors[i].prototype !== 'undefined' && allBehaviors[i].prototype.initializer === true) {
+					allBehaviors[i](model);
+				}
+			}
+		}
 		for (var p in this) {
 			if (!this.hasOwnProperty(p)) {
 				continue;
@@ -259,11 +274,8 @@
 			}
 			if (typeof this[p]._term !== 'undefined') {
 				model[p] = this[p]._term;
-				if (typeof behaviors !== 'undefined') {
-					var allBehaviors = [].concat(behaviors);
-					for (var i = 0; i < allBehaviors.length; i++) {
-						core.alsoBehavesLike(Object.getPrototypeOf(model[p]), allBehaviors[i].prototype);
-					}
+				for (var i = 0; i < allBehaviors.length; i++) {
+					core.alsoBehavesLike(Object.getPrototypeOf(model[p]), allBehaviors[i].prototype);
 				}
 			}
 			else {
