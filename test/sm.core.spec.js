@@ -324,6 +324,13 @@ describe('sm.core', function() {
 			var actual = smallmachine.typeMask(a, b);
 			expect(actual.length).toBe(1);
 		});
+
+		it('should return all of the properties identified in the mask when comparing against something undefined', function() {
+			var junk;
+			var b  = { testB : 'object' } ;
+			var actual = smallmachine.typeMask(junk, b);
+			expect(actual.length).toBe(1);
+		});
 	});
 });
 

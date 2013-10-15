@@ -23,8 +23,26 @@
 				var flowchart = sm.ontology['sm.flowchart'];
 				var raphaeljs = sm.ontology['sm.raphaeljs'];
 				var wiring = sm([channels, nodes, flowchart, raphaeljs], sm.behavior.Channel);
+				wiring.system.set.config({
+					shapeAttr : {
+						'fill': '90-#777793:5-#FFF:95',
+						'stroke': '#FFF',
+						'stroke-width' : 2
+					},
+					lineAttr : {
+						'stroke':'#aab',
+						'arrow-end' : 'classic-wide-long'
+					},
+					textLabelAttr : {
+						'fill' : '#eef',
+						'font-weight' : 'normal'
+					}
+				});
 				wiring.system.set.svg('paper', '100%', '100%');
 				wiring.system.set.publish(new sm.type.NamedValue('sm.flowchart', 'root', '1'));
+				wiring.system.initialize.subscribe(function(message) {
+					wiring.system.paint.publish(message);
+				});
 				wiring.system.initialize.json('example.json');
 			}
 			catch (error) {

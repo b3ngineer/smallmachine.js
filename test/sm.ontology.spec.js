@@ -451,6 +451,17 @@ describe('target.ontology', function() {
 			target.system.initialize.unsubscribe(actual);
 			expect(target.system.initialize._subscribers[actual]).not.toBeDefined();
 		});
+
+		it('should remove subscribers when their lifetime reaches 0', function() {
+			var actual = target.system.initialize.subscribe({
+				update : function(message){
+					this.lifetime = 0;
+				}
+			});	
+			expect(target.system.initialize._subscribers[actual]).toBeDefined();
+			target.system.initialize.publish('test');
+			expect(target.system.initialize._subscribers[actual]).not.toBeDefined();
+		});
 	});
 
 	describe('merging', function() {

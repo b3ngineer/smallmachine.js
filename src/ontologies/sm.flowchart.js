@@ -1,7 +1,7 @@
 ;(function(sm, $, raphael) {
 	var ontology = new sm.Ontology('sm.flowchart');
 
-	ontology.addTerm('initialize');
+	ontology.addTerm('paint');
 	ontology.addTerm('get');
 
 	var TOP_MARGIN = 50;
@@ -115,7 +115,7 @@
 	};
 
 	var activator = function(model) {
-		model.initialize.subscribe(function(message) {
+		model.paint.subscribe(function(message) {
 			if (sm.typeMask(message.value, { length : true, sort : 'function' } ) === null) {
 				return function(mesage) {
 					var json = message.value;

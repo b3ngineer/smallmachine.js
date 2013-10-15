@@ -60,7 +60,15 @@ describe('target.helpers', function() {
         });
     });
 
-    it('should not define the Hook class in global namespace', function() {
-        expect(typeof Hook).not.toBe('function');
-    });
+	it('should set config options using the helper', function() {
+		target.system.set.config({test1:123});
+		expect(target.memory._collection['sm.channels'].config.test1).toBe(123);
+	});
+
+	it('should get config options using the helper', function() {
+		target.system.set.config({test2:123});
+		var actual = new smallmachine.type.Config();
+		target.system.get.config(actual);
+		expect(actual.test2).toBe(123);
+	});
 });

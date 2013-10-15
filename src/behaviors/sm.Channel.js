@@ -76,8 +76,11 @@
 			deference = [];
 		for (var id in subscribers) {
 			var response = subscribers[id].update(message);
+			if (typeof subscribers[id] === 'undefined') {
+				continue;
+			}
 			if (subscribers[id].lifetime <= 0) {
-				this.unsusbscribe(id);
+				this.unsubscribe(id);
 			}
 			if (response === true) {
 				authoritative = true;

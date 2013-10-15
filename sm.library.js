@@ -430,13 +430,13 @@ var smallmachine = function(core) {
       if(!b.hasOwnProperty(p)) {
         continue
       }
-      if(b[p] === true) {
-        if(typeof a[p] === "undefined") {
-          result.push(p)
-        }
+      if(typeof a === "undefined" || typeof a[p] === "undefined") {
+        result.push(p)
       }else {
-        if(typeof a[p] !== "undefinedf" && typeof a[p] !== b[p]) {
-          result.push(p)
+        if(typeof a[p] !== "undefined" && typeof a[p] !== b[p]) {
+          if(b[p] !== true) {
+            result.push(p)
+          }
         }
       }
     }
