@@ -130,6 +130,17 @@
 		return this;
 	};
 
+	NamedValue.prototype.adapt = function(namespace, behaviors) {
+		this.namespace = namespace;
+		if (typeof behaviors !== 'undefined') {
+			var allBehaviors = [].concat(behaviors);
+			for (var i = 0; i < allBehaviors.length; i++) {
+				sm.alsoBehavesLike(this, allBehaviors[i]);			
+			}
+		}
+		return this;
+	};
+
 	sm.type.extendedBy(NamedValue, 'NamedValue');
 
 	var NamedValueCollection = function() {

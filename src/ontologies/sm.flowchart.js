@@ -5,8 +5,8 @@
 	ontology.addTerm('get');
 
 	var TOP_MARGIN = 50;
-	var SIBLING_MARGIN = 20;
-	var SECTOR_MARGIN = 40;
+	var SIBLING_MARGIN = 40;
+	var SECTOR_MARGIN = 80;
 	var GROUP_MARGIN = 40;
 	var FIXED_EDGE_LENGTH = false;
 
@@ -41,8 +41,8 @@
 					maxEdgeLabelLength = node.edges[i].label.length;
 				}
 			}
-			if (maxEdgeLabelLength > 8) {
-				var newHeight = this.height + ((maxEdgeLabelLength - 8) * 10);
+			if (maxEdgeLabelLength > 6) {
+				var newHeight = this.height + ((maxEdgeLabelLength - 6) * 10);
 				if (newHeight > this.height) {
 					this.height = newHeight;
 				}
@@ -51,10 +51,12 @@
 		this.nodes.push({node: node, nodeGroup: nodeGroup});
 	};
 
-	Sector.prototype.finalize = function() {
+	Sector.prototype.finalize = function(newWidth) {
+		if (typeof newWidth === 'undefined' || newWidth < 0) newWidth = 0;
+		var widthAdjustment = newWidth * 0.5;
 		var lastNodeGroup = null;
 		for (var i = 0; i < this.nodes.length; i++) {
-			var margin = SIBLING_MARGIN * i;
+			var margin = SIBLING_MARGIN * (i + 1);
 			if (lastNodeGroup === null) {
 				lastNodeGroup = this.nodes[i].nodeGroup;
 			}
@@ -62,15 +64,17 @@
 				margin = margin + GROUP_MARGIN;
 				lastNodeGroup = this.nodes[i].nodeGroup;
 			}
-			this.nodes[i].node.x = this.x + margin + (this.nodes[i].node.width * i); 
+			this.nodes[i].node.x = this.x + margin + (this.nodes[i].node.width * i) + widthAdjustment; 
 			this.nodes[i].node.y = this.y;
 		}
 	};
 
 	var Layout = function(paper) {
 		this.paper = paper;
-		this.width = parseFloat(paper.value.width);
-		this.height = parseFloat(paper.value.height);
+		this.width = parseFloat(paper.width);
+		this.height = parseFloat(paper.height);
+		this.finalWidth = this.width;
+		this.finalHeight = this.height;
 		this.sectors = [];
 		return this;
 	};
@@ -86,7 +90,12 @@
 
 	Layout.prototype.finalize = function() {
 		for (var i = 0; i < this.sectors.length; i++) {
-			this.sectors[i].finalize();
+			if (this.sectors[i].width > this.finalWidth) {
+				this.finalWidth = this.sectors[i].width;
+			}
+		}
+		for (var i = 0; i < this.sectors.length; i++) {
+			this.sectors[i].finalize(this.finalWidth - this.width);
 		};
 	};
 
@@ -123,7 +132,9 @@
 					model.get.publish(root);
 					var paper = new sm.type.NamedValue('sm.raphaeljs', 'paper', null);
 					model.get.publish(paper);
-					format(json, root.value, new Layout(paper));
+					var layout = new Layout(paper.value);
+					format(json, root.value, layout);
+					paper.value.setSize(layout.finalWidth, layout.finalHeight);
 					return false; // proceed to delegated subscribers
 				};
 			}

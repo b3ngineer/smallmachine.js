@@ -31,13 +31,15 @@
 					},
 					lineAttr : {
 						'stroke':'#aab',
+						'stroke-width' : 2,
 						'arrow-end' : 'classic-wide-long'
 					},
-					textLabelAttr : {
+					edgeLabelAttr : {
 						'fill' : '#eef',
 						'font-weight' : 'normal'
 					}
 				});
+				console.log(wiring);
 				wiring.system.set.svg('paper', '100%', '100%');
 				wiring.system.set.publish(new sm.type.NamedValue('sm.flowchart', 'root', '1'));
 				wiring.system.initialize.subscribe(function(message) {

@@ -7,19 +7,25 @@
 	ontology.addTerm('set');
 	ontology.addTerm('get');
 	ontology.addTerm('paint');
+	ontology.addTerm('paintNodes');
 	ontology.paint.isA(ontology.task);
 	ontology.insert.isA(ontology.task);
 	ontology.connect.isA(ontology.task);
 	ontology.set.isA(ontology.task);
 	ontology.get.isA(ontology.task);
+	ontology.paintNodes.isA(ontology.paint);
 
-	var Node = function(item, paper, shapeAttr) {
-		this.id = item.id || (function() {
-			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-				var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-				return v.toString(16);
-			});
-		})();
+	var _getGuid =  function(c) {
+		var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+		return v.toString(16);
+	};
+
+	var getGuid = function() {
+		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, _getGuid);
+	};
+
+	var Node = function(item, paper, shapeAttr, shapeLabelAttr) {
+		this.id = item.id || getGuid();
 		this.width = parseFloat(item.width) || 50;
 		this.height = parseFloat(item.height) || 50;
 		this.y = parseFloat(item.y);
@@ -28,6 +34,8 @@
 		this.label = item.label || this.id;
 		this.paper = paper;
 		this.shapeAttr = shapeAttr;
+		this.shapeLabelAttr = shapeLabelAttr;
+		this.data = {};
 		return this;
 	};
 
@@ -38,18 +46,26 @@
 									 	this.height / 2);
 		element.id = this.id;
 		if (typeof this.shapeAttr === 'function') {
-			element.attr(this.shapeAttr(this.label));
+			this.shapeAttr(element, this);
 		}
 		else {
 			element.attr(this.shapeAttr);
 		}
-		this.paper.text(this.x, this.y, this.label);
+		var shapeText = this.paper.text(this.x, this.y, this.label);
+		if (typeof this.shapeLabelAttr === 'function') {
+			this.shapeLabelAttr(shapeText, this);
+		}
+		else {
+			shapeText.attr(this.shapeLabelAttr);
+		}
 		return true;
 	};
 
-	var Edge = function(a, b, index, paper, lineAttr, textLabelAttr) {
+	var Edge = function(a, b, index, paper, lineAttr, edgeLabelAttr) {
 		this.id1 = a.id;
 		this.id2 = b.id;
+		this.r1 =  a.width / 2;
+		this.r2 =  b.width / 2;
 		this.x1 = parseFloat(a.x);
 		this.y1 = parseFloat(a.y);
 		this.x2 = parseFloat(b.x);
@@ -57,33 +73,47 @@
 		this.label = a.edges[index].label || '';
 		this.paper = paper;
 		this.lineAttr = lineAttr;
-		this.textLabelAttr = textLabelAttr;
+		this.edgeLabelAttr = edgeLabelAttr;
+		this.data = {};
 		return this;
 	};
 
 	Edge.prototype.update = function(message) {
-		var line = this.paper.path( ["M", this.x1, this.y1, "L", this.x2, this.y2] );
+		var d = Math.sqrt(Math.pow((this.x2 - this.x1), 2) + Math.pow((this.y2 - this.y1), 2));
+		var r1 = this.r1 / d;
+		var r2 = (d - this.r2) / d;
+		var x3 = r1 * this.x2 + (1 - r1) * this.x1;
+		var y3 = r1 * this.y2 + (1 - r1) * this.y1;
+		var x4 = r2 * this.x2 + (1 - r2) * this.x1;
+		var y4 = r2 * this.y2 + (1 - r2) * this.y1;
+
+		var line = this.paper.path( ["M", x3, y3, "L", x4, y4] );
 		if (typeof this.lineAttr === 'function') {
-			line.attr(this.lineAttr(this.label));
+			this.lineAttr(line, this);
 		}
 		else {
 			line.attr(this.lineAttr);
 		}
 		var a = this.x1 - this.x2;
 		var b = this.y1 - this.y2;
-		var cX = (this.x1 + this.x2) / 2;
+		var cX = (this.x1 + this.x2) / 2 
 		var cY = (this.y1 + this.y2) / 2;
 		var textLabel = this.paper.text(cX, cY, this.label);
-		if (typeof this.textLabelAttr === 'function') {
-			textLabel.attr(this.textLabelAttr(this.label));
+		if (typeof this.edgeLabelAttr === 'function') {
+			this.edgeLabelAttr(textLabel, this);
 		}
 		else {
-			textLabel.attr(this.textLabelAttr);
+			textLabel.attr(this.edgeLabelAttr);
 		}
 		var dX = this.x2 - this.x1;
 		var dY = this.y2 - this.y1;
 		var angle = Math.atan2(dY, dX) * 180 / Math.PI;
-		textLabel.transform('r' + angle);
+		if (angle > 90) {
+			textLabel.transform('t-6,-6r' + (angle + 180));
+		}
+		else {
+			textLabel.transform('t6,-6r' + angle);
+		}
 		return true;
 	};
 
@@ -98,9 +128,6 @@
 
 	var PaintDelegate = function(model) {
 		this._model = model;
-		var settings = new sm.type.Config();
-		model.system.get.config(settings);
-		this.settings = settings;
 		this.handleError = function(Error) {
 			model.messenger.error.publish(Error);
 		};
@@ -108,6 +135,9 @@
 	};
 
 	PaintDelegate.prototype.update = function(message) {
+		var settings = new sm.type.Config();
+		this._model.system.get.config(settings);
+
 		var json = message.value;
 		if (typeof json === 'undefined') {
 			return false;
@@ -117,13 +147,14 @@
 		}
 		var paper = new sm.type.NamedValue('sm.raphaeljs', 'paper', null);
 		this._model.get.publish(paper);
+		paper.value.clear();
 		var edges = [];
 		for(var i = 0; i < json.length; i++) {
-			var node = new Node(json[i], paper.value, this.settings.shapeAttr || {});
+			var node = new Node(json[i], paper.value, settings.shapeAttr || {}, settings.shapeLabelAttr || {});
 			for (var j = 0; j < node.edges.length; j++) {
 				var objectNode = getObjectNode(json, node.edges[j].id);
-				if (objectNode !== null) {
-					var edge = new Edge(node, objectNode, j, paper.value, this.settings.lineAttr || {}, this.settings.textLabelAttr || {});
+				if (objectNode !== null && typeof objectNode.x != 'undefined' && typeof objectNode.y !== 'undefined' ) {
+					var edge = new Edge(node, objectNode, j, paper.value, settings.lineAttr || {}, settings.edgeLabelAttr || {});
 					this._model.connect.publish(edge);
 				}
 			}
@@ -132,9 +163,8 @@
 	};
 
 	var activator = function(model) {
-		// default behaviors
 		var delegate = new PaintDelegate(model);
-		model.paint.subscribe(function(message) { return delegate; });
+		model.paintNodes.subscribe(function(message) { return delegate; });
 		model.connect.subscribe(function(message) { return message; });
 		model.insert.subscribe(function(message) { return message; });
 	};
