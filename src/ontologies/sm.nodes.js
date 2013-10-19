@@ -15,17 +15,8 @@
 	ontology.get.isA(ontology.task);
 	ontology.paintNodes.isA(ontology.paint);
 
-	var _getGuid =  function(c) {
-		var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-		return v.toString(16);
-	};
-
-	var getGuid = function() {
-		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, _getGuid);
-	};
-
 	var Node = function(item, paper, shapeAttr, shapeLabelAttr) {
-		this.id = item.id || getGuid();
+		this.id = item.id || sm.getGuid();
 		this.width = parseFloat(item.width) || 50;
 		this.height = parseFloat(item.height) || 50;
 		this.y = parseFloat(item.y);

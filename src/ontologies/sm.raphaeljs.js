@@ -47,7 +47,8 @@
 				validHeight = elementHeight * parseFloat(validHeightMatch[0]) / 100;
 			}
 
-			return new sm.type.NamedValue(TITLE, 'paper', raphael(elementId, validWidth, validHeight));
+			var paper = raphael(elementId, validWidth, validHeight);
+			return new sm.type.NamedValue(TITLE, 'paper', paper);
 		};
 
 		if (typeof model.set.addHelper === 'function') {

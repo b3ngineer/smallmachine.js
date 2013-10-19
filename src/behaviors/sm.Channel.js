@@ -37,15 +37,6 @@
 		}
 	};
 
-	var _getGuid =  function(c) {
-		var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-		return v.toString(16);
-	};
-
-	var getGuid = function() {
-		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, _getGuid);
-	};
-
 	Channel.prototype.unsubscribe = function(subscriberId) {
 		if (typeof this._subscribers !== 'undefined') {
 			delete this._subscribers[subscriberId];
@@ -56,7 +47,7 @@
 		if (typeof this._subscribers === 'undefined') {
 			this._subscribers = {};
 		}
-		var subscriberId = getGuid();
+		var subscriberId = sm.getGuid();
 		if (typeof subscriber === 'function') {
 			this._subscribers[subscriberId] = { update : subscriber, lifetime : 1 };
 		}
@@ -90,7 +81,7 @@
 				authoritative = true;
 			}
 			else if (response && typeof response.update === 'function') {
-				delegates[getGuid()] = response;
+				delegates[sm.getGuid()] = response;
 				delegateCount++;
 			}
 		}

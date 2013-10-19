@@ -22,14 +22,22 @@
 		this.height = 0;
 		this.x = layoutWidth * 0.5;
 		this.width = 0;
-		this.lastNodeGroup = parentId;
 		this.layoutWidth = layoutWidth;
+		this.lastNodeGroup = null;
+		this.nodeGroups = 0;
 		this.nodes = [];
 		return this;
 	};
 
 	Sector.prototype.add = function(node, nodeGroup) {
 		var nodeWidth = parseFloat(node.width);
+		if (this.lastNodeGroup === null) {
+			this.lastNodeGroup = nodeGroup;
+		}
+		else if (this.lastNodeGroup != nodeGroup) {
+			this.nodeGroups++;
+			this.lastNodeGroup = nodeGroup;
+		}
 		this.width = this.width + SIBLING_MARGIN + nodeWidth;
 		var nodeHeight = parseFloat(node.height);
 		this.height = this.height < nodeHeight ? nodeHeight : this.height;
@@ -53,18 +61,20 @@
 
 	Sector.prototype.finalize = function(newWidth) {
 		if (typeof newWidth === 'undefined' || newWidth < 0) newWidth = 0;
-		var widthAdjustment = newWidth * 0.5;
-		var lastNodeGroup = null;
+		var widthAdjustment = newWidth * 0.5,
+		 	lastNodeGroup = null,
+			groupLevel = 0;
+
 		for (var i = 0; i < this.nodes.length; i++) {
-			var margin = SIBLING_MARGIN * (i + 1);
 			if (lastNodeGroup === null) {
 				lastNodeGroup = this.nodes[i].nodeGroup;
 			}
 			else if (this.nodes[i].nodeGroup != lastNodeGroup) {
-				margin = margin + GROUP_MARGIN;
+				groupLevel++;
 				lastNodeGroup = this.nodes[i].nodeGroup;
 			}
-			this.nodes[i].node.x = this.x + margin + (this.nodes[i].node.width * i) + widthAdjustment; 
+			var adjustLeft = (SIBLING_MARGIN * i) + (GROUP_MARGIN * groupLevel);
+			this.nodes[i].node.x = this.x + adjustLeft + (this.nodes[i].node.width * i) + widthAdjustment; 
 			this.nodes[i].node.y = this.y;
 		}
 	};
@@ -90,6 +100,7 @@
 
 	Layout.prototype.finalize = function() {
 		for (var i = 0; i < this.sectors.length; i++) {
+			this.sectors[i].width = this.sectors[i].width + (this.sectors[i].nodeGroups * GROUP_MARGIN);
 			if (this.sectors[i].width > this.finalWidth) {
 				this.finalWidth = this.sectors[i].width;
 			}
@@ -134,7 +145,7 @@
 					model.get.publish(paper);
 					var layout = new Layout(paper.value);
 					format(json, root.value, layout);
-					paper.value.setSize(layout.finalWidth, layout.finalHeight);
+					paper.value.setSize(layout.finalWidth * 1.05, layout.finalHeight * 1.05);
 					return false; // proceed to delegated subscribers
 				};
 			}
