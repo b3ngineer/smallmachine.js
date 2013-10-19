@@ -3,27 +3,20 @@
 
 	ontology.addTerm('initialize');
 
-	var Sammy = function(id, callback) {
+	var Sammy = function(id, callback, runArg) {
 		this._id = id;
 		this._callback = callback;
+		this._runArg = runArg || '#/';
 		return this;
-	};
-
-	Sammy.prototype.getType = function() {
-		return '[object Sammy]';
-	};
-
-	Sammy.prototype.ofType = function(type) {
-		return type === 'Sammy' || (typeof type.getType === 'function' && type.getType() === this.getType());
 	};
 
 	sm.type.extendedBy(Sammy, 'Sammy');
 	
 	var sammyInitializerDelegate = {
 		update : function(message) {
-			if (typeof message.ofType === 'function' && message.ofType('Sammy')) {
+			if (sm.typeMask(message, { _id : true, _callback : true, _runArg : true } === null)) {
 				return function(message) {
-					sammy('#' + message._id, message._callback).run('#/');
+					sammy('#' + message._id, message._callback).run(message._runArg);
 				};
 			}
 			return false;

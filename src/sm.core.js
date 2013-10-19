@@ -266,6 +266,9 @@
 		if (typeof behaviors !== 'undefined') {
 			allBehaviors = allBehaviors.concat(behaviors);
 			for (var i = 0; i < allBehaviors.length; i++) {
+				if (typeof allBehaviors[i] === 'undefined') {
+					core.error('One or more [behaviors] arguments were supplied to the smallmachine constructor that are \'undefined\'; error creating object model');
+				}
 				if (typeof allBehaviors[i].prototype !== 'undefined' && allBehaviors[i].prototype.initializer === true) {
 					allBehaviors[i](model);
 				}

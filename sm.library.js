@@ -134,6 +134,13 @@ var smallmachine = function(core) {
       }
     }
   };
+  var _getGuid = function(c) {
+    var r = Math.random() * 16 | 0, v = c == "x" ? r : r & 3 | 8;
+    return v.toString(16)
+  };
+  core.getGuid = function() {
+    return"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, _getGuid)
+  };
   core.CONCEPT = "concept";
   core.RELATIONSHIP = "relationship";
   var Proxy = function(Term, Inferencer) {
@@ -233,6 +240,9 @@ var smallmachine = function(core) {
     if(typeof behaviors !== "undefined") {
       allBehaviors = allBehaviors.concat(behaviors);
       for(var i = 0;i < allBehaviors.length;i++) {
+        if(typeof allBehaviors[i] === "undefined") {
+          core.error("One or more [behaviors] arguments were supplied to the smallmachine constructor that are 'undefined'; error creating object model")
+        }
         if(typeof allBehaviors[i].prototype !== "undefined" && allBehaviors[i].prototype.initializer === true) {
           allBehaviors[i](model)
         }

@@ -1,33 +1,24 @@
 <html>
 	<head>
-		<title>Dashboard</title>
-		<style type="text/css">
-            body { margin:5%; }
-
-			.node circle {
-			  fill: #56C9D1;
-			  stroke: #30757A;
-			  stroke-width: 1px;
-			}
-
-			.node {
-			  font: 13px sans-serif;
-			}
-
-			.link {
-			  fill: none;
-			  stroke: #8FECF2;
-			  stroke-width: 1px;
-			}
-		</style>
-		
+		<title>smallmachine.js</title>
+		<link rel="stylesheet" type="text/css" href="style/all.css" />
 	</head>
 	<body>
+		<div id="svg"></div>
 		<script type="text/javascript" src="../lib/jquery-1.10.2.min.js"></script>
-		<script type="text/javascript" src="../lib/d3.v3.min.js"></script>
-		<script type="text/javascript" src="../src/sm.core.js"></script>
-		<script type="text/javascript" src="../src/sm.channels.js"></script>
-		<script type="text/javascript" src="../src/sm.base.ontology.js"></script>
-		<script type="text/javascript" src="sm.visualizer.js"></script>
+		<script type="text/javascript" src="../lib/sammy.library.min.js"></script>
+		<script type="text/javascript" src="../lib/raphael-min.js"></script>
+		<script type="text/javascript" src="../sm.library-all.min.js"></script>
+		<script type="text/javascript" src="src/sm.tools.js"></script>
+		<script type="text/javascript">
+			(function(sm) {
+				var channels = sm.ontology['sm.channels'];
+				var sammy = sm.ontology['sm.sammyjs'];
+				var raphael = sm.ontology['sm.raphaeljs'];
+				var wiring = sm([channels, sammy, raphael], [sm.behavior.Channel, sm.behavior.Extension]);
+				wiring.system.set.svg('svg', '100%', '100%');
+				wiring.system.initialize.publish(new sm.type.Sammy('svg', sm.tools));
+			}(smallmachine));
+		</script>
 	</body>
 </html>
