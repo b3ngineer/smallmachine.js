@@ -1,6 +1,13 @@
-;(function(sm, $, sammy, raphael) {
-	var width = $(window).width();
-	var height = $(window).height();
-	var paper = raphael('svg', width, height);
-	
-}(smallmachine, jQuery, Sammy, Raphael));
+;var tools = (function(sm, $, sammy) {
+	return function() {
+		this.use(sm.type.RadialMenu);
+
+		this.get('#/', function() {
+			this.showRadialMenu([
+				{ label : 'Package', publishTo : '' },
+				{ label : 'View', publishTo : '' },
+				{ label : 'Tests', publishTo : '' }
+			], 'center');
+		});
+	};
+}(smallmachine, jQuery, Sammy));

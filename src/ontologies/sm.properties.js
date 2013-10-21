@@ -25,6 +25,7 @@
 		return this;
 	};
 
+	// TODO: make this use the various methods for determining the typeName from the model
 	TypeExtender.prototype.extendedBy = function(model,typeName) {
 		if (typeof typeName !== 'undefined' && typeof model === 'function') {
 			if (typeof this[typeName] !== 'undefined') {

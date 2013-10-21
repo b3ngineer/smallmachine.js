@@ -10,6 +10,7 @@
 		<script type="text/javascript" src="../lib/raphael-min.js"></script>
 		<script type="text/javascript" src="../sm.library-all.min.js"></script>
 		<script type="text/javascript" src="src/sm.tools.js"></script>
+		<script type="text/javascript" src="../src/plugins/sm.RadialMenu.js"></script>
 		<script type="text/javascript">
 			(function(sm) {
 				var channels = sm.ontology['sm.channels'];
@@ -17,7 +18,7 @@
 				var raphael = sm.ontology['sm.raphaeljs'];
 				var wiring = sm([channels, sammy, raphael], [sm.behavior.Channel, sm.behavior.Extension]);
 				wiring.system.set.svg('svg', '100%', '100%');
-				wiring.system.initialize.publish(new sm.type.Sammy('svg', sm.tools));
+				wiring.system.initialize.publish(new sm.type.Sammy('svg', tools));
 			}(smallmachine));
 		</script>
 	</body>

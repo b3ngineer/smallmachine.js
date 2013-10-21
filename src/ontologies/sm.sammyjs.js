@@ -14,7 +14,7 @@
 	
 	var sammyInitializerDelegate = {
 		update : function(message) {
-			if (sm.typeMask(message, { _id : true, _callback : true, _runArg : true } === null)) {
+			if (sm.typeMask(message, { _id : true, _callback : true, _runArg : true }) === null) {
 				return function(message) {
 					sammy('#' + message._id, message._callback).run(message._runArg);
 				};
