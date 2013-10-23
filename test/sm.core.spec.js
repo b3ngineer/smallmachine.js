@@ -96,20 +96,19 @@ describe('sm.core', function() {
 		});
 
 		it('should allow truthful comparison of types after merge', function() {
-			var TestA = function() {
+			function TestA() {
 				this.propertyA = true;
 				return this;
 			};
 
-			var TestB = function() {
+			function TestB() {
 				return this;
 			};
 
 			smallmachine.type.extendedBy(TestA, 'Test');
 			smallmachine.type.extendedBy(TestB, 'Test');
 			var test = new smallmachine.type.Test();
-			expect(test.ofType('Test')).toBe(true);
-			expect(test.getType()).toBe('[object Test]');
+			expect(test.constructor.name).toBe('TestA');
 			expect(test instanceof smallmachine.type.Test).toBe(true);
 			delete smallmachine.type.Test;
 		});
@@ -160,7 +159,7 @@ describe('sm.core', function() {
 		it('should add instances of Proxy to an ontology at the child level', function() {
 			var target = new smallmachine.Ontology();
 			target.addTerm('test');
-			expect(target.test.constructor.name === 'Proxy').toBe(true);
+			expect(target.test._name === 'Proxy').toBe(true);
 		});
 
 		it('should return a model with all of the terms from the ontology applied', function() {
@@ -191,7 +190,7 @@ describe('sm.core', function() {
 		it('should include the title in a model', function() {
 			var target = new smallmachine.Ontology('test');
 			var actual = target.getModel();
-			expect(actual.title).toBe('test');
+			expect(actual.namespace).toBe('test');
 		});
 
 		it('should make a subclass of a Term a property of that Term', function() {

@@ -5,13 +5,7 @@
 		return this;
 	};	
 
-	Security.prototype.getType = function() {
-		return '[object Security]';
-	};
+	Security.prototype._name = 'Security';
 
-	Security.prototype.ofType = function(type) {
-		return (type === 'Security' || (typeof type.getType === 'function' && type.getType() === this.getType()));
-	};
-
-	sm.behavior.extendedBy(Security, 'Security');
+	sm.behavior.extendedBy(Security);
 }(smallmachine));

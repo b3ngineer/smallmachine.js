@@ -6,6 +6,8 @@
         this._type = type;
 		return this;
 	};
+
+	Channel.prototype._name = 'Channel';
     
 	Channel.prototype.forward = function(message, recipients) {
 		if (this._value != null) {
@@ -51,7 +53,7 @@
 		if (typeof subscriber === 'function') {
 			this._subscribers[subscriberId] = { update : subscriber, lifetime : 1 };
 		}
-		else {
+		else{
 			if (typeof subscriber.lifecycle === 'undefined') {
 				subscriber.lifetime = 1;
 			}
@@ -107,9 +109,9 @@
 		if (typeof message === 'function') {
 			var newResult = message(new sm.type.AsyncResult(this));
 			message = newResult;
-			if (typeof message !== 'undefined' &&
-				typeof message.getType === 'function' &&
-				message.getType() === '[object AsyncResult]') {
+			if (typeof message !== 'undefined'
+				&& typeof message._channel !== 'undefined'
+				&& typeof message.publish === 'function') {
 				return this;
 			}
 		}
@@ -138,13 +140,5 @@
 		return this;
 	};
 
-	Channel.prototype.getType = function() {
-		return '[object Channel]';
-	};
-
-	Channel.prototype.ofType = function(type) {
-		return (type === 'Channel' || (typeof type.getType === 'function' && type.getType() === this.getType()));
-	};
-
-	sm.behavior.extendedBy(Channel, 'Channel');
+	sm.behavior.extendedBy(Channel);
 }(smallmachine));

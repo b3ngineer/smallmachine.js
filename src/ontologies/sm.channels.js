@@ -89,7 +89,7 @@
 
 		var defaultStorageDelegate = {
 			update : function(message) {
-				if (typeof message.ofType === 'function' && message.ofType('NamedValue')) {
+				if (typeof message.key !== 'undefined' && typeof message.namespace !== 'undefined') {
 					return function(message) {
 						model.memory.modify(message);
 					}
@@ -103,7 +103,7 @@
 
 		var defaultValueDelegate = {
 			update : function(message) {
-				if (typeof message.ofType === 'function') {
+				if (typeof message.key !== 'undefined' && typeof message.namespace !== 'undefined') {
 					return function(message) {
 						model.memory.getValue(message);
 					}
@@ -131,11 +131,13 @@
 				return this;
 			};
 
+			Config.prototype._name = 'Config';
+
 			Config.prototype.setValue = function(value) {
 				sm.alsoBehavesLike(this, value);
 			};
 
-			sm.type.extendedBy(Config, 'Config');
+			sm.type.extendedBy(Config);
 
 			model.get.addHelper('config', function(outVar) {
 				return outVar;

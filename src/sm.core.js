@@ -14,23 +14,11 @@
 		}
 	}
 
-	/* IE Hack */
-	if (Function.prototype.name === undefined && Object.defineProperty !== undefined) {
-		Object.defineProperty(Function.prototype, 'name', {
-			get: function() {
-				var funcNameRegex = /function\s([^(]{1,})\(/;
-				var results = (funcNameRegex).exec((this).toString());
-				return (results && results.length > 1) ? results[1].trim() : "";
-			},
-			set: function(value) {}
-		});
-	}
-
 	function getMissingDependency(ontologies, activator) {
 		for (var i = 0; i < activator.dependencies.length; i++) {
 			var foundDependency = false;
 			for (var j = 0; j < ontologies.length; j++) {
-				if (activator.dependencies[i] == ontologies[j].title) {
+				if (activator.dependencies[i] == ontologies[j].namespace) {
 					foundDependency = true;
 					break;
 				}
@@ -44,29 +32,30 @@
 
     function ctor(ontologies, behaviors) {
 		if (typeof ontologies === 'undefined') {
-			core.error(new Error('Missing required parameter for smallmachine constructor: one or more instances of type [object Ontology]'));
+			core.error(new Error('Missing required parameter for smallmachine constructor: one or more instances of type \'Ontology\''));
 		}
 		var allOntologies = [].concat(ontologies);
-		var titleList = '';
+		var namespaceList = '';
 		for (var i = 0; i < allOntologies.length; i++) {
-			if (typeof allOntologies[i].title === 'undefined') {
+			if (typeof allOntologies[i].namespace === 'undefined') {
 				if (typeof core.ontology[allOntologies[i]] !== 'undefined') {
-					titleList = titleList + allOntologies[i] + ',';
+					namespaceList = namespaceList + allOntologies[i] + ',';
 					allOntologies[i] = core.ontology[allOntologies[i]];
 				}
 			}
 			else {
-				titleList = titleList + allOntologies[i].title + ',';
+				namespaceList = namespaceList + allOntologies[i].namespace + ',';
 			}
 		}
-		var ontology = new Ontology(titleList.substring(0,titleList.length - 1));
+		var ontology = new Ontology(namespaceList.substring(0,namespaceList.length - 1));
 		for (var i = 0; i < allOntologies.length; i++) {
 			// call ontology.addTerm for all terms in the additional ontology
 			for (var p in allOntologies[i]) {
 				if (!allOntologies[i].hasOwnProperty(p)) {
 					continue;
 				}
-				if (allOntologies[i][p].constructor.name === 'Proxy') {
+				if (typeof allOntologies[i][p]._name !== 'undefined'
+					&& allOntologies[i][p]._name == 'Proxy') {
 					var term = allOntologies[i][p]._term;
 					ontology.addTerm(term._value);
 				}
@@ -83,17 +72,17 @@
 				}
 				ontology.registerActivator(allOntologies[i]._activators[j]);
 				ontology._activators.sort(function(a, b) {
-					if (a.title == b.title) {
+					if (a.namespace == b.namespace) {
 						return 0;
 					}
 					for (var i = 0; i < a.dependencies.length; i++) {
-						if (b.title == a.dependencies[i]) {
+						if (b.namespace == a.dependencies[i]) {
 							return 1;
 						}
 					}
 					for (var i = 0; i < b.dependencies.length; i++) {
 						// if a is a dependency of b, it has a lower index
-						if (a.title == b.dependencies[i]) {
+						if (a.namespace == b.dependencies[i]) {
 							return -1;
 						}
 					}
@@ -185,6 +174,8 @@
 		return this;
 	};
 
+	Proxy.prototype._name = 'Proxy';
+
 	function _Term() {
 		return this;
 	};
@@ -205,19 +196,16 @@
 		}
 	};
 
-	_Term.prototype.getType = function() {
-		return '[object Term]';
-	};
-
-	function Behavior(title) {
-		this.title = title;
+	function Behavior() {
 		return this;
 	};
 
+	Behavior.prototype._name = 'Behavior';
+
 	core.Behavior = Behavior;
 
-	function Ontology(title) {
-		this.title = title;
+	function Ontology(namespace) {
+		this.namespace = namespace;
 		this._inferencer = new Inferencer();
 		this._activators = [];
 		this.Term = function(value) {
@@ -238,9 +226,7 @@
         return this;
     };
 
-	Ontology.prototype.getType = function() {
-		return '[object Ontology]';
-	};
+	Ontology.prototype._name = 'Ontology';
 
     Ontology.prototype.addTerm = function(value) {
 		if (typeof this[value] !== 'undefined') {
@@ -248,7 +234,6 @@
 		}
 		var Term = this.Term;
 		Term.prototype.relate = _Term.prototype.relate;
-		Term.prototype.getType = _Term.prototype.getType;
         var t = new Term(value);
 		this[value] = new Proxy(t, this._inferencer);
         return this;
@@ -258,15 +243,15 @@
 		if (typeof dependencies === 'undefined') {
 			dependencies = [];
 		}
-		if (core.typeMask(activator, { fn : 'function', title : true, dependencies : true }) === null) {
+		if (core.typeMask(activator, { fn : 'function', namespace : true, dependencies : true }) === null) {
 			this._activators.push(activator);
 			return;
 		}
-		this._activators.push({ fn : activator, title : this.title, dependencies : dependencies });
+		this._activators.push({ fn : activator, namespace : this.namespace, dependencies : dependencies });
 	};
 
 	Ontology.prototype.getModel = function(behaviors) {
-		var Model = function(title) {
+		var Model = function() {
 			return this;
 		};
 		var model = new Model();

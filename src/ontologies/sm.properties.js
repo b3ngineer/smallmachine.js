@@ -25,8 +25,16 @@
 		return this;
 	};
 
-	// TODO: make this use the various methods for determining the typeName from the model
 	TypeExtender.prototype.extendedBy = function(model,typeName) {
+		var typeConcept = this.hasMemberType;
+		if (typeof typeName === 'undefined') {
+			if (typeConcept === 'undefined') {
+				typeName = model._name;
+			}
+			else if (typeof model.prototype !== 'undefined') {
+				typeName = model.prototype._name;
+			}
+		}
 		if (typeof typeName !== 'undefined' && typeof model === 'function') {
 			if (typeof this[typeName] !== 'undefined') {
 				sm.alsoBehavesLike(this[typeName], model);
@@ -34,51 +42,33 @@
 			else {
 				this[typeName] = model;
 			}
-			if (typeof this[typeName].prototype.getType !== 'function') {
-				this[typeName].prototype.getType = function() {
-					return '[object ' + typeName + ']';
-				};
-			}
-			if (typeof this[typeName].prototype.ofType !== 'function') {
-				this[typeName].prototype.ofType = function(type) {
-					if (typeof type.getType === 'function') {
-						return this.getType() === type.getType();
-					}
-					return this.getType() === '[object ' + type + ']';
-				};
+			if (typeof this[typeName]._name === 'undefined') {
+				this[typeName]._name = typeName;
 			}
 			return;
 		}
-		var propertyName = typeName || model.title;
+		var propertyName = typeName || model.namespace || model._name;
 		if (typeof propertyName === 'undefined') {
-			sm.error(new Error('Cannot call extendedBy on the core ontology with an object that is missing the \'title\' property without specifying a \'typeName\''));
+			sm.error(new Error('Cannot call extendedBy on the core ontology with an object that is missing the \'namepsace\' and \'_name\' properties without specifying a \'typeName\''));
 		}
 		if (typeof this[propertyName] !== 'undefined') {
 			sm.alsoBehavesLike(this[propertyName], model);
 			return;
 		}
-		var typeConcept = this.hasMemberType;
-		if (typeof typeConcept === 'undefined' || typeof typeConcept.getType === 'undefined') {
-			sm.error(new Error('The specified concept does not have a valid \'hasMemberType\' relationship with another concept'));
-		}
 		var hasMemberType = sm[this._value][typeConcept._value];
 		if (typeof hasMemberType === 'undefined') {
 			sm.error(new Error('The specified type does not exist in the core object model: ' + typeConcept._value));
 		}
-		if (typeof model.getType !== 'function') {
-			sm.error(new Error('The specified model is missing the getType function: ' + propertyName));
-		}
-		var modelType = model.getType();
+		var modelType = model._name || model.constructor.name;
 		var validModelType = false;
 		for (var t in hasMemberType) {
 			if (!hasMemberType.hasOwnProperty(t)) {
 				continue;
 			}
-			if (typeof this[t].getType === 'undefined') {
+			if (t.indexOf('_') === 0) {
 				continue;
 			}
-			var comparison = '[object ' + t + ']';
-			if (comparison === modelType) {
+			if (t === modelType) {
 				this.hasMember[propertyName] = model;
 				this[propertyName] = model; // syntax sugar; like all Terms provide
 				validModelType = true;
@@ -91,18 +81,10 @@
 	};
 
 	function Null() {
-		this.title = 'Null';
 		return this;
 	};
 
-	Null.prototype.getType = function() {
-		return '[object Null]';
-	};
-
-	Null.prototype.ofType = function(type) {
-		if (type === null || type === 'null' || type === 'Null') return true;
-		return false;
-	};
+	Null.prototype._name = 'Null';
 
 	// a "core" ontology is used as a behavior model for smallmachine
 	sm.alsoBehavesLike(sm, o.getModel(TypeExtender));
@@ -113,13 +95,15 @@
 		this._channel = channel;
 		return this;
 	};
+	
+	AsyncResult.prototype._name = 'AsyncResult';
 
 	AsyncResult.prototype.publish = function(message, recipients) {
 		this._channel.publish(message, recipients);
 		return this;
 	};
 
-	sm.type.extendedBy(AsyncResult, 'AsyncResult');
+	sm.type.extendedBy(AsyncResult);
 
 	function NamedValue(namespace, key, value) {
 		if (typeof key === 'undefined') {
@@ -142,13 +126,16 @@
 		return this;
 	};
 
-	sm.type.extendedBy(NamedValue, 'NamedValue');
+	NamedValue.prototype._name = 'NamedValue';
+
+	sm.type.extendedBy(NamedValue);
 
 	function NamedValueCollection() {
-		this.title = 'NamedValueCollection';
 		this._collection = {};
 		return this;
 	};
+
+	NamedValueCollection.prototype._name = 'NamedValueCollection';
 
 	NamedValueCollection.prototype.exists = function(namespaceOrNamedValue, key) {
 		var namespace = namespaceOrNamedValue;
@@ -213,10 +200,6 @@
 		return value;
 	};
 
-	NamedValueCollection.prototype.ofType = function(type) {
-		return type === 'NamedValueCollection' || (typeof type.getType === 'function' && type.getType() === this.getType());
-	};
-
-	sm.type.extendedBy(NamedValueCollection, 'NamedValueCollection');
+	sm.type.extendedBy(NamedValueCollection);
 }(smallmachine));
 
