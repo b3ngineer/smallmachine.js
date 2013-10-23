@@ -1,10 +1,11 @@
 ;(function(sm, $, raphael, sammy) {
-	var RadialMenu = function(app) {
+	function RadialMenu(app) {
 		this.helpers({
 			showRadialMenu : function(options, position) {
 				console.log('menu');
 			}
 		});
 	};
-	sm.type.extendedBy(RadialMenu, 'RadialMenu');
+	RadialMenu.prototype._name = 'RadialMenu';
+	sm.type.extendedBy(RadialMenu);
 }(smallmachine, jQuery, Raphael, Sammy));

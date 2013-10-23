@@ -10,7 +10,9 @@
 		return this;
 	};
 
+	Extension.prototype._name = 'Extension';
+
 	Extension.prototype.initializer = true;
 
-	sm.behavior.extendedBy(Extension, 'Extension');
+	sm.behavior.extendedBy(Extension);
 }(smallmachine, jQuery || {}));

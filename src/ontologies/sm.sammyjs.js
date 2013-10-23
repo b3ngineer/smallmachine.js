@@ -10,7 +10,9 @@
 		return this;
 	};
 
-	sm.type.extendedBy(Sammy, 'Sammy');
+	Sammy.prototype._name = 'Sammy';
+
+	sm.type.extendedBy(Sammy);
 	
 	var sammyInitializerDelegate = {
 		update : function(message) {
