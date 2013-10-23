@@ -1,7 +1,7 @@
 ;(function(sm) {
     'use strict';
 
-	var Channel = function(value, type) {
+	function Channel(value, type) {
         this._value = value;
         this._type = type;
 		return this;

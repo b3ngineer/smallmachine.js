@@ -43,9 +43,9 @@
 	ontology.performs.hasRange(ontology.action).hasRange(ontology.task);
 	ontology.reactsTo.hasRange(ontology.action).hasDomain(ontology.system);
 
-	var activator = function(model) {
+	function activator(model) {
 
-		var jsonHelper = function(url, asyncResult){
+		function jsonHelper(url, asyncResult){
 			if (typeof jQuery !== 'undefined') {
 				try {
 					jQuery.ajax({

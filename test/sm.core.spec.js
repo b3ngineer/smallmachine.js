@@ -160,7 +160,7 @@ describe('sm.core', function() {
 		it('should add instances of Proxy to an ontology at the child level', function() {
 			var target = new smallmachine.Ontology();
 			target.addTerm('test');
-			expect(target.test.getType() === '[object Proxy]').toBe(true);
+			expect(target.test.constructor.name === 'Proxy').toBe(true);
 		});
 
 		it('should return a model with all of the terms from the ontology applied', function() {
@@ -168,8 +168,8 @@ describe('sm.core', function() {
 			target.addTerm('test');
 			target.addTerm('again');
 			var actual = target.getModel();
-			expect(actual.test.getType() === '[object Term]').toBe(true);
-			expect(actual.again.getType() === '[object Term]').toBe(true);
+			expect(smallmachine.typeMask(actual.test,{ _id : true, _value : true })).toBe(null);
+			expect(smallmachine.typeMask(actual.again,{ _id : true, _value : true })).toBe(null);
 		});
 
 		it('should save rules added to an ontology in the inferencer\'s _rules property', function() {

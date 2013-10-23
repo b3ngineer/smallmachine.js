@@ -10,7 +10,15 @@ var smallmachine = function(core) {
       }
     }
   }
-  var getMissingDependency = function(ontologies, activator) {
+  if(Function.prototype.name === undefined && Object.defineProperty !== undefined) {
+    Object.defineProperty(Function.prototype, "name", {get:function() {
+      var funcNameRegex = /function\s([^(]{1,})\(/;
+      var results = funcNameRegex.exec(this.toString());
+      return results && results.length > 1 ? results[1].trim() : ""
+    }, set:function(value) {
+    }})
+  }
+  function getMissingDependency(ontologies, activator) {
     for(var i = 0;i < activator.dependencies.length;i++) {
       var foundDependency = false;
       for(var j = 0;j < ontologies.length;j++) {
@@ -24,8 +32,8 @@ var smallmachine = function(core) {
       }
     }
     return null
-  };
-  core = function(ontologies, behaviors) {
+  }
+  function ctor(ontologies, behaviors) {
     if(typeof ontologies === "undefined") {
       core.error(new Error("Missing required parameter for smallmachine constructor: one or more instances of type [object Ontology]"))
     }
@@ -41,7 +49,7 @@ var smallmachine = function(core) {
         titleList = titleList + allOntologies[i].title
       }
     }
-    var ontology = new core.Ontology(titleList.substring(0, titleList.length - 1));
+    var ontology = new Ontology(titleList.substring(0, titleList.length - 1));
     for(var i = 0;i < allOntologies.length;i++) {
       for(var p in allOntologies[i]) {
         if(!allOntologies[i].hasOwnProperty(p)) {
@@ -80,8 +88,9 @@ var smallmachine = function(core) {
       }
     }
     return ontology.getModel(behaviors)
-  };
-  core.alsoBehavesLike = function(a, b) {
+  }
+  core = ctor;
+  function alsoBehavesLike(a, b) {
     if(typeof a === "undefined" || typeof b === "undefined") {
       core.error(new Error("Cannot mixin with an undefined object"))
     }
@@ -122,8 +131,9 @@ var smallmachine = function(core) {
       }
       core.alsoBehavesLike(a.prototype, b.prototype)
     }
-  };
-  core.error = function(Error, handler) {
+  }
+  core.alsoBehavesLike = alsoBehavesLike;
+  function error(Error, handler) {
     if(typeof handler !== "undefined" && typeof handler.handleError === "function") {
       handler.handleError(Error)
     }else {
@@ -133,30 +143,32 @@ var smallmachine = function(core) {
         throw Error;
       }
     }
-  };
+  }
+  core.error = error;
   var _getGuid = function(c) {
     var r = Math.random() * 16 | 0, v = c == "x" ? r : r & 3 | 8;
     return v.toString(16)
   };
-  core.getGuid = function() {
+  function getGuid() {
     return"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, _getGuid)
-  };
+  }
+  core.getGuid = getGuid;
   core.CONCEPT = "concept";
   core.RELATIONSHIP = "relationship";
-  var Proxy = function(Term, Inferencer) {
+  function Proxy(Term, Inferencer) {
     this._term = Term;
     this._rules = Inferencer._rules;
     return this
-  };
+  }
   Proxy.prototype.getType = function() {
     return"[object Proxy]"
   };
   Proxy.prototype.ofType = function(type) {
     return type === "Proxy" || typeof type.getType === "function" && type.getType() === this.getType()
   };
-  var _Term = function() {
+  function _Term() {
     return this
-  };
+  }
   _Term.prototype.relate = function(Term) {
     if(typeof this._relatesTo === "undefined") {
       this._relatesTo = []
@@ -178,11 +190,12 @@ var smallmachine = function(core) {
   _Term.prototype.ofType = function(type) {
     return type === "Term" || typeof type.getType === "function" && type.getType() === this.getType()
   };
-  core.Behavior = function(title) {
+  function Behavior(title) {
     this.title = title;
     return this
-  };
-  core.Ontology = function(title) {
+  }
+  core.Behavior = Behavior;
+  function Ontology(title) {
     this.title = title;
     this._inferencer = new Inferencer;
     this._activators = [];
@@ -203,11 +216,11 @@ var smallmachine = function(core) {
       return this
     };
     return this
-  };
-  core.Ontology.prototype.getType = function() {
+  }
+  Ontology.prototype.getType = function() {
     return"[object Ontology]"
   };
-  core.Ontology.prototype.addTerm = function(value) {
+  Ontology.prototype.addTerm = function(value) {
     if(typeof this[value] !== "undefined") {
       return this
     }
@@ -219,7 +232,7 @@ var smallmachine = function(core) {
     this[value] = new Proxy(t, this._inferencer);
     return this
   };
-  core.Ontology.prototype.registerActivator = function(activator, dependencies) {
+  Ontology.prototype.registerActivator = function(activator, dependencies) {
     if(typeof dependencies === "undefined") {
       dependencies = []
     }
@@ -231,7 +244,7 @@ var smallmachine = function(core) {
       return"[object Activator]"
     }})
   };
-  core.Ontology.prototype.getModel = function(behaviors) {
+  Ontology.prototype.getModel = function(behaviors) {
     var Model = function(title) {
       return this
     };
@@ -279,11 +292,12 @@ var smallmachine = function(core) {
     }
     return model
   };
-  var Inferencer = function() {
+  core.Ontology = Ontology;
+  function Inferencer() {
     this._term = {_value:null};
     this._rules = [];
     return this
-  };
+  }
   var Rule = function(priority, fn, args) {
     this._fn = fn;
     this._args = args;

@@ -21,7 +21,7 @@
 	o.ontology.relatesTo(o.hasMember, o.Null);
 	o.behavior.relatesTo(o.hasMember, o.Null);
 
-	var TypeExtender = function() {
+	function TypeExtender() {
 		return this;
 	};
 
@@ -90,7 +90,7 @@
 		}
 	};
 
-	var Null = function() {
+	function Null() {
 		this.title = 'Null';
 		return this;
 	};
@@ -109,7 +109,7 @@
 	sm.ontology.extendedBy(new Null());
 	sm.behavior.extendedBy(new Null());
 
-	var AsyncResult = function(channel) {
+	function AsyncResult(channel) {
 		this._channel = channel;
 		return this;
 	};
@@ -121,7 +121,7 @@
 
 	sm.type.extendedBy(AsyncResult, 'AsyncResult');
 
-	var NamedValue = function(namespace, key, value) {
+	function NamedValue(namespace, key, value) {
 		if (typeof key === 'undefined') {
 			sm.error(new Error('Parameter \'key\' is required when instantiating the sm.NamedValue type'));
 		}
@@ -144,7 +144,7 @@
 
 	sm.type.extendedBy(NamedValue, 'NamedValue');
 
-	var NamedValueCollection = function() {
+	function NamedValueCollection() {
 		this.title = 'NamedValueCollection';
 		this._collection = {};
 		return this;

@@ -1,7 +1,7 @@
 ;(function(sm, $) {
     'use strict';
 
-	var Extension = function(a) {
+	function Extension(a) {
 		if (typeof $.fn !== 'undefined') {
 			$.extend({
 				'sm' : a

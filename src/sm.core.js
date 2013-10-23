@@ -49,14 +49,14 @@
 		var allOntologies = [].concat(ontologies);
 		var titleList = '';
 		for (var i = 0; i < allOntologies.length; i++) {
-			if (typeof allOntologies[i].ofType !== 'function' || !allOntologies[i].ofType('Ontology')) {
+			if (typeof allOntologies[i].title === 'undefined') {
 				if (typeof core.ontology[allOntologies[i]] !== 'undefined') {
 					titleList = titleList + allOntologies[i] + ',';
 					allOntologies[i] = core.ontology[allOntologies[i]];
 				}
 			}
 			else {
-				titleList = titleList + allOntologies[i].title;
+				titleList = titleList + allOntologies[i].title + ',';
 			}
 		}
 		var ontology = new Ontology(titleList.substring(0,titleList.length - 1));
@@ -66,7 +66,7 @@
 				if (!allOntologies[i].hasOwnProperty(p)) {
 					continue;
 				}
-				if (typeof allOntologies[i][p].ofType === 'function' && allOntologies[i][p].ofType('Proxy')) {
+				if (allOntologies[i][p].constructor.name === 'Proxy') {
 					var term = allOntologies[i][p]._term;
 					ontology.addTerm(term._value);
 				}
@@ -166,7 +166,7 @@
 
 	core.error = error;
 
-	var _getGuid =  function(c) {
+	var _getGuid = function(c) {
 		var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
 		return v.toString(16);
 	};
@@ -183,14 +183,6 @@
 		this._term = Term;
 		this._rules = Inferencer._rules;
 		return this;
-	};
-
-	Proxy.prototype.getType = function() {
-		return '[object Proxy]';
-	};
-
-	Proxy.prototype.ofType = function(type) {
-		return (type === 'Proxy' || (typeof type.getType === 'function' && type.getType() === this.getType()));
 	};
 
 	function _Term() {
@@ -217,10 +209,6 @@
 		return '[object Term]';
 	};
 
-	_Term.prototype.ofType  = function(type) {
-		return (type === 'Term' || (typeof type.getType === 'function' && type.getType() === this.getType()));
-	};
-
 	function Behavior(title) {
 		this.title = title;
 		return this;
@@ -232,7 +220,7 @@
 		this.title = title;
 		this._inferencer = new Inferencer();
 		this._activators = [];
-		this._term = function(value) {
+		this.Term = function(value) {
 			this._id = (function() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 				var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
 				return v.toString(16);
@@ -258,10 +246,9 @@
 		if (typeof this[value] !== 'undefined') {
 			return this;
 		}
-		var Term = this._term;
+		var Term = this.Term;
 		Term.prototype.relate = _Term.prototype.relate;
 		Term.prototype.getType = _Term.prototype.getType;
-		Term.prototype.ofType = _Term.prototype.ofType;
         var t = new Term(value);
 		this[value] = new Proxy(t, this._inferencer);
         return this;
@@ -271,11 +258,11 @@
 		if (typeof dependencies === 'undefined') {
 			dependencies = [];
 		}
-		if (typeof activator !== 'function' && typeof activator.getType === 'function' && activator.getType() === '[object Activator]') {
+		if (core.typeMask(activator, { fn : 'function', title : true, dependencies : true }) === null) {
 			this._activators.push(activator);
 			return;
 		}
-		this._activators.push({ fn : activator, title : this.title, dependencies : dependencies, getType : function() { return '[object Activator]' } });
+		this._activators.push({ fn : activator, title : this.title, dependencies : dependencies });
 	};
 
 	Ontology.prototype.getModel = function(behaviors) {
@@ -366,7 +353,7 @@
 	core.alsoBehavesLike(Proxy, Inferencer);
 
 	/* relatesTo scopes cross-cutting concerns by implicitly grouping concepts */
-	var relatesTo = function(target, termA, termB) {
+	function relatesTo(target, termA, termB) {
 		var Term = this[target];
 		var TermA = this[termA];
 		var TermB = this[termB];
@@ -403,7 +390,7 @@
 			if (!TermB.hasOwnProperty(field)) {
 				continue;
 			}
-			if (TermB[field].getType && TermB[field].getType() === '[object Term]') {
+			if (typeof TermB[field].relate === 'function') {
 				if (typeof Term[termA][field] === 'undefined') {
 					Term[termA][field] = TermB[field]; // link subclasses in scope
 				}
@@ -416,7 +403,7 @@
 	};
 
 	/* subsumption establishes proximal relationship to other concepts */
-	var isA = function(target, termA) {
+	function isA(target, termA) {
 		var Term = this[target];
 		var TermA = this[termA];
 
@@ -438,7 +425,7 @@
 	};
 
 	/* object property range universally relates concepts downstream from an edge */
-	var hasRange = function(target, termA) {
+	function hasRange(target, termA) {
 		var Term = this[target];
 		var TermA = this[termA];
 		if (TermA._type === core.RELATIONSHIP) {
@@ -461,8 +448,11 @@
 			if (!TermA.hasOwnProperty(field)) {
 				continue;
 			}
-			if (TermA[field].getType && TermA[field].getType() === '[object Term]') {
-				var term = TermA[field]._value;
+			if (typeof TermA[field].relate === 'function') {
+				var term = TermA[field]._value || null;
+				if (term === null) {
+					continue;
+				}
 				if (typeof Term[term] === 'undefined') {
 					Term[term] = TermA[field];
 				}
@@ -472,7 +462,7 @@
 	};
 
 	/* object property domain universally relates concepts upstream from an edge */
-	var hasDomain = function(target, termA) {
+	function hasDomain(target, termA) {
 		var Term = this[target];
 		var TermA = this[termA];
 		if (TermA._type === core.RELATIONSIP) {
@@ -492,7 +482,7 @@
 		}
 	};
 
-	core.typeMask = function(a, b) {
+	function typeMask(a, b) {
 		var result = [];
 		for (var p in b) {
 			if (!b.hasOwnProperty(p)) {
@@ -509,6 +499,8 @@
 		}
 		return result.length === 0 ? null : result;
 	};
+
+	core.typeMask = typeMask;
 
 	return core;
 }(smallmachine || {}));

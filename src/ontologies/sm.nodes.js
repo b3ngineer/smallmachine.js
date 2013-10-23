@@ -15,7 +15,7 @@
 	ontology.get.isA(ontology.task);
 	ontology.paintNodes.isA(ontology.paint);
 
-	var Node = function(item, paper, shapeAttr, shapeLabelAttr) {
+	function Node(item, paper, shapeAttr, shapeLabelAttr) {
 		this.id = item.id || sm.getGuid();
 		this.width = parseFloat(item.width) || 50;
 		this.height = parseFloat(item.height) || 50;
@@ -52,7 +52,7 @@
 		return true;
 	};
 
-	var Edge = function(a, b, index, paper, lineAttr, edgeLabelAttr) {
+	function Edge(a, b, index, paper, lineAttr, edgeLabelAttr) {
 		this.id1 = a.id;
 		this.id2 = b.id;
 		this.r1 =  a.width / 2;
@@ -108,7 +108,7 @@
 		return true;
 	};
 
-	var getObjectNode = function(message, id) {
+	function getObjectNode(message, id) {
 		for (var i = 0; i < message.length; i++) {
 			if (message[i].id === id) {
 				return message[i];
@@ -117,7 +117,7 @@
 		return null;
 	};
 
-	var PaintDelegate = function(model) {
+	function PaintDelegate(model) {
 		this._model = model;
 		this.handleError = function(Error) {
 			model.messenger.error.publish(Error);
