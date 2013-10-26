@@ -32,6 +32,9 @@ var smallmachine = function(core) {
     var allOntologies = [].concat(ontologies);
     var namespaceList = "";
     for(var i = 0;i < allOntologies.length;i++) {
+      if(typeof allOntologies[i] === "undefined") {
+        core.error(new Error("Element " + i + " of the ontologies argument passed to the smallmachine constructor is undefined"))
+      }
       if(typeof allOntologies[i].namespace === "undefined") {
         if(typeof core.ontology[allOntologies[i]] !== "undefined") {
           namespaceList = namespaceList + allOntologies[i] + ",";

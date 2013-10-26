@@ -15,12 +15,70 @@
 	ontology.get.isA(ontology.task);
 	ontology.paintNodes.isA(ontology.paint);
 
+	function shape(item, s) {
+		s.y = parseFloat(item.y);
+		s.x = parseFloat(item.x);
+		s.width = parseFloat(item.width);
+		s.height = parseFloat(item.height);
+		return this;
+	};
+
+	function ellipse(item) {
+		new shape(item, this);
+		return this;
+	}
+
+	ellipse.prototype.draw = function(paper) {
+		return paper.ellipse(this.x, this.y, this.width / 2, this.height / 2); };
+
+	function rectangle(item) {
+		new shape(item, this);
+		return this;
+	};
+
+	rectangle.prototype.draw = function(paper) {
+		return paper.rect(this.x - (this.width / 2), this.y - (this.height / 2), this.width, this.height);
+	};
+
+	function diamond(item) {
+		new shape(item, this);
+		return this;
+	};
+
+	diamond.prototype.draw = function(paper) {
+		var x1 = this.x - (this.width / 2);
+		var y1 = this.y;
+		var y2 = this.y - (this.height / 2);
+		var x3 = this.x + (this.width / 2);
+		var y4 = this.y + (this.height / 2);
+		return paper.path(["M", x1, y1, "L", this.x, y2, "L", x3, this.y, "L", this.x, y4, "L", x1, y1]);
+	};
+
+	function triangle(item) {
+		new shape(item, this);
+		return this;
+	};
+
+	triangle.prototype.draw = function(paper) {
+		var x1 = this.x - (this.width / 2);
+		var y1 = this.y + (this.height / 2);;
+		var y2 = this.y - (this.height / 2);
+		var x3 = this.x + (this.width / 2);
+		var y3 = this.y + (this.height / 2);
+		return paper.path(["M", x1, y1, "L", this.x, y2, "L", x3, y3, "L", x1, y1]);
+	};
+
+	var shapes = {
+		ellipse : ellipse,
+		rectangle : rectangle,
+		diamond : diamond,
+		triangle : triangle
+	}
+
 	function Node(item, paper, shapeAttr, shapeLabelAttr) {
+		var shape = item.shape || 'ellipse';
+		this.shape = new shapes[shape](item);
 		this.id = item.id || sm.getGuid();
-		this.width = parseFloat(item.width) || 50;
-		this.height = parseFloat(item.height) || 50;
-		this.y = parseFloat(item.y);
-		this.x = parseFloat(item.x);
 		this.edges = item.edges || [];
 		this.label = item.label || this.id;
 		this.paper = paper;
@@ -31,10 +89,7 @@
 	};
 
 	Node.prototype.update = function(message) {
-		var element = this.paper.circle(this.x,
-									 	this.y,
-									 	this.width / 2,
-									 	this.height / 2);
+		var element = this.shape.draw(this.paper);
 		element.id = this.id;
 		if (typeof this.shapeAttr === 'function') {
 			this.shapeAttr(element, this);
@@ -42,7 +97,7 @@
 		else {
 			element.attr(this.shapeAttr);
 		}
-		var shapeText = this.paper.text(this.x, this.y, this.label);
+		var shapeText = this.paper.text(this.shape.x, this.shape.y, this.label);
 		if (typeof this.shapeLabelAttr === 'function') {
 			this.shapeLabelAttr(shapeText, this);
 		}
@@ -55,12 +110,12 @@
 	function Edge(a, b, index, paper, lineAttr, edgeLabelAttr) {
 		this.id1 = a.id;
 		this.id2 = b.id;
-		this.r1 =  a.width / 2;
-		this.r2 =  b.width / 2;
-		this.x1 = parseFloat(a.x);
-		this.y1 = parseFloat(a.y);
-		this.x2 = parseFloat(b.x);
-		this.y2 = parseFloat(b.y);
+		this.r1 =  a.shape.width / 2;
+		this.r2 =  b.shape.width / 2;
+		this.x1 = a.shape.x;
+		this.y1 = a.shape.y;
+		this.x2 = b.shape.x;
+		this.y2 = b.shape.y;
 		this.label = a.edges[index].label || '';
 		this.paper = paper;
 		this.lineAttr = lineAttr;
@@ -77,7 +132,6 @@
 		var y3 = r1 * this.y2 + (1 - r1) * this.y1;
 		var x4 = r2 * this.x2 + (1 - r2) * this.x1;
 		var y4 = r2 * this.y2 + (1 - r2) * this.y1;
-
 		var line = this.paper.path( ["M", x3, y3, "L", x4, y4] );
 		if (typeof this.lineAttr === 'function') {
 			this.lineAttr(line, this);
@@ -111,7 +165,7 @@
 	function getObjectNode(message, id) {
 		for (var i = 0; i < message.length; i++) {
 			if (message[i].id === id) {
-				return message[i];
+				return new Node(message[i]);
 			}
 		}
 		return null;
@@ -144,7 +198,7 @@
 			var node = new Node(json[i], paper.value, settings.shapeAttr || {}, settings.shapeLabelAttr || {});
 			for (var j = 0; j < node.edges.length; j++) {
 				var objectNode = getObjectNode(json, node.edges[j].id);
-				if (objectNode !== null && typeof objectNode.x != 'undefined' && typeof objectNode.y !== 'undefined' ) {
+				if (objectNode !== null && typeof objectNode.shape.x != 'undefined' && typeof objectNode.shape.y !== 'undefined' ) {
 					var edge = new Edge(node, objectNode, j, paper.value, settings.lineAttr || {}, settings.edgeLabelAttr || {});
 					this._model.connect.publish(edge);
 				}

@@ -330,6 +330,13 @@ describe('sm.core', function() {
 			var actual = smallmachine.typeMask(junk, b);
 			expect(actual.length).toBe(1);
 		});
+
+		it('should throw a usable error when passing in an undefined ontology element in a collection to the ctor', function() {
+			var ontologyA = new smallmachine.Ontology('testA');
+			ontologyA.addTerm('one');
+			var ontologyB;
+			expect( function(){ smallmachine([ontologyA, ontologyB]); } ).toThrow(new Error("Element 1 of the ontologies argument passed to the smallmachine constructor is undefined"));
+		});
 	});
 });
 

@@ -67,6 +67,7 @@
 			delegates = {},
 			delegateCount = 0,
 			deference = [];
+
 		for (var id in subscribers) {
 			var response = subscribers[id].update(message);
 			if (typeof subscribers[id] === 'undefined') {
@@ -88,7 +89,7 @@
 			}
 		}
 		if (authoritative) {
-			var continuedAuthority = false;
+			var continuedAuthority = deference.length === 0;
 			for (var i = 0; i < deference.length; i++) {
 				var deferredResult = deference[i](message);
 				if (!deferredResult === false) {
