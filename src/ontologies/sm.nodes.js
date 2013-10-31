@@ -29,7 +29,9 @@
 	}
 
 	ellipse.prototype.draw = function(paper) {
-		return paper.ellipse(this.x, this.y, this.width / 2, this.height / 2); };
+		console.log('ellipse');
+		return paper.ellipse(this.x, this.y, this.width / 2, this.height / 2);
+	};
 
 	function rectangle(item) {
 		new shape(item, this);
@@ -51,7 +53,8 @@
 		var y2 = this.y - (this.height / 2);
 		var x3 = this.x + (this.width / 2);
 		var y4 = this.y + (this.height / 2);
-		return paper.path(["M", x1, y1, "L", this.x, y2, "L", x3, this.y, "L", this.x, y4, "L", x1, y1]);
+		console.log('diamond');
+		return paper.path(['M', x1, y1, 'L', this.x, y2, 'L', x3, this.y, 'L', this.x, y4, 'L', x1, y1]);
 	};
 
 	function triangle(item) {
@@ -65,7 +68,8 @@
 		var y2 = this.y - (this.height / 2);
 		var x3 = this.x + (this.width / 2);
 		var y3 = this.y + (this.height / 2);
-		return paper.path(["M", x1, y1, "L", this.x, y2, "L", x3, y3, "L", x1, y1]);
+		console.log('triangle');
+		return paper.path(['M', x1, y1, 'L', this.x, y2, 'L', x3, y3, 'L', x1, y1]);
 	};
 
 	var shapes = {
@@ -132,7 +136,8 @@
 		var y3 = r1 * this.y2 + (1 - r1) * this.y1;
 		var x4 = r2 * this.x2 + (1 - r2) * this.x1;
 		var y4 = r2 * this.y2 + (1 - r2) * this.y1;
-		var line = this.paper.path( ["M", x3, y3, "L", x4, y4] );
+		console.log('Edge:line %s, %s -> %s, %s', x3, y3, x4, y4);
+		var line = this.paper.path( ['M', x3, y3, 'L', x4, y4] );
 		if (typeof this.lineAttr === 'function') {
 			this.lineAttr(line, this);
 		}
@@ -143,6 +148,7 @@
 		var b = this.y1 - this.y2;
 		var cX = (this.x1 + this.x2) / 2 
 		var cY = (this.y1 + this.y2) / 2;
+		console.log('Edge:text');
 		var textLabel = this.paper.text(cX, cY, this.label);
 		if (typeof this.edgeLabelAttr === 'function') {
 			this.edgeLabelAttr(textLabel, this);

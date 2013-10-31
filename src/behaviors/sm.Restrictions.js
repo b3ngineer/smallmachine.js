@@ -4,12 +4,13 @@
 	function Collection() {
 		this.length = 0;
 		this._max = -1;
+		this._min = -1;
 		return this;
 	}
 
 	Collection.prototype.add = function(key, value) {
 		if (typeof this[key] === 'undefined') {
-			if (this._max < this.length + 1) {
+			if (this._max > 0 && this._max < this.length + 1) {
 				sm.error(new Error('The maximum number of items already exists in this collection (max ' + this._max + ')'));
 			}
 			this[key] = value;
@@ -34,26 +35,33 @@
 		}
 	};
 
-	function Validation() {
+	function Restrictions() {
 		return this;
 	};
 
-	Validation.prototype._name = 'Validation';
+	Restrictions.prototype._name = 'Restrictions';
 
 	/* if a Term has a max restricition, it must be a collection */
-	Validation.prototype.max = function(maximumLength) {
+	Restrictions.prototype.max = function(maximumLength) {
 		if (typeof this._collection === 'undefined') {
 			this._collection = new Collection();
 		}
 		this._collection._max = maximumLength;
 	};
 
-	Validation.prototype.add = function(key, value) {
+	Restrictions.prototype.add = function(key, value) {
 		if (typeof this._collection === 'undefined') {
 			this._collection = new Collection();
 		}
 		this._collection.add(key, value);
 	};
 
-	sm.behavior.extendedBy(Validation);
+	Restrictions.prototype.min = function(minimumLength) {
+		if (typeof this._collection === 'undefined') {
+			this._collection = new Collection();
+		}
+		this._collection._min = minimumLength;
+	};
+
+	sm.behavior.extendedBy(Restrictions);
 }(smallmachine));

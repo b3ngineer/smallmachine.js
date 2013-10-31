@@ -9,7 +9,7 @@ describe('sm.validation', function() {
 	testRules.type2.isA(testRules.something);
 	testRules.type3.isA(testRules.something);
 
-	var rulesTarget = new smallmachine([testRules],[smallmachine.behavior.Validation]); 
+	var rulesTarget = new smallmachine([testRules],[smallmachine.behavior.Restrictions]); 
 	rulesTarget.something.type1.max(1);
 	
 	it('should allow the creation of object models that throw an error if properties exceed maximum', function() {

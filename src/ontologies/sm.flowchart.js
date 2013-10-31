@@ -120,6 +120,9 @@
 				rootNode = nodes[i];
 			}
 		}
+		if (typeof rootNode === 'undefined') {
+			sm.error(new Error('Could not determine the root node for the given node list (as specified): ' + root));
+		}
 		setNodeCoords(rootNode, nodes, nodeIndex, layout, sectorId, rootNode.id);
 		layout.finalize();
 	};
@@ -129,6 +132,9 @@
 		for (var i = 0; i < current.edges.length; i++) {
 			var id = current.edges[i].id;
 			var nodeIndex = index[id];
+			if (typeof nodeIndex === 'undefined') {
+				continue;
+			}
 			var next = nodes[nodeIndex];
 			setNodeCoords(next, nodes, index, layout, sectorId, current.id);
 		}
