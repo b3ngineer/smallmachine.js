@@ -38,7 +38,8 @@
 			}
 			nodeList[i].prelim = 0;
 			nodeList[i].mod = 0;
-			nodeList[i].ancestor = null;
+			nodeList[i].thread = null;
+			nodeList[i].ancestor = nodeList[i];
 			this.nodeIndex[nodeList[i].id] = nodeList[i];
 			if (typeof nodeList[i].children === 'undefined') {
 				nodeList[i].children = [];
@@ -87,7 +88,7 @@
 				this.apportion(node.children[i], defaultAncestor);
 			}
 			this.executeShifts(node);
-			var midpoint = 0.5*(node.leftMostChild().prelim + node.rightMostChild().prelim); 
+			var midpoint = 0.5*(node.leftMostChild().prelim + node.rightMostChild().prelim);
 			var leftSibling = node.leftSibling();
 			if (leftSibling !== null) {
 				var distance = 0; // TODO
@@ -100,13 +101,69 @@
 		}
 	};
 
-	TreeLayout.prototype.apportion = function(node, ancestor) {
+	TreeLayout.prototype.apportion = function(node, defaultAncestor) {
+		var leftSibling = node.leftSibling();
+		if (leftSibling !== null) {
+			var rightInsideEdge = node;
+			var rightOutsideEdge = node; 
+			var leftInsideEdge = leftSibling;
+			var leftOutsideEdge = rightInsideEdge.leftSibling();
+			var sumOfRightInsideEdge = rightInsideEdge.mod;
+			var sumOfRightOutsideEdge = rightOutsideEdge.mod;
+			var sumOfLeftInsideEdge = leftInsideEdge.mod;
+			var sumOfLeftOutsideEdge = leftOutsideEdge.mod;
+			while (this.nextRight(leftInsideEdge) !== null && this.nextLeft(rightInsideEdge) !== null) {
+				leftInsideEdge = this.nextRight(leftInsideEdge);
+				rightInsideEdge = this.nextLeft(rightInsideEdge);
+				leftOutsideEdge = this.nextLeft(leftOutsideEdge);
+				rightOutsideEdge = this.nextRight(rightOutsideEdge);
+				leftInsideEdge.ancestor = node;
+				var shift = (leftInsideEdge.prelim + sumOfLeftInsideEdge) - (rightInsideEdge + sumOfRightInsideEdge) + distance; // TODO
+				if (shift > 0) {
+					this.moveSubtree(this.ancestor(rightInsideEdge, node, defaultAncestor), node, shift);
+					sumOfRightInsideEdge = sumOfRightInsideEdge + shift;
+					sumOfRightOutsideEdge = sumOfRightOutsideEdge + shift;
+				}
+				sumOfLeftInsideEdge = sumOfLeftInsideEdge + leftInsideEdge.mod;
+				sumOfRightInsideEdge = sumOfRightInsideEdge + rightInsideEdge.mod;
+				sumOfLeftOutsideEdge = sumOfLeftOutsideEdge + leftOutsideEdge.mod;
+				sumOfRightOutsideEdge = sumOfRightOutsideEdge + rightOutsideEdge.mod; 
+			}
+			if (this.nextRight(leftInsideEdge) !== null && this.nextRight(rightOutsideEdge) === null) {
+				rightOutsideEdge.thread = this.nextLeft(leftOutsideEdge);	
+				rightOutsideEdge.mod = rightOutsideEdge.mod + sumOfLeftInsideEdge - sumOfRightOutsideEdge;
+			}
+			if (this.nextLeft(rightInsideEdge) !== null && this.nextLeft(leftOutsideEdge) === null) {
+				leftOutsideEdge.thread = this.nextLeft(rightInsideEdge);
+				leftOutsideEdge.mod = leftOutsideEdge.mod + sumOfRightInsideEdge - sumOfLeftOutsideEdge;
+				defaultAncestor = node;
+			}
+		}
 	};
 
 	TreeLayout.prototype.executeShifts = function(node) {
 	};
 
 	TreeLayout.prototype.secondWalk = function(node) {
+	};
+
+	TreeLayout.prototype.nextRight = function(node) {
+		var rightMostChild = node.rightMostChild();
+		if (rightMostChild !== null) {
+			return rightMostChild;
+		}
+		return node.thread;
+	};
+
+	TreeLayout.prototype.nextLeft = function(node) {
+		var leftMostChild = node.leftMostChild();
+		if (leftMostChild !== null) {
+			return leftMostChild;
+		}
+		return node.thread;
+	};
+
+	TreeLayout.prototype.ancestor = function(rightInsideEdge, node, defaultAncestor) {
 	};
 
 	function activator(model) {
