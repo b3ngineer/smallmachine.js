@@ -7,16 +7,17 @@
 	ontology.addTerm('get');
 
 	function TreeNode() {
+		this.leftSiblingNode = null;
 		return this;
 	}
 
 	TreeNode.prototype.leftMostChild = function() {
-		return this.children[0];
+		return this.children[0] || null;
 	};
 
 	TreeNode.prototype.rightMostChild = function() {
 		if (this.children.length < 1) {
-			return this.children[0];
+			return this.children[0] || null;
 		}
 		return this.children[this.children.length - 1];
 	};
@@ -31,10 +32,11 @@
 
 	function TreeLayout(nodeList, rootId) {
 		this.nodeIndex = {};
-		var root = nodeList[0];
+		this.distance = 60;
+		this.root = nodeList[0];
 		for (var i = 0; i < nodeList.length; i++) {
 			if (nodeList[i].id === rootId) {
-				root = nodeList[i];
+				this.root = nodeList[i];
 			}
 			nodeList[i].prelim = 0;
 			nodeList[i].mod = 0;
@@ -59,9 +61,14 @@
 				sm.alsoBehavesLike(nodeList[i], TreeNode);
 			}
 		}
-		this.firstWalk(root);
-		this.secondWalk(root, -root.prelim);
 	}
+
+	TreeLayout.prototype.walk = function() {
+		this.firstWalk(this.root);
+		this.secondWalk(this.root, -this.root.prelim);
+	};
+
+	TreeLayout.prototype._name = 'TreeLayout';
 
 	TreeLayout.prototype._getNodeFromIndex = function(nodeId, startAt, nodeList) {
 		if (typeof this.nodeIndex[nodeId] !== 'undefined') {
@@ -91,8 +98,7 @@
 			var midpoint = 0.5*(node.leftMostChild().prelim + node.rightMostChild().prelim);
 			var leftSibling = node.leftSibling();
 			if (leftSibling !== null) {
-				var distance = 0; // TODO
-				node.prelim = leftSibling.prelim + distance;
+				node.prelim = leftSibling.prelim + this.distance;
 				node.mod = node.prelim - midpoint;
 			}
 			else {
@@ -104,41 +110,45 @@
 	TreeLayout.prototype.apportion = function(node, defaultAncestor) {
 		var leftSibling = node.leftSibling();
 		if (leftSibling !== null) {
-			var rightInsideEdge = node;
-			var rightOutsideEdge = node; 
-			var leftInsideEdge = leftSibling;
-			var leftOutsideEdge = rightInsideEdge.leftSibling();
-			var sumOfRightInsideEdge = rightInsideEdge.mod;
-			var sumOfRightOutsideEdge = rightOutsideEdge.mod;
-			var sumOfLeftInsideEdge = leftInsideEdge.mod;
-			var sumOfLeftOutsideEdge = leftOutsideEdge.mod;
-			while (this.nextRight(leftInsideEdge) !== null && this.nextLeft(rightInsideEdge) !== null) {
-				leftInsideEdge = this.nextRight(leftInsideEdge);
-				rightInsideEdge = this.nextLeft(rightInsideEdge);
-				leftOutsideEdge = this.nextLeft(leftOutsideEdge);
-				rightOutsideEdge = this.nextRight(rightOutsideEdge);
-				leftInsideEdge.ancestor = node;
-				var shift = (leftInsideEdge.prelim + sumOfLeftInsideEdge) - (rightInsideEdge + sumOfRightInsideEdge) + distance; // TODO
+			var insideRightNode = node;
+			var outsideRightNode = node;
+			var insideLeftNode = leftSibling;
+			var outsideLeftNode = insideRightNode.leftSibling();
+			var sumInsideRight = insideRightNode.mod;
+			var sumOutsideRight = outsideRightNode.mod;
+			var sumInsideLeft = insideLeftNode.mod;
+			var sumOutsideLeft = outsideLeftNode.mod;
+
+			while (this.nextRight(insideLeftNode) !== null && this.nextLeft(insideRightNode) !== null) {
+				insideLeftNode = this.nextRight(insideLeftNode);
+				insideRightNode = this.nextLeft(insideRightNode);
+				outsideLeftNode = this.nextLeft(outsideLeftNode);
+				outsideRightNode = this.nextRight(outsideRightNode);
+				insideLeftNode.ancestor = node;
+				var shift = (insideLeftNode.prelim + sumInsideLeft) - (insideRightNode.prelim + sumInsideRight) + this.distance;
 				if (shift > 0) {
-					this.moveSubtree(this.ancestor(rightInsideEdge, node, defaultAncestor), node, shift);
-					sumOfRightInsideEdge = sumOfRightInsideEdge + shift;
-					sumOfRightOutsideEdge = sumOfRightOutsideEdge + shift;
+					this.moveSubtree(this.ancestor(insideRightNode, node, defaultAncestor), node, shift);
+					sumInsideRight += shift;
+					sumOutsideRight += shift;
 				}
-				sumOfLeftInsideEdge = sumOfLeftInsideEdge + leftInsideEdge.mod;
-				sumOfRightInsideEdge = sumOfRightInsideEdge + rightInsideEdge.mod;
-				sumOfLeftOutsideEdge = sumOfLeftOutsideEdge + leftOutsideEdge.mod;
-				sumOfRightOutsideEdge = sumOfRightOutsideEdge + rightOutsideEdge.mod; 
+				sumInsideLeft += insideLeftNode.mod;
+				sumInsideRight += insideRightNode.mod;
+				sumOutsideLeft += outsideLeftNode.mod;
+				sumOutsideRight += outsideRightNode.mod; 
 			}
-			if (this.nextRight(leftInsideEdge) !== null && this.nextRight(rightOutsideEdge) === null) {
-				rightOutsideEdge.thread = this.nextLeft(leftOutsideEdge);	
-				rightOutsideEdge.mod = rightOutsideEdge.mod + sumOfLeftInsideEdge - sumOfRightOutsideEdge;
+			if (this.nextRight(insideLeftNode) !== null && this.nextRight(outsideRightNode) === null) {
+				outsideRightNode.thread = this.nextLeft(outsideLeftNode);	
+				outsideRightNode.mod += sumInsideLeft - sumOutsideRight;
 			}
-			if (this.nextLeft(rightInsideEdge) !== null && this.nextLeft(leftOutsideEdge) === null) {
-				leftOutsideEdge.thread = this.nextLeft(rightInsideEdge);
-				leftOutsideEdge.mod = leftOutsideEdge.mod + sumOfRightInsideEdge - sumOfLeftOutsideEdge;
+			if (this.nextLeft(insideRightNode) !== null && this.nextLeft(outsideLeftNode) === null) {
+				outsideLeftNode.thread = this.nextLeft(insideRightNode);
+				outsideLeftNode.mod += sumInsideRight - sumOutsideLeft;
 				defaultAncestor = node;
 			}
 		}
+	};
+
+	TreeLayout.prototype.moveSubtree = function(ancestor, node, shift) {
 	};
 
 	TreeLayout.prototype.executeShifts = function(node) {
@@ -163,8 +173,18 @@
 		return node.thread;
 	};
 
-	TreeLayout.prototype.ancestor = function(rightInsideEdge, node, defaultAncestor) {
+	TreeLayout.prototype.ancestor = function(a, b, defaultAncestor) {
+		if (this.areSiblings(a,b)) {
+			return a.ancestor;
+		}
+		return defaultAncestor;
 	};
+
+	TreeLayout.prototype.areSiblings = function(a, b) {
+		return false;
+	};
+
+	sm.type.extendedBy(TreeLayout);
 
 	function activator(model) {
 		model.paint.subscribe(function(message) {
@@ -172,7 +192,8 @@
 				return function(mesage) {
 					var root = new sm.type.NamedValue('sm.flowchart', 'root', null);
 					model.get.publish(root);
-					new TreeLayout(message.value, root.value);
+					var layout = new sm.type.TreeLayout(message.value, root.value);
+					layout.walk();
 					return false;
 				};
 			}
