@@ -42,13 +42,18 @@
 			nodeList[i].mod = 0;
 			nodeList[i].thread = null;
 			nodeList[i].ancestor = nodeList[i];
+			nodeList[i].shift = 0;
+			nodeList[i].change = 0;
+			nodeList[i].num = 0;
 			this.nodeIndex[nodeList[i].id] = nodeList[i];
 			if (typeof nodeList[i].children === 'undefined') {
 				nodeList[i].children = [];
 			}
 			if (typeof nodeList[i].edges !== 'undefined') {
 				for (var j = 0; j < nodeList[i].edges.length; j++) {
-					nodeList[i].children.push(this._getNodeFromIndex(nodeList[i].edges[j].id, i, nodeList));
+					var child = this._getNodeFromIndex(nodeList[i].edges[j].id, i, nodeList);
+					child.parentNodeId = nodeList[i].id;
+					nodeList[i].children.push(child);
 				}
 			}
 			for (var k = 1; k < nodeList[i].children.length; k++) {
@@ -65,7 +70,7 @@
 
 	TreeLayout.prototype.walk = function() {
 		this.firstWalk(this.root);
-		this.secondWalk(this.root, -this.root.prelim);
+		this.secondWalk(this.root, -this.root.prelim, 0);
 	};
 
 	TreeLayout.prototype._name = 'TreeLayout';
@@ -114,6 +119,7 @@
 			var outsideRightNode = node;
 			var insideLeftNode = leftSibling;
 			var outsideLeftNode = insideRightNode.leftSibling();
+			console.log(outsideLeftNode.label);
 			var sumInsideRight = insideRightNode.mod;
 			var sumOutsideRight = outsideRightNode.mod;
 			var sumInsideLeft = insideLeftNode.mod;
@@ -148,13 +154,33 @@
 		}
 	};
 
-	TreeLayout.prototype.moveSubtree = function(ancestor, node, shift) {
+	TreeLayout.prototype.moveSubtree = function(leftRoot, rightRoot, shift) {
+		var subtrees = rightRoot.num - leftRoot.num;
+		rightRoot.change -= shift / subtrees; 
+		rightRoot.shift += shift;
+		leftRoot.change += shift / subtrees; 
+		rightRoot.prelim += shift;
+		rightRoot.mod += shift;
 	};
 
 	TreeLayout.prototype.executeShifts = function(node) {
+		var shift = 0;
+		var change = 0;
+		for (var i = (node.children.length - 1); i >= 0; i--) {
+			var child = node.children[i];
+			child.prelim += shift;
+			child.mod += shift;
+			change += child.change;
+			shift += child.shift + change;
+		}
 	};
 
-	TreeLayout.prototype.secondWalk = function(node) {
+	TreeLayout.prototype.secondWalk = function(node, mod, level) {
+		node.x = node.prelim + mod;
+		node.y = level++ * this.distance;
+		for (var i = 0; i < node.children.length; i++) {
+			this.secondWalk(node.children[i], mod + node.mod, level);
+		}
 	};
 
 	TreeLayout.prototype.nextRight = function(node) {
@@ -173,15 +199,15 @@
 		return node.thread;
 	};
 
-	TreeLayout.prototype.ancestor = function(a, b, defaultAncestor) {
-		if (this.areSiblings(a,b)) {
-			return a.ancestor;
+	TreeLayout.prototype.ancestor = function(left, right, defaultAncestor) {
+		if (left.parentNodeId === right.parentNodeId) {
+			return left.ancestor;
 		}
 		return defaultAncestor;
 	};
 
 	TreeLayout.prototype.areSiblings = function(a, b) {
-		return false;
+		return a.parentNodeId === b.parentNodeId;
 	};
 
 	sm.type.extendedBy(TreeLayout);

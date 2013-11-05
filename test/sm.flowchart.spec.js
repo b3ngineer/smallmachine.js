@@ -18,6 +18,8 @@ describe('sm.flowchart', function() {
 	var actual = new smallmachine.type.TreeLayout(testMessage.value, '1');
 	actual.walk();
 
+	console.log(testMessage);
+
 	it('should initialize children in a node list according to the alias of \'edges\' the behavior of the TreeLayout', function() {
 		expect(testMessage.value[0].children).toBeDefined();
 		expect(testMessage.value[0].children.length).toBe(2);
@@ -164,6 +166,6 @@ describe('sm.flowchart', function() {
 	it('should indicate that \'G\' is not a sibling of \'F\' when calling areSiblings', function() {
 		var G = actual.root.rightMostChild().children[0];
 		var F = actual.root.leftMostChild().children[2];
-		expect(actual.areSiblings(G,F)).toBe(true);
+		expect(actual.areSiblings(G,F)).toBe(false);
 	});
 });
