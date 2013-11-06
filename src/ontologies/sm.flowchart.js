@@ -36,7 +36,9 @@
 
 	function TreeLayout(nodeList, rootId) {
 		this.nodeIndex = {};
-		this.distance = 120;
+		this.defaultHorizontalDistance = 120;
+		this.defaultVerticalDistance = 100;
+		this.defaultNodeMargin = 40;
 		this.root = nodeList[0];
 		for (var i = 0; i < nodeList.length; i++) {
 			if (nodeList[i].id === rootId) {
@@ -77,9 +79,9 @@
 		}
 	}
 
-	TreeLayout.prototype.walk = function() {
+	TreeLayout.prototype.walk = function(centerX) {
 		this.firstWalk(this.root);
-		this.secondWalk(this.root, -this.root.prelim, 0);
+		this.secondWalk(this.root, -this.root.prelim, 0, centerX);
 	};
 
 	TreeLayout.prototype._name = 'TreeLayout';
@@ -98,15 +100,24 @@
 		}
 	};
 
+	TreeLayout.prototype.getSpacing = function(node) {
+		var margin = (typeof node.margin !== 'undefined') 
+			? parseFloat(node.margin)
+			: this.defaultNodeMargin;
+		var spacing = (typeof node.width !== 'undefined')
+			? parseFloat(node.width) + margin
+			: this.defaultHorizontalDistance;
+		return spacing;
+	};
+
 	TreeLayout.prototype.firstWalk = function(node) {
-		//console.log('calling first walk on %s', node.label);
 		if (node.isLeaf()) {
 			var leftSibling = node.leftSibling();
 			if (leftSibling === null) {
 				node.prelim = 0;
 			}
 			else {
-				node.prelim = leftSibling.prelim + this.distance;
+				node.prelim = leftSibling.prelim + this.getSpacing(node);
 			}
 		}
 		else {
@@ -119,42 +130,36 @@
 			var midpoint = 0.5*(node.leftMostChild().prelim + node.rightMostChild().prelim);
 			var leftSibling = node.leftSibling();
 			if (leftSibling !== null) {
-				node.prelim = leftSibling.prelim + this.distance;
+				node.prelim = leftSibling.prelim + this.getSpacing(node);
 				node.mod = node.prelim - midpoint;
-				//console.log("%s %d %d", node.label, node.prelim, node.mod);
 			}
 			else {
 				node.prelim = midpoint;
-				//console.log("%s %d %d", node.label, node.prelim, node.mod);
 			}
 		}
 	};
 
 	TreeLayout.prototype.apportion = function(node, defaultAncestor) {
 		var leftSibling = node.leftSibling();
-		//console.log('calling apportion on %s with leftSibling of %o', node.label, leftSibling);
 		if (leftSibling !== null) {
 			var insideRightNode = node;
 			var outsideRightNode = node;
 			var insideLeftNode = leftSibling;
 			var outsideLeftNode = node.leftMostSibling();
 			var sumInsideRight = insideRightNode.mod;
-			//console.log("sumInsideRight %d", sumInsideRight);
 			var sumOutsideRight = outsideRightNode.mod;
 			var sumInsideLeft = insideLeftNode.mod;
 			var sumOutsideLeft = outsideLeftNode.mod;
 
 			var nextRight = this.nextRight(insideLeftNode);
 			var nextLeft = this.nextLeft(insideRightNode);
-			//console.log("%o %o %o", insideLeftNode.label, nextRight, insideRightNode.label, nextLeft);
 			while (nextRight !== null && nextLeft !== null) {
 				insideLeftNode = nextRight;
 				insideRightNode = nextLeft;
 				outsideLeftNode = this.nextLeft(outsideLeftNode);
 				outsideRightNode = this.nextRight(outsideRightNode);
 				insideLeftNode.ancestor = node;
-				var shift = (insideLeftNode.prelim + sumInsideLeft) - (insideRightNode.prelim + sumInsideRight) + this.distance;
-				//console.log('shift %d + %d - %d + %d + %d = %d', insideLeftNode.prelim, sumInsideLeft, insideRightNode.prelim, sumInsideRight, this.distance, shift);
+				var shift = (insideLeftNode.prelim + sumInsideLeft) - (insideRightNode.prelim + sumInsideRight) + this.defaultHorizontalDistance;
 				if (shift > 0) {
 					this.moveSubtree(this.ancestor(insideRightNode, node, defaultAncestor), node, shift);
 					sumInsideRight += shift;
@@ -166,19 +171,14 @@
 				sumOutsideRight += outsideRightNode.mod; 
 				nextRight = this.nextRight(insideLeftNode);
 				nextLeft = this.nextLeft(insideRightNode);
-				//console.log("%o %o %o", insideLeftNode.label, nextRight, insideRightNode.label, nextLeft);
 			}
 			if (this.nextRight(insideLeftNode) !== null && this.nextRight(outsideRightNode) === null) {
-				//console.log('adding thread to %o', outsideRightNode.label);
 				outsideRightNode.thread = this.nextLeft(outsideLeftNode);	
 				outsideRightNode.mod += sumInsideLeft - sumOutsideRight;
-				//console.log("%s %d %d", outsideRightNode.label, outsideRightNode.prelim, outsideRightNode.mod);
 			}
 			if (this.nextLeft(insideRightNode) !== null && this.nextLeft(outsideLeftNode) === null) {
-				//console.log('adding thread to %o', outsideLeftNode.label);
 				outsideLeftNode.thread = this.nextLeft(insideRightNode);
 				outsideLeftNode.mod += sumInsideRight - sumOutsideLeft;
-				//console.log("%s %d %d", outsideLeftNode.label, outsideLeftNode.prelim, outsideLeftNode.mod);
 				defaultAncestor = node;
 			}
 		}
@@ -186,7 +186,6 @@
 	};
 
 	TreeLayout.prototype.moveSubtree = function(leftRoot, rightRoot, shift) {
-		//console.log('moveSubtree on %o', leftRoot.label);
 		var subtrees = rightRoot.num - leftRoot.num;
 		rightRoot.change -= shift / subtrees; 
 		rightRoot.shift += shift;
@@ -196,7 +195,6 @@
 	};
 
 	TreeLayout.prototype.executeShifts = function(node) {
-		//console.log('executeShifts on %o', node.label);
 		var shift = 0;
 		var change = 0;
 		for (var i = (node.children.length - 1); i >= 0; i--) {
@@ -205,15 +203,17 @@
 			child.mod += shift;
 			change += child.change;
 			shift += child.shift + change;
-			//console.log("%s %d %d", child.label, child.prelim, child.mod);
 		}
 	};
 
-	TreeLayout.prototype.secondWalk = function(node, mod, level) {
-		node.x = node.prelim + mod + 400;
-		node.y = level++ * this.distance + 100;
+	TreeLayout.prototype.secondWalk = function(node, mod, level, centerX) {
+		if (typeof centerX === 'undefined') {
+			centerX = 0;
+		}
+		node.x = node.prelim + mod + centerX;
+		node.y = level++ * this.defaultHorizontalDistance + this.defaultVerticalDistance;
 		for (var i = 0; i < node.children.length; i++) {
-			this.secondWalk(node.children[i], mod + node.mod, level);
+			this.secondWalk(node.children[i], mod + node.mod, level, centerX);
 		}
 	};
 
@@ -252,8 +252,17 @@
 				return function(mesage) {
 					var root = new sm.type.NamedValue('sm.flowchart', 'root', null);
 					model.get.publish(root);
-					var layout = new sm.type.TreeLayout(message.value, root.value);
-					layout.walk();
+					var paper = new sm.type.NamedValue('sm.raphaeljs', 'paper', null);
+					model.get.publish(paper);
+					//TODO: add config support
+					var config = {};
+					var layout = new sm.type.TreeLayout(message.value, root.value, config);
+					if (paper.value !== null) {
+						layout.walk(paper.value.width / 2);	
+					}
+					else {
+						layout.walk();
+					}
 					return false;
 				};
 			}

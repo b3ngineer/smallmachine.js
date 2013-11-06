@@ -201,7 +201,7 @@
 				var objectNode = getObjectNode(json, node.edges[j].id);
 				if (objectNode !== null && typeof objectNode.shape.x != 'undefined' && typeof objectNode.shape.y !== 'undefined' ) {
 					var edge = new Edge(node, objectNode, j, paper.value, settings.lineAttr || {}, settings.edgeLabelAttr || {});
-					//this._model.connect.publish(edge);
+					this._model.connect.publish(edge);
 				}
 			}
 			this._model.insert.publish(node);
