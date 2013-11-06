@@ -18,7 +18,17 @@ describe('sm.flowchart', function() {
 	var actual = new smallmachine.type.TreeLayout(testMessage.value, '1');
 	actual.walk();
 
-	console.log(testMessage);
+	var A = actual.root;
+	var B = A.leftMostChild();
+	var C = A.rightMostChild();
+	var D = B.leftMostChild();
+	var E = B.children[1];
+	var F = B.rightMostChild();
+	var G = C.leftMostChild();
+	var H = G.leftMostChild();
+	var I = G.rightMostChild();
+	var J = H.leftMostChild();
+
 
 	it('should initialize children in a node list according to the alias of \'edges\' the behavior of the TreeLayout', function() {
 		expect(testMessage.value[0].children).toBeDefined();
@@ -99,73 +109,94 @@ describe('sm.flowchart', function() {
 		expect(actual.root.leftMostChild().leftMostChild().thread.label).toBe('H');
 	});
 
-	it('should indicate that \'H\' is the successor of \'D\' when calling nextLeft', function() {
-		expect(actual.nextLeft(actual.root.leftMostChild().leftMostChild())).not.toBe(0);
-		expect(actual.nextLeft(actual.root.leftMostChild().leftMostChild())).not.toBe(null);
-		expect(actual.nextLeft(actual.root.leftMostChild().leftMostChild()).label).toBe('H');
+	describe('TreeLayout.nextLeft', function() {
+		it('should indicate that \'H\' is the successor of \'D\' when calling nextLeft', function() {
+			expect(actual.nextLeft(actual.root.leftMostChild().leftMostChild())).not.toBe(0);
+			expect(actual.nextLeft(actual.root.leftMostChild().leftMostChild())).not.toBe(null);
+			expect(actual.nextLeft(actual.root.leftMostChild().leftMostChild()).label).toBe('H');
+		});
+
+		it('should indicate that \'J\' is the successor of \'H\' when calling nextLeft', function() {
+			expect(actual.nextLeft(actual.root.rightMostChild().leftMostChild().leftMostChild())).not.toBe(0);
+			expect(actual.nextLeft(actual.root.rightMostChild().leftMostChild().leftMostChild())).not.toBe(null);
+			expect(actual.nextLeft(actual.root.rightMostChild().leftMostChild().leftMostChild())).toBeDefined();
+			expect(actual.nextLeft(actual.root.rightMostChild().leftMostChild().leftMostChild()).label).toBe('J');
+		});
+
+		it('should indicate that \'J\' has no successor (null) when calling nextLeft', function() {
+			expect(actual.nextLeft(actual.root.rightMostChild().leftMostChild().leftMostChild().leftMostChild())).toBe(null);
+		});
 	});
 
-	it('should indicate that \'J\' is the successor of \'H\' when calling nextLeft', function() {
-		expect(actual.nextLeft(actual.root.rightMostChild().leftMostChild().leftMostChild())).not.toBe(0);
-		expect(actual.nextLeft(actual.root.rightMostChild().leftMostChild().leftMostChild())).not.toBe(null);
-		expect(actual.nextLeft(actual.root.rightMostChild().leftMostChild().leftMostChild())).toBeDefined();
-		expect(actual.nextLeft(actual.root.rightMostChild().leftMostChild().leftMostChild()).label).toBe('J');
-	});
+	describe('TreeLayout.nextRight', function() {
+		it('should indicate that \'C\' is the successor of \'A\' when calling nextRight', function() {
+			expect(actual.nextRight(actual.root)).not.toBe(0);
+			expect(actual.nextRight(actual.root)).not.toBe(null);
+			expect(actual.nextRight(actual.root).label).toBe('C');
+		});
 
-	it('should indicate that \'J\' has no successor (null) when calling nextLeft', function() {
-		expect(actual.nextLeft(actual.root.rightMostChild().leftMostChild().leftMostChild().leftMostChild())).toBe(null);
-	});
+		it('should indicate that \'G\' is the successor of \'C\' when calling nextRight', function() {
+			expect(actual.nextRight(actual.root.rightMostChild())).not.toBe(0);
+			expect(actual.nextRight(actual.root.rightMostChild())).not.toBe(null);
+			expect(actual.nextRight(actual.root.rightMostChild()).label).toBe('G');
+		});
 
-	it('should indicate that \'C\' is the successor of \'A\' when calling nextRight', function() {
-		expect(actual.nextRight(actual.root)).not.toBe(0);
-		expect(actual.nextRight(actual.root)).not.toBe(null);
-		expect(actual.nextRight(actual.root).label).toBe('C');
-	});
+		it('should indicate that \'I\' is the successor of \'G\' when calling nextRight', function() {
+			expect(actual.nextRight(actual.root.rightMostChild().rightMostChild())).not.toBe(0);
+			expect(actual.nextRight(actual.root.rightMostChild().rightMostChild())).not.toBe(null);
+			expect(actual.nextRight(actual.root.rightMostChild().rightMostChild()).label).toBe('I');
+		});
 
-	it('should indicate that \'G\' is the successor of \'C\' when calling nextRight', function() {
-		expect(actual.nextRight(actual.root.rightMostChild())).not.toBe(0);
-		expect(actual.nextRight(actual.root.rightMostChild())).not.toBe(null);
-		expect(actual.nextRight(actual.root.rightMostChild()).label).toBe('G');
-	});
+		it('should assign a thread from \'I\' to \'J\'', function() {
+			expect(actual.root.rightMostChild().rightMostChild().rightMostChild().label).toBe('I');
+			expect(actual.root.rightMostChild().rightMostChild().rightMostChild().thread.label).toBe('J');
+		});
 
-	it('should indicate that \'I\' is the successor of \'G\' when calling nextRight', function() {
-		expect(actual.nextRight(actual.root.rightMostChild().rightMostChild())).not.toBe(0);
-		expect(actual.nextRight(actual.root.rightMostChild().rightMostChild())).not.toBe(null);
-		expect(actual.nextRight(actual.root.rightMostChild().rightMostChild()).label).toBe('I');
-	});
+		it('should indicate that \'J\' is the successor of \'I\' when calling nextRight', function() {
+			expect(actual.nextRight(actual.root.rightMostChild().rightMostChild().rightMostChild())).not.toBe(0);
+			expect(actual.nextRight(actual.root.rightMostChild().rightMostChild().rightMostChild())).not.toBe(null);
+			expect(actual.nextRight(actual.root.rightMostChild().rightMostChild().rightMostChild()).label).toBe('J');
+		});
 
-	it('should assign a thread from \'I\' to \'J\'', function() {
-		expect(actual.root.rightMostChild().rightMostChild().rightMostChild().label).toBe('I');
-		expect(actual.root.rightMostChild().rightMostChild().rightMostChild().thread.label).toBe('J');
-	});
-
-	it('should indicate that \'J\' is the successor of \'I\' when calling nextRight', function() {
-		expect(actual.nextRight(actual.root.rightMostChild().rightMostChild().rightMostChild())).not.toBe(0);
-		expect(actual.nextRight(actual.root.rightMostChild().rightMostChild().rightMostChild())).not.toBe(null);
-		expect(actual.nextRight(actual.root.rightMostChild().rightMostChild().rightMostChild()).label).toBe('J');
+		it('should indicate that \'H\' is the successor of \'D\' when calling nextRight', function() {
+			expect(actual.nextRight(D).label).toBe('H');
+		});
 	});
 
 	it('should indicate that \'F\' is a sibling of \'E\' when calling areSiblings', function() {
-		var F = actual.root.leftMostChild().children[2];
-		var E = actual.root.leftMostChild().children[1];
 		expect(actual.areSiblings(F,E)).toBe(true);
 	});
 
 	it('should indicate that \'D\' is a sibling of \'E\' when calling areSiblings', function() {
-		var D = actual.root.leftMostChild().children[0];
-		var E = actual.root.leftMostChild().children[1];
 		expect(actual.areSiblings(D,E)).toBe(true);
 	});
 
 	it('should indicate that \'D\' is a sibling of \'F\' when calling areSiblings', function() {
-		var D = actual.root.leftMostChild().children[0];
-		var F = actual.root.leftMostChild().children[2];
 		expect(actual.areSiblings(D,F)).toBe(true);
 	});
 
 	it('should indicate that \'G\' is not a sibling of \'F\' when calling areSiblings', function() {
-		var G = actual.root.rightMostChild().children[0];
-		var F = actual.root.leftMostChild().children[2];
 		expect(actual.areSiblings(G,F)).toBe(false);
 	});
+
+	it('should indicate that \'B\' is the leftmost sibling of itself', function() {
+		expect(B.leftMostSibling().label).toBe('B');
+	});
+
+	it('should indicate that \'D\' is the leftmost sibling of \'F\'', function() {
+		expect(F.leftMostSibling().label).toBe('D');
+	});
+
+	it('should indicate that \'D\' is the leftmost sibling of \'E\'', function() {
+		expect(E.leftMostSibling().label).toBe('D');
+	});
+
+	it('should indicate that \'D\' is the leftmost sibling of itself', function() {
+		expect(D.leftMostSibling().label).toBe('D');
+	});
+
+	it('should indicate that \'B\' is the leftmost sibling of \'C\'', function() {
+		expect(C.leftMostSibling().label).toBe('B');
+	});
+
 });
