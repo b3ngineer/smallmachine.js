@@ -150,6 +150,57 @@ describe('sm.core', function() {
 			expect(b.test()).toBe(true); // B behaves like C
 		});
 
+		it('should update a term that calls it\'s own alsoBehavesLike', function() {
+			function Bar() {
+				return this;
+			};
+
+			Bar.prototype.someMethod = function() {
+				return true;
+			};
+
+			var testOntologyZ = new smallmachine.Ontology('some.ontology.test.z');
+			testOntologyZ.addTerm('foo');
+			testOntologyZ.foo.alsoBehavesLike(Bar);
+			var actual = smallmachine(testOntologyZ);
+			expect(actual.foo.someMethod).toBeDefined();
+		});
+
+		it('should update a term that is a type of another term that calls it\'s respective alsoBehavesLike', function() {
+			function Bar() {
+				return this;
+			};
+
+			Bar.prototype.someMethod = function() {
+				return true;
+			};
+
+			var testOntologyZ = new smallmachine.Ontology('some.ontology.test.z');
+			testOntologyZ.addTerm('foo');
+			testOntologyZ.addTerm('baz');
+			testOntologyZ.foo.alsoBehavesLike(Bar);
+			testOntologyZ.baz.isA(testOntologyZ.foo);
+			var actual = smallmachine(testOntologyZ);
+			expect(actual.baz.someMethod).toBeDefined();
+		});
+		
+		it('should not update a term that is not a type of another term that calls it\'s respective alsoBehavesLike', function() {
+			function Bar() {
+				return this;
+			};
+
+			Bar.prototype.someMethod = function() {
+				return true;
+			};
+
+			var testOntologyZ = new smallmachine.Ontology('some.ontology.test.z');
+			testOntologyZ.addTerm('foo');
+			testOntologyZ.addTerm('baz');
+			testOntologyZ.foo.alsoBehavesLike(Bar);
+			var actual = smallmachine(testOntologyZ);
+			expect(actual.baz.someMethod).not.toBeDefined();
+		});
+
 		it('should add terms to an ontology at the child level', function() {
 			var target = new smallmachine.Ontology();
 			target.addTerm('test');

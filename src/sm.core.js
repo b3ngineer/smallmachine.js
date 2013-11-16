@@ -135,10 +135,9 @@
 			}
 		}
 		if (typeof b.prototype !== 'undefined') {
-			if (typeof a.prototype === 'undefined') {
-				a.prototype = {};
+			if (typeof a.prototype !== 'undefined') {
+				core.alsoBehavesLike(a.prototype, b.prototype);
 			}
-			core.alsoBehavesLike(a.prototype, b.prototype);
 		}
 	}
 
@@ -207,25 +206,27 @@
 
 	core.Behavior = Behavior;
 
+	function Term(value) {
+		this._id = (function() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+				var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+				return v.toString(16);
+			})})();
+		if (typeof value._value !== 'undefined' && typeof value._type !== 'undefined') {
+			this._value = value._value;
+			this._type = value._type;
+		}
+		else {
+			this._value = value;
+			this._type = null;
+		}
+		return this;
+	}
+
 	function Ontology(namespace) {
 		this.namespace = namespace;
 		this._inferencer = new Inferencer();
 		this._activators = [];
-		this.Term = function(value) {
-			this._id = (function() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-				var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-				return v.toString(16);
-			})})();
-			if (typeof value._value !== 'undefined' && typeof value._type !== 'undefined') {
-				this._value = value._value;
-				this._type = value._type;
-			}
-			else {
-				this._value = value;
-				this._type = null;
-			}
-			return this;
-		};
+		this._term = Term;
         return this;
     };
 
@@ -235,9 +236,8 @@
 		if (typeof this[value] !== 'undefined') {
 			return this;
 		}
-		var Term = this.Term;
-		Term.prototype.relate = _Term.prototype.relate;
-        var t = new Term(value);
+		this._term.prototype.relate = _Term.prototype.relate;
+        var t = new this._term(value);
 		this[value] = new Proxy(t, this._inferencer);
         return this;
     };
@@ -318,6 +318,29 @@
 		return this;
 	};
 
+	function _alsoBehavesLike(target, behavior) {
+		var term = this[target];
+		if (typeof behavior === 'function') {
+			core.alsoBehavesLike(term, behavior.prototype);
+		}
+		else {
+			core.alsoBehavesLike(term, behavior);
+		}
+		for (var p in term) {
+			if (!term.hasOwnProperty(p) || p.indexOf('_') === 0) {
+				continue;
+			}
+			if (typeof term[p]._type !== 'undefined' && term[p]._type === core.CONCEPT) {
+				if (typeof behavior === 'function') {
+					core.alsoBehavesLike(term[p], behavior.prototype);
+				}
+				else {
+					core.alsoBehavesLike(term[p], behavior);
+				}
+			}
+		}
+	};
+
 	Inferencer.prototype.isA = function(Proxy) {
 		this._rules.push(new Rule(1, isA, [this._term._value, Proxy._term._value]));
 		return this;
@@ -335,6 +358,11 @@
 
 	Inferencer.prototype.hasRange = function(Proxy) {
 		this._rules.push(new Rule(2, hasRange, [this._term._value, Proxy._term._value]));
+		return this;
+	};
+
+	Inferencer.prototype.alsoBehavesLike = function(behavior) {
+		this._rules.push(new Rule(20, _alsoBehavesLike, [this._term._value, behavior])); 
 		return this;
 	};
 

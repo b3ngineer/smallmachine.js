@@ -1,0 +1,23 @@
+[
+	{ "id" : "1", "edges" : [ { "id" : "2", "label" : "isA" }, { "id" : "3", "label" : "isA" } ], "height" : 60, "width" : 200, "label" : "A" },
+	{ "id" : "2", "shape" : "rectangle", "edges" : [ { "id" : "4", "label" : "hasProperty" }, { "id" : "5", "label" : "alsoHasProperty" }, { "id" : "6", "label" : "relatesTo" } ],  "height" : "60", "width" : "60", "label" : "B" },
+	{ "id" : "3", "shape" : "diamond", "edges" : [ {"id" : "7", "label" : "tests" } ],  "height" : 60, "width" : 150, "label" : "C" },
+	{ "id" : "4", "shape" : "triangle", "edges" : [ { "id" : "8", "label" : "also" } ],  "height" : 60, "width" : 80, "label" : "D" },
+	{ "id" : "5", "edges" : [],  "height" : 60, "width" : 60, "label" : "E" },
+	{ "id" : "6", "edges" : [],  "height" : 60, "width" : 60, "label" : "F" },
+	{ "id" : "7", "edges" : [ { "id" : "8", "label" : "isA" }, { "id" : "9", "label" : "isA" }],  "height" : 60, "width" : 60, "label" : "G" },
+	{ "id" : "8", "edges" : [ {"id":"10", "label":"isA"} ],  "height" : 60, "width" : 90, "label" : "H" },
+	{ "id" : "9", "edges" : [{ "id" : "17" }, { "id" : "18" }, { "id" : "19" }, { "id" : "20" }, { "id" : "21" }],  "height" : 60, "width" : 70, "label" : "I" },
+	{ "id" : "10", "edges" : [{ "id" : "11", "label" : "" }],  "height" : 220, "width" : 220, "label" : "J" },
+	{ "id" : "11", "edges" : [{ "id" : "12" }, { "id" : "13" }, { "id" : "14" }, { "id" : "15" }, { "id" : "16" }],  "height" : 60, "width" : 60, "label" : "K" },
+	{ "id" : "12", "edges" : [],  "height" : 60, "width" : 90, "label" : "L" },
+	{ "id" : "13", "edges" : [],  "height" : 60, "width" : 80, "label" : "M" },
+	{ "id" : "14", "edges" : [],  "height" : 60, "width" : 70, "label" : "N" },
+	{ "id" : "15", "edges" : [],  "height" : 60, "width" : 60, "label" : "O" },
+	{ "id" : "16", "edges" : [],  "height" : 60, "width" : 60, "label" : "P" },
+	{ "id" : "17", "edges" : [],  "height" : 60, "width" : 70, "label" : "Q" },
+	{ "id" : "18", "edges" : [],  "height" : 60, "width" : 80, "label" : "R" },
+	{ "id" : "19", "edges" : [],  "height" : 60, "width" : 100, "label" : "S" },
+	{ "id" : "20", "edges" : [],  "height" : 60, "width" : 220, "label" : "T" },
+	{ "id" : "21", "edges" : [],  "height" : 60, "width" : 60, "label" : "U" }
+]

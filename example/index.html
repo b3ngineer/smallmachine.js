@@ -17,34 +17,47 @@
 	<script type="text/javascript" src="../src/behaviors/sm.Channel.js"></script>
 	<script type="text/javascript">
         (function(sm) {
+			var com = { stackoverflow : { getParameterByName : function(name) {
+				name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+				var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+					results = regex.exec(location.search);
+				return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+			}}};
+			
 			try {
 				var channels = sm.ontology['sm.channels'];
 				var nodes = sm.ontology['sm.nodes'];
 				var flowchart = sm.ontology['sm.flowchart'];
 				var raphaeljs = sm.ontology['sm.raphaeljs'];
 				var wiring = sm([channels, nodes, flowchart, raphaeljs], sm.behavior.Channel);
-				wiring.system.set.config({
-					shapeAttr : {
-						'fill': '90-#777793:5-#FFF:95',
-						'stroke': '#FFF',
-						'stroke-width' : 2
-					},
-					lineAttr : {
-						'stroke':'#aab',
-						'stroke-width' : 2,
-						'arrow-end' : 'classic-wide-long'
-					},
-					edgeLabelAttr : {
-						'fill' : '#eef',
-						'font-weight' : 'normal'
-					}
-				});
-				wiring.system.set.svg('paper', '100%', '100%');
-				wiring.system.set.publish(new sm.type.NamedValue('sm.flowchart', 'root', '1'));
-				wiring.system.initialize.subscribe(function(message) {
-					wiring.system.paint.publish(message);
-				});
-				wiring.system.initialize.json('example.json');
+				var exampleNumber = com.stackoverflow.getParameterByName('n');
+				if (exampleNumber === null) {
+					//wiring.system.initialize.publish();
+				}
+				else {
+					wiring.system.set.config({
+						shapeAttr : {
+							'fill': '90-#777793:5-#FFF:95',
+							'stroke': '#FFF',
+							'stroke-width' : 2
+						},
+						lineAttr : {
+							'stroke':'#aab',
+							'stroke-width' : 2,
+							'arrow-end' : 'classic-wide-long'
+						},
+						edgeLabelAttr : {
+							'fill' : '#eef',
+							'font-weight' : 'normal'
+						}
+					});
+					wiring.system.set.svg('paper', '100%', '100%');
+					wiring.system.set.publish(new sm.type.NamedValue('sm.flowchart', 'root', '1'));
+					wiring.system.initialize.subscribe(function(message) {
+						wiring.system.paint.publish(message);
+					});
+					wiring.system.initialize.json('example.' + exampleNumber + '.json');
+				}
 			}
 			catch (error) {
 				if (typeof console.error === 'function') {
@@ -61,3 +74,4 @@
 	</script>
 </body>
 </html>
+

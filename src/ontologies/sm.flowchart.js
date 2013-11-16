@@ -36,8 +36,7 @@
 
 	function TreeLayout(nodeList, rootId) {
 		this.nodeIndex = {};
-		this.defaultHorizontalDistance = 120;
-		this.defaultVerticalDistance = 100;
+		this.defaultWidth = 60;
 		this.defaultNodeMargin = 40;
 		this.root = nodeList[0];
 		for (var i = 0; i < nodeList.length; i++) {
@@ -51,13 +50,19 @@
 			nodeList[i].shift = 0;
 			nodeList[i].change = 0;
 			nodeList[i].num = nodeList[i].num || 0;
-			this.nodeIndex[nodeList[i].id] = nodeList[i];
+			nodeList[i].vert = 100; // minimum distance
+			if (typeof nodeList[i].height !== 'undefined') {
+				var height = parseFloat(nodeList[i].height);
+				if (height > 100) {
+					nodeList[i].vert = height;
+				}
+			}
 			if (typeof nodeList[i].children === 'undefined') {
 				nodeList[i].children = [];
 			}
 			if (typeof nodeList[i].edges !== 'undefined') {
 				for (var j = 0; j < nodeList[i].edges.length; j++) {
-					var child = this._getNodeFromIndex(nodeList[i].edges[j].id, i, nodeList);
+					var child = this._getNodeFromIndex(nodeList[i].edges[j].id, nodeList);
 					child.parentNodeId = nodeList[i].id;
 					child.num = j;
 					nodeList[i].children.push(child);
@@ -70,29 +75,30 @@
 				}
 				nodeList[i].children[k].leftSiblingNode = nodeList[i].children[k - 1];
 			}
-			if (typeof nodeList[i].prototype === 'undefined') {
+			if (typeof nodeList[i].isLeaf === 'undefined') {
 				nodeList[i].__proto__ = TreeNode.prototype;
+				sm.alsoBehavesLike(nodeList[i], TreeNode.prototype);
 			}
-			else {
-				sm.alsoBehavesLike(nodeList[i], TreeNode);
-			}
+		}
+		if (typeof this.root.parentNodeId !== 'undefined') {
+			sm.error(new Error('Aborting; An infinite loop may occur because the root node has a value for parentNodeId (which is set to ' + this.root.parentNodeId + ')'));
 		}
 	}
 
 	TreeLayout.prototype.walk = function(centerX) {
 		this.firstWalk(this.root);
-		this.secondWalk(this.root, -this.root.prelim, 0, centerX);
+		this.secondWalk(this.root, -this.root.prelim, 0, 0, centerX);
 	};
 
 	TreeLayout.prototype._name = 'TreeLayout';
 
-	TreeLayout.prototype._getNodeFromIndex = function(nodeId, startAt, nodeList) {
+	TreeLayout.prototype._getNodeFromIndex = function(nodeId, nodeList) {
 		if (typeof this.nodeIndex[nodeId] !== 'undefined') {
 			return this.nodeIndex[nodeId];
 		}
-		for (var i = startAt; i < nodeList.length; i++) {
+		for (var i = nodeList.length - 1; i >= 0; i--) {
 			if (typeof this.nodeIndex[nodeList[i].id] === 'undefined') {
-				this.nodeIndex[nodeList[i].id] = this.nodeIndex[i];	
+				this.nodeIndex[nodeList[i].id] = nodeList[i];	
 			}
 			if (nodeList[i].id === nodeId) {
 				return nodeList[i];
@@ -101,13 +107,10 @@
 	};
 
 	TreeLayout.prototype.getSpacing = function(node) {
-		var margin = (typeof node.margin !== 'undefined') 
-			? parseFloat(node.margin)
-			: this.defaultNodeMargin;
 		var spacing = (typeof node.width !== 'undefined')
-			? parseFloat(node.width) + margin
-			: this.defaultHorizontalDistance;
-		return spacing;
+			? parseFloat(node.width)
+			: this.defaultWidth;
+		return 0.5 * spacing;
 	};
 
 	TreeLayout.prototype.firstWalk = function(node) {
@@ -117,7 +120,10 @@
 				node.prelim = 0;
 			}
 			else {
-				node.prelim = leftSibling.prelim + this.getSpacing(node);
+				node.prelim = leftSibling.prelim + this.getSpacing(leftSibling) + this.defaultNodeMargin + this.getSpacing(node);
+				if (leftSibling.vert > node.vert) {
+					node.vert = leftSibling.vert;
+				}
 			}
 		}
 		else {
@@ -130,8 +136,11 @@
 			var midpoint = 0.5*(node.leftMostChild().prelim + node.rightMostChild().prelim);
 			var leftSibling = node.leftSibling();
 			if (leftSibling !== null) {
-				node.prelim = leftSibling.prelim + this.getSpacing(node);
+				node.prelim = leftSibling.prelim + this.getSpacing(leftSibling);
 				node.mod = node.prelim - midpoint;
+				if (leftSibling.vert > node.vert) {
+					node.vert = leftSibling.vert;
+				}
 			}
 			else {
 				node.prelim = midpoint;
@@ -159,7 +168,7 @@
 				outsideLeftNode = this.nextLeft(outsideLeftNode);
 				outsideRightNode = this.nextRight(outsideRightNode);
 				insideLeftNode.ancestor = node;
-				var shift = (insideLeftNode.prelim + sumInsideLeft) - (insideRightNode.prelim + sumInsideRight) + this.defaultHorizontalDistance;
+				var shift = (insideLeftNode.prelim + sumInsideLeft) - (insideRightNode.prelim + sumInsideRight);
 				if (shift > 0) {
 					this.moveSubtree(this.ancestor(insideRightNode, node, defaultAncestor), node, shift);
 					sumInsideRight += shift;
@@ -188,7 +197,7 @@
 	TreeLayout.prototype.moveSubtree = function(leftRoot, rightRoot, shift) {
 		var subtrees = rightRoot.num - leftRoot.num;
 		rightRoot.change -= shift / subtrees; 
-		rightRoot.shift += shift;
+		rightRoot.shift += shift - 300;
 		leftRoot.change += shift / subtrees;
 		rightRoot.prelim += shift;
 		rightRoot.mod += shift;
@@ -206,14 +215,16 @@
 		}
 	};
 
-	TreeLayout.prototype.secondWalk = function(node, mod, level, centerX) {
+	TreeLayout.prototype.secondWalk = function(node, mod, level, vert, centerX) {
 		if (typeof centerX === 'undefined') {
 			centerX = 0;
 		}
 		node.x = node.prelim + mod + centerX;
-		node.y = level++ * this.defaultHorizontalDistance + this.defaultVerticalDistance;
+		vert = vert + node.vert * 0.5;
+		node.y = (level++ * this.defaultNodeMargin) + vert;
+		vert = vert + node.vert * 0.5;
 		for (var i = 0; i < node.children.length; i++) {
-			this.secondWalk(node.children[i], mod + node.mod, level, centerX);
+			this.secondWalk(node.children[i], mod + node.mod, level, vert, centerX);
 		}
 	};
 

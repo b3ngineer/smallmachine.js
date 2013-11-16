@@ -85,7 +85,8 @@
 		this.paper = paper;
 		this.shapeAttr = shapeAttr;
 		this.shapeLabelAttr = shapeLabelAttr;
-		this.data = {};
+		this.data = item.data || {};
+		this.title = item.title || item.label;
 		return this;
 	};
 
@@ -99,6 +100,10 @@
 			element.attr(this.shapeAttr);
 		}
 		var shapeText = this.paper.text(this.shape.x, this.shape.y, this.label);
+		if (this.title != "") {
+			element.attr('title',this.title);
+			shapeText.attr('title',this.title);
+		}
 		if (typeof this.shapeLabelAttr === 'function') {
 			this.shapeLabelAttr(shapeText, this);
 		}
@@ -126,6 +131,7 @@
 	};
 
 	Edge.prototype.update = function(message) {
+		/*
 		var d = Math.sqrt(Math.pow((this.x2 - this.x1), 2) + Math.pow((this.y2 - this.y1), 2));
 		var r1 = this.r1 / d;
 		var r2 = (d - this.r2) / d;
@@ -134,6 +140,9 @@
 		var x4 = r2 * this.x2 + (1 - r2) * this.x1;
 		var y4 = r2 * this.y2 + (1 - r2) * this.y1;
 		var line = this.paper.path( ['M', x3, y3, 'L', x4, y4] );
+		*/
+
+		var line = this.paper.path( ['M', this.x1, this.y1, 'L', this.x2, this.y2] );
 		if (typeof this.lineAttr === 'function') {
 			this.lineAttr(line, this);
 		}
@@ -142,7 +151,7 @@
 		}
 		var a = this.x1 - this.x2;
 		var b = this.y1 - this.y2;
-		var cX = (this.x1 + this.x2) / 2 
+		var cX = (this.x1 + this.x2) / 2; 
 		var cY = (this.y1 + this.y2) / 2;
 		var textLabel = this.paper.text(cX, cY, this.label);
 		if (typeof this.edgeLabelAttr === 'function') {
