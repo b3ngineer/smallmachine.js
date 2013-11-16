@@ -1,4 +1,4 @@
-describe('sm.flowchart', function() {
+describe('sm.treelayout', function() {
 
 	var testMessage = {
 		value : 

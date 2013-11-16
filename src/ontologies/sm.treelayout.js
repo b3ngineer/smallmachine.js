@@ -1,7 +1,7 @@
 ;(function(sm, $, raphael) {
 	'use strict';
 
-	var ontology = new sm.Ontology('sm.flowchart');
+	var ontology = new sm.Ontology('sm.treelayout');
 
 	ontology.addTerm('paint');
 	ontology.addTerm('get');
@@ -39,6 +39,7 @@
 		this.defaultWidth = 60;
 		this.defaultNodeMargin = 40;
 		this.root = nodeList[0];
+		this.size = { height : 0, width : 0 } ;
 		for (var i = 0; i < nodeList.length; i++) {
 			if (nodeList[i].id === rootId) {
 				this.root = nodeList[i];
@@ -52,9 +53,9 @@
 			nodeList[i].num = nodeList[i].num || 0;
 			nodeList[i].vert = 100; // minimum distance
 			if (typeof nodeList[i].height !== 'undefined') {
-				var height = parseFloat(nodeList[i].height);
-				if (height > 100) {
-					nodeList[i].vert = height;
+				nodeList[i].height = parseFloat(nodeList[i].height);
+				if (nodeList[i].height > 100) {
+					nodeList[i].vert = nodeList[i].height;
 				}
 			}
 			if (typeof nodeList[i].children === 'undefined') {
@@ -63,9 +64,13 @@
 			if (typeof nodeList[i].edges !== 'undefined') {
 				for (var j = 0; j < nodeList[i].edges.length; j++) {
 					var child = this._getNodeFromIndex(nodeList[i].edges[j].id, nodeList);
-					child.parentNodeId = nodeList[i].id;
-					child.num = j;
-					nodeList[i].children.push(child);
+					if (typeof child.parentNodeId === 'undefined' || child.parentNodeId == null) {
+						child.parentNodeId = nodeList[i].id;
+						child.num = j;
+						nodeList[i].children.push(child);
+					}
+					else {
+					}
 				}
 			}
 			for (var k = 0; k < nodeList[i].children.length; k++) {
@@ -168,7 +173,7 @@
 				outsideLeftNode = this.nextLeft(outsideLeftNode);
 				outsideRightNode = this.nextRight(outsideRightNode);
 				insideLeftNode.ancestor = node;
-				var shift = (insideLeftNode.prelim + sumInsideLeft) - (insideRightNode.prelim + sumInsideRight);
+				var shift = (insideLeftNode.prelim + sumInsideLeft) - (insideRightNode.prelim + sumInsideRight) + this.getSpacing(insideRightNode) + this.getSpacing(insideLeftNode) + this.defaultNodeMargin;
 				if (shift > 0) {
 					this.moveSubtree(this.ancestor(insideRightNode, node, defaultAncestor), node, shift);
 					sumInsideRight += shift;
@@ -197,7 +202,7 @@
 	TreeLayout.prototype.moveSubtree = function(leftRoot, rightRoot, shift) {
 		var subtrees = rightRoot.num - leftRoot.num;
 		rightRoot.change -= shift / subtrees; 
-		rightRoot.shift += shift - 300;
+		rightRoot.shift += shift;
 		leftRoot.change += shift / subtrees;
 		rightRoot.prelim += shift;
 		rightRoot.mod += shift;
@@ -220,8 +225,14 @@
 			centerX = 0;
 		}
 		node.x = node.prelim + mod + centerX;
+		if (node.x + node.width > this.size.width) {
+			this.size.width = node.x + node.width;
+		}
 		vert = vert + node.vert * 0.5;
 		node.y = (level++ * this.defaultNodeMargin) + vert;
+		if (node.y + node.height > this.size.height) {
+			this.size.height = node.y + node.height;
+		}
 		vert = vert + node.vert * 0.5;
 		for (var i = 0; i < node.children.length; i++) {
 			this.secondWalk(node.children[i], mod + node.mod, level, vert, centerX);
@@ -261,7 +272,7 @@
 		model.paint.subscribe(function(message) {
 			if (sm.typeMask(message.value, { length : true, sort : 'function' } ) === null) {
 				return function(mesage) {
-					var root = new sm.type.NamedValue('sm.flowchart', 'root', null);
+					var root = new sm.type.NamedValue('sm.treelayout', 'root', null);
 					model.get.publish(root);
 					var paper = new sm.type.NamedValue('sm.raphaeljs', 'paper', null);
 					model.get.publish(paper);
@@ -270,6 +281,7 @@
 					var layout = new sm.type.TreeLayout(message.value, root.value, config);
 					if (paper.value !== null) {
 						layout.walk(paper.value.width / 2);	
+						paper.value.setSize(layout.size.width, layout.size.height);
 					}
 					else {
 						layout.walk();

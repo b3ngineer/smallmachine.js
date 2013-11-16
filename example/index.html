@@ -12,7 +12,7 @@
 	<script type="text/javascript" src="../src/ontologies/sm.properties.js"></script>
 	<script type="text/javascript" src="../src/ontologies/sm.channels.js"></script>
 	<script type="text/javascript" src="../src/ontologies/sm.nodes.js"></script>
-	<script type="text/javascript" src="../src/ontologies/sm.flowchart.js"></script>
+	<script type="text/javascript" src="../src/ontologies/sm.treelayout.js"></script>
 	<script type="text/javascript" src="../src/ontologies/sm.raphaeljs.js"></script>
 	<script type="text/javascript" src="../src/behaviors/sm.Channel.js"></script>
 	<script type="text/javascript">
@@ -27,9 +27,9 @@
 			try {
 				var channels = sm.ontology['sm.channels'];
 				var nodes = sm.ontology['sm.nodes'];
-				var flowchart = sm.ontology['sm.flowchart'];
+				var treelayout = sm.ontology['sm.treelayout'];
 				var raphaeljs = sm.ontology['sm.raphaeljs'];
-				var wiring = sm([channels, nodes, flowchart, raphaeljs], sm.behavior.Channel);
+				var wiring = sm([channels, nodes, treelayout, raphaeljs], sm.behavior.Channel);
 				var exampleNumber = com.stackoverflow.getParameterByName('n');
 				if (exampleNumber === null) {
 					//wiring.system.initialize.publish();
@@ -52,7 +52,7 @@
 						}
 					});
 					wiring.system.set.svg('paper', '100%', '100%');
-					wiring.system.set.publish(new sm.type.NamedValue('sm.flowchart', 'root', '1'));
+					wiring.system.set.publish(new sm.type.NamedValue('sm.treelayout', 'root', '1'));
 					wiring.system.initialize.subscribe(function(message) {
 						wiring.system.paint.publish(message);
 					});
