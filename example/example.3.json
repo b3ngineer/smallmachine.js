@@ -5,7 +5,7 @@
 	{ "id" : "4", "shape" : "triangle", "edges" : [ { "id" : "8", "label" : "also" } ],  "height" : 60, "width" : 80, "label" : "D" },
 	{ "id" : "5", "edges" : [],  "height" : 60, "width" : 60, "label" : "E" },
 	{ "id" : "6", "edges" : [],  "height" : 60, "width" : 60, "label" : "F" },
-	{ "id" : "7", "edges" : [ { "id" : "8", "label" : "isA" }, { "id" : "9", "label" : "isA" }, { "id" : "22" }],  "height" : 60, "width" : 60, "label" : "G" },
+	{ "id" : "7", "edges" : [ { "id" : "9", "label" : "isA" }, { "id" : "22" }],  "height" : 60, "width" : 60, "label" : "G" },
 	{ "id" : "8", "edges" : [ {"id":"10", "label":"isA"} ],  "height" : 60, "width" : 90, "label" : "H" },
 	{ "id" : "9", "edges" : [{ "id" : "17" }, { "id" : "18" }, { "id" : "19" }, { "id" : "20" }, { "id" : "21" }],  "height" : 60, "width" : 70, "label" : "I" },
 	{ "id" : "10", "edges" : [{ "id" : "11", "label" : "" }],  "height" : 220, "width" : 220, "label" : "J" },
