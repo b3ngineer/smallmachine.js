@@ -1,4 +1,4 @@
-;(function(sm, sammy) {
+;var Sammy=typeof Sammy==='undefined'?{}:Sammy;(function(sm, sammy) {
 	function StateQueryModel(app) {
 
 		var EQUAL = 0,
@@ -288,4 +288,4 @@
 
 	StateQueryModel.prototype._name = 'StateQueryModel';
 	sm.type.extendedBy(StateQueryModel);
-}(smallmachine, Sammy));
+})(smallmachine,Sammy);

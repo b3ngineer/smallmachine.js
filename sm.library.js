@@ -211,6 +211,11 @@ var smallmachine = function(core) {
     this[value] = new Proxy(t, this._inferencer);
     return this
   };
+  Ontology.prototype.addTerms = function(list) {
+    for(var i = 0;i < list.length;i++) {
+      this.addTerm(list[i])
+    }
+  };
   Ontology.prototype.registerActivator = function(activator, dependencies) {
     if(typeof dependencies === "undefined") {
       dependencies = []
