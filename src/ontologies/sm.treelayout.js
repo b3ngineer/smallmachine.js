@@ -34,13 +34,17 @@
 		return this.children.length === 0;
 	};
 
-	function TreeLayout(nodeList, rootId) {
+	function TreeLayout(nodeList, rootId, config) {
 		this.nodeIndex = {};
-		this.defaultWidth = 60;
-		this.defaultNodeMargin = 40;
-		this.defaultTreeMargin = 80;
+		if (typeof config === 'undefined') {
+			config = {};
+		}
+		this.defaultWidth = config.defaultWidth || 60;
+		this.defaultNodeMargin = config.defaultNodeMargin || 40;
+		this.defaultTreeMargin = config.defaultTreeMargin || 80;
 		this.root = nodeList[0];
 		this.size = { height : 0, width : 0, left : 0, right : 0 } ;
+		this.minimiumVerticalDistance = config.minimiumVerticalDistance || 40;
 
 		for (var i = 0; i < nodeList.length; i++) {
 			if (nodeList[i].id === rootId) {
@@ -53,7 +57,7 @@
 			nodeList[i].shift = 0;
 			nodeList[i].change = 0;
 			nodeList[i].num = nodeList[i].num || 0;
-			nodeList[i].vert = 100; // minimum distance
+			nodeList[i].vert = this.minimiumVerticalDistance;
 
 			if (typeof nodeList[i].width === 'undefined') {
 				nodeList[i].width = this.defaultWidth;
@@ -63,7 +67,7 @@
 			}
 			if (typeof nodeList[i].height !== 'undefined') {
 				nodeList[i].height = parseFloat(nodeList[i].height);
-				if (nodeList[i].height > 100) {
+				if (nodeList[i].height > this.minimiumVerticalDistance) {
 					nodeList[i].vert = nodeList[i].height;
 				}
 			}
@@ -144,7 +148,7 @@
 				defaultAncestor = this.apportion(node.children[i], defaultAncestor);
 			}
 
-			//this.executeShifts(node);
+			this.executeShifts(node);
 
 			var midpoint = 0.5*(node.leftMostChild().prelim + node.rightMostChild().prelim);
 			var leftSibling = node.leftSibling();
@@ -215,14 +219,11 @@
 		return defaultAncestor;
 	};
 
-	var llll = 0;
-
 	TreeLayout.prototype.moveSubtree = function(leftRoot, rightRoot, shift) {
-		if (++llll > 6) return;
 		var subtrees = rightRoot.num - leftRoot.num;
-		rightRoot.change = (rightRoot.change - shift) / subtrees; 
+		rightRoot.change -= shift / subtrees; 
 		rightRoot.shift += shift;
-		leftRoot.change = (leftRoot.change + shift) / subtrees;
+		leftRoot.change += shift / subtrees;
 		rightRoot.prelim += shift;
 		rightRoot.mod += shift;
 	};
@@ -289,7 +290,7 @@
 	};
 
 	TreeLayout.prototype.ancestor = function(left, right, defaultAncestor) {
-		if (left.parentNodeId === right.parentNodeId) {
+		if (left.ancestor.parentNodeId === right.parentNodeId) {
 			return left.ancestor;
 		}
 		return defaultAncestor;
@@ -309,8 +310,9 @@
 					model.get.publish(root);
 					var paper = new sm.type.NamedValue('sm.raphaeljs', 'paper', null);
 					model.get.publish(paper);
-					//TODO: add config support
-					var config = {};
+					var config = new sm.type.Config();
+					model.system.get.config(config);
+
 					var layout = new sm.type.TreeLayout(message.value, root.value, config);
 					if (paper.value !== null) {
 						layout.walk(paper.value.width / 2);

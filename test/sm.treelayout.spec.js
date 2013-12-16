@@ -198,5 +198,4 @@ describe('sm.treelayout', function() {
 	it('should indicate that \'B\' is the leftmost sibling of \'C\'', function() {
 		expect(C.leftMostSibling().label).toBe('B');
 	});
-
 });

@@ -1,0 +1,13 @@
+[
+	{ "id" : "root", "edges" : [ { "id" : "2" } ], "height" : 30, "width" : 30, "label" : "A" },
+	{ "id" : "2", "edges" : [ { "id" : "3" }, { "id" : "5" }, { "id" : "9" } ], "height" : 30, "width" : 30, "label" : "B" },
+	{ "id" : "3", "edges" : [ { "id" : "4" } ], "height" : 30, "width" : 30, "label" : "C" },
+	{ "id" : "4", "edges" : [],  "height" : 30, "width" : 30, "label" : "D" },
+	{ "id" : "5", "edges" : [ { "id" : "6" }, { "id" : "7" }, { "id" : "8" } ],"height" : 30, "width" : 30, "label" : "E" },
+	{ "id" : "6", "edges" : [],  "height" : 30, "width" : 30, "label" : "F" },
+	{ "id" : "7", "edges" : [],  "height" : 30, "width" : 30, "label" : "G" },
+	{ "id" : "8", "edges" : [],  "height" : 30, "width" : 30, "label" : "H" },
+	{ "id" : "9", "edges" : [ { "id" : "10" }, { "id" : "11" } ], "height" : 30, "width" : 30, "label" : "I" },
+	{ "id" : "10", "edges" : [],  "height" : 30, "width" : 30, "label" : "J" },
+	{ "id" : "11", "edges" : [],  "height" : 30, "width" : 30, "label" : "K" }
+]
