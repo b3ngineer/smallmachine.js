@@ -218,4 +218,4 @@ pip-log.txt
 web.config
 
 *.swo
-*.bat
+test.bat

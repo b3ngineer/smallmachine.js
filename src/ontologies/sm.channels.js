@@ -27,8 +27,6 @@
 	ontology.user.relatesTo(ontology.performs, ontology.action);
 	ontology.system.isA(ontology.thing);
 	ontology.system.relatesTo(ontology.performs, ontology.task);
-	ontology.action.isA(ontology.thing);
-	ontology.task.isA(ontology.thing);
 	ontology.messenger.isA(ontology.thing);
 	ontology.click.isA(ontology.action);
 	ontology.doubleClick.isA(ontology.action);

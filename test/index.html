@@ -16,6 +16,8 @@
 	<script type="text/javascript" src="../src/ontologies/sm.properties.js"></script>
 	<script type="text/javascript" src="../src/behaviors/sm.Channel.js"></script>
 	<script type="text/javascript" src="../src/behaviors/sm.Restrictions.js"></script>
+	<script type="text/javascript" src="../src/behaviors/sm.Extension.js"></script>
+	<script type="text/javascript" src="../src/behaviors/sm.ChannelExtension.js"></script>
 	<script type="text/javascript" src="../src/ontologies/sm.channels.js"></script>
 	<script type="text/javascript" src="../src/ontologies/sm.nodes.js"></script>
 	<script type="text/javascript" src="../src/ontologies/sm.treelayout.js"></script>
@@ -30,7 +32,7 @@
 				var nodes = sm.ontology['sm.nodes'];
 				var sammy = sm.ontology['sm.sammyjs'];
 				var raphael = sm.ontology['sm.raphaeljs'];
-				var wiring = sm([channels, nodes, sammy, raphael], [sm.behavior.Channel]);
+				var wiring = sm([channels, nodes, sammy, raphael], [sm.behavior.Channel, sm.behavior.Extension, sm.behavior.ChannelExtension]);
 				return wiring;
 			}
 			catch (error) {
@@ -81,5 +83,7 @@
 	</script>
 </head>
 <body>
+	<span id="test1"></span>
+	<span id="test2"></span>
 </body>
 </html>

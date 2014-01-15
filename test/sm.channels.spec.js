@@ -123,5 +123,14 @@ describe('sm.channels', function() {
 			target.system.initialize.publish('test');
 			expect(target.system.initialize._subscribers[actual]).not.toBeDefined();
 		});
+
+		it('should subscribe #test1 and #test2 using the jQuery extension', function() {
+			var hit1 = false, hit2 = false;
+			jQuery('#test1').subscribe(target.system, function(message) { hit1 = this.id; });
+			jQuery('#test2').subscribe(target.system, function(message) { hit2 = this.id; });
+			target.system.publish(true);
+			expect(hit1).toBe('test1');
+			expect(hit2).toBe('test2');
+		});
 	});
 });
