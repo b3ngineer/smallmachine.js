@@ -125,13 +125,18 @@
 		return this;
 	};
 
-	Channel.prototype.addHelper = function(name, helper) {
+	Channel.prototype.addHelper = function(name, helper, minArgs) {
 		var method = Channel.prototype.publish;
 		var context = this; // context becomes static to the channel adding the helper
 		this[name] = function() {
 			var args = [];
 			for (var i = 0; i < arguments.length; i++) {
 				args.push(arguments[i]);
+			}
+			if (typeof minArgs !== 'undefined') {
+				for (var i = 0; i < minArgs - args.length; i++) {
+					args.push(null);
+				}
 			}
 			return method.apply(context, [function(asyncResult) {
 				args.push(asyncResult);

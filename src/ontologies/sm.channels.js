@@ -43,7 +43,7 @@
 
 	function activator(model) {
 
-		function jsonHelper(url, asyncResult){
+		function jsonHelper(url, errorHandler, asyncResult){
 			if (typeof jQuery !== 'undefined') {
 				try {
 					jQuery.ajax({
@@ -55,7 +55,12 @@
 							asyncResult.publish(new sm.type.NamedValue('sm.channels', url, data));
 						},
 						error: function(jqxhr, textStatus, thrown) {
-							sm.error(new Error(thrown));
+							if (errorHandler) {
+								errorHandler(jqxhr, textStatus, thrown);
+							}
+							else {
+								sm.error(new Error(thrown));
+							}
 						}
 					});
 				}
@@ -113,7 +118,7 @@
 		model.get.subscribe({ update : function(message) { return defaultValueDelegate; } });
 
 		if (typeof model.initialize.addHelper === 'function') {
-			model.initialize.addHelper('json', jsonHelper);
+			model.initialize.addHelper('json', jsonHelper, 2);
 		}
 		if (typeof model.set.addHelper === 'function') {
 			model.set.addHelper('config', function(config) {
@@ -121,7 +126,7 @@
 			});
 		}
 		if (typeof model.get.addHelper === 'function') {
-			model.get.addHelper('json', jsonHelper);
+			model.get.addHelper('json', jsonHelper, 2);
 
 			var Config = function() {
 				this.namespace = 'sm.channels';
