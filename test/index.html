@@ -8,50 +8,14 @@
 	<script type="text/javascript" src="../lib/jasmine.js"></script>
 	<script type="text/javascript" src="../lib/jasmine-html.js"></script>
 	<script type="text/javascript" src="../lib/jquery-1.10.2.min.js"></script>
-	<script type="text/javascript" src="../lib/raphael-min.js"></script>
-	<script type="text/javascript" src="../lib/sammy.library.min.js"></script>
 
 	<!-- include source files here... -->
 	<script type="text/javascript" src="../src/sm.core.js"></script>
-	<script type="text/javascript" src="../src/ontologies/sm.properties.js"></script>
-	<script type="text/javascript" src="../src/behaviors/sm.Channel.js"></script>
-	<script type="text/javascript" src="../src/behaviors/sm.Restrictions.js"></script>
-	<script type="text/javascript" src="../src/behaviors/sm.Extension.js"></script>
-	<script type="text/javascript" src="../src/behaviors/sm.ChannelExtension.js"></script>
-	<script type="text/javascript" src="../src/ontologies/sm.channels.js"></script>
-	<script type="text/javascript" src="../src/ontologies/sm.nodes.js"></script>
-	<script type="text/javascript" src="../src/ontologies/sm.treelayout.js"></script>
-	<script type="text/javascript" src="../src/ontologies/sm.raphaeljs.js"></script>
-	<script type="text/javascript" src="../src/ontologies/sm.sammyjs.js"></script>
-	<script type="text/javascript" src="../src/plugins/sm.StateQueryModel.js"></script>
-
-	<script type="text/javascript">
-		var target = (function(sm) {
-			try {
-				var channels = sm.ontology['sm.channels'];
-				var nodes = sm.ontology['sm.nodes'];
-				var sammy = sm.ontology['sm.sammyjs'];
-				var raphael = sm.ontology['sm.raphaeljs'];
-				var wiring = sm([channels, nodes, sammy, raphael], [sm.behavior.Channel, sm.behavior.Extension, sm.behavior.ChannelExtension]);
-				return wiring;
-			}
-			catch (error) {
-				if (typeof console.error === 'function') {
-					console.error(error.message + '\n' + error.stack);
-				}
-				return null;
-			}
-		}(smallmachine));
-	</script>
+	<script type="text/javascript" src="../src/sm.properties.js"></script>
 
 	<!-- include spec files here... -->
 	<script type="text/javascript" src="sm.core.spec.js"></script>
 	<script type="text/javascript" src="sm.ontology.spec.js"></script>
-	<script type="text/javascript" src="sm.channels.spec.js"></script>
-	<script type="text/javascript" src="sm.helpers.spec.js"></script>
-	<script type="text/javascript" src="sm.treelayout.spec.js"></script>
-	<script type="text/javascript" src="sm.restrictions.spec.js"></script>
-	<script type="text/javascript" src="sm.StateQueryModel.spec.js"></script>
 
 	<script type="text/javascript">
 		(function() {
@@ -83,7 +47,5 @@
 	</script>
 </head>
 <body>
-	<span id="test1"></span>
-	<span id="test2"></span>
 </body>
 </html>
